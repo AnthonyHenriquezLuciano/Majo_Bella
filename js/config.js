@@ -26,7 +26,7 @@ window.MAJOBELLA_CONFIG = {
      3. En "Orígenes autorizados de JavaScript" añade el dominio de la web (ej. https://majobella.com).
      4. Copia el ID de cliente (termina en .apps.googleusercontent.com) aquí y en el backend (Code.gs). */
   google: {
-    clientId: '',
+    clientId: '333956941163-rlgrb3759jf2uc05olhhpm9e2ggrhm1s.apps.googleusercontent.com',
   },
 
   /* Redes sociales (deja vacío lo que no uses) */

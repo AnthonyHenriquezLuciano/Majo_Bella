@@ -18,7 +18,7 @@
  */
 
 const CALENDAR_ID = 'primary';
-const GOOGLE_CLIENT_ID = '';            // ID de cliente OAuth (termina en .apps.googleusercontent.com)
+const GOOGLE_CLIENT_ID = '333956941163-rlgrb3759jf2uc05olhhpm9e2ggrhm1s.apps.googleusercontent.com';            // ID de cliente OAuth (termina en .apps.googleusercontent.com)
 const SEND_INVITE_TO_CLIENT = true;     // la clienta recibe la invitación y la cita aparece en su calendario
 const HISTORY_DAYS = 365;               // cuánto historial devuelve "Mis citas"
 
