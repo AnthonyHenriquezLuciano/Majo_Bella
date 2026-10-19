@@ -17,7 +17,8 @@ window.MAJOBELLA_CONFIG = {
   whatsapp: {
     number: '18299784986',
     display: '829-978-4986',
-    greeting: 'Hola, quiero agendar una cita en MAJOBELLA.',
+    // WhatsApp es para dudas e información; las citas se reservan y se pagan en la web.
+    greeting: 'Hola, tengo una pregunta sobre MAJOBELLA.',
   },
 
   /* Inicio de sesión con Google -------------------------------------------
@@ -75,12 +76,27 @@ window.MAJOBELLA_CONFIG = {
   },
 
   /* Sistema de reservas ----------------------------------------------------
-     apiUrl vacío: la cita se envía por WhatsApp y la clienta puede añadirla a su calendario.
-     Con apiUrl: la web consulta la disponibilidad real y registra la cita en el calendario
-     de MAJOBELLA. Ver backend/google-apps-script/Code.gs y README.md. */
+     URL de la aplicación web de Google Apps Script (termina en /exec).
+     Con ella, las reservas se guardan en la hoja de Google de MAJOBELLA, los horarios ocupados
+     se ven en gris para todas y el dashboard (admin.html) muestra la agenda.
+     Pasos en backend/google-apps-script/INSTALAR.md */
   booking: {
     apiUrl: '',
     studioCalendarName: 'MAJOBELLA',
     reminderMinutesBefore: 120,
+  },
+
+  /* Pagos con PayPal -------------------------------------------------------
+     La cita se aparta pagando un depósito; el saldo se paga al terminar (efectivo o PayPal).
+     PayPal no cobra en pesos dominicanos: el depósito se cobra en dólares con la tasa de abajo.
+     Con el backend activo, la tasa y el porcentaje se toman de la pestaña "Ajustes" de la hoja.
+     paypalClientId: ID de cliente PÚBLICO de la app de PayPal (sandbox para pruebas, live para cobrar).
+     El secreto de PayPal NUNCA va aquí: se guarda en las propiedades del script de Apps Script. */
+  payments: {
+    enabled: true,
+    paypalClientId: '',
+    depositPercent: 50,
+    usdRate: 63,              // RD$ por 1 US$ (ejemplo: actualízala en la hoja "Ajustes")
+    holdMinutes: 15,          // minutos que se aparta el horario mientras la clienta paga
   },
 };

@@ -32,6 +32,7 @@
       s.src = 'https://accounts.google.com/gsi/client';
       s.async = true; s.defer = true;
       s.onload = () => {
+        if (!window.google || !google.accounts) { this.loadError = true; this.emit(); return; }
         google.accounts.id.initialize({
           client_id: M.config.google.clientId,
           callback: (resp) => this.handleCredential(resp.credential),

@@ -14,45 +14,80 @@ js/data/brows.js                Forma de las cejas sobre el rostro ilustrado
 js/core/utils.js                Estado compartido y formatos (precio, fechas, horas)
 js/integrations/whatsapp.js     Mensajes y enlaces de WhatsApp
 js/integrations/calendar.js     Google Calendar y archivo .ics (Apple, Outlook)
-js/integrations/booking-api.js  Disponibilidad, registro, consulta y cancelación de citas (backend)
+js/integrations/booking-api.js  Agenda (horarios ocupados), reservas, pagos y cancelaciones (backend)
+js/integrations/paypal.js       Botones de PayPal para el depósito y el saldo
 js/integrations/google-auth.js  Inicio de sesión con Google
 js/integrations/appointments.js Registro de citas de la clienta (Citas)
 js/components/*.js              Menú, rostro ilustrado, cejas, servicios, barra de suma, reservas, citas, contacto
-backend/google-apps-script/     Backend gratuito con Google Calendar
+admin.html, js/admin.js         Dashboard privado de reservas
+backend/google-apps-script/     Backend gratuito: Google Sheets + PayPal + Google Calendar (ver INSTALAR.md)
 assets/                         Logos, monograma, favicon y fuentes
 ```
 
 ## Antes de publicar
 
 1. **WhatsApp**: configurado con 829-978-4986 (`whatsapp.number` en `js/config.js`).
-2. **Precios y duraciones**: en `js/data/services.js`. Los valores actuales son de ejemplo.
+2. **Precios y duraciones**: valores de ejemplo en `js/data/services.js`. Con el backend activo, los que cuentan son los de la pestaña **Servicios** de la hoja.
 3. **Google**: para el botón "Continuar con Google", crea el ID de cliente (pasos en `js/config.js`) y ponlo en `google.clientId` y en `GOOGLE_CLIENT_ID` de `Code.gs`.
 4. **Redes y contacto**: `social.instagram`, `social.tiktok`, `contact.email`. La dirección y el enlace de Google Maps ya están; puedes añadir calle y sector en `contact.address`.
 5. **Horario**: igual al de Google Maps (lunes cerrado, martes a sábado 10:00–5:00, domingo 10:00–1:00). Se cambia en `schedule.hours`; días cerrados puntuales en `schedule.blockedDates`.
 6. **Fuente Mistrully**: copia el archivo en `assets/fonts/` (ver `LEEME.txt`).
+7. **Reservas con depósito y dashboard**: sigue `backend/google-apps-script/INSTALAR.md`.
 
 ## Cómo funcionan las reservas
 
-**Sin backend** (`booking.apiUrl` vacío):
-- Las horas se calculan con el horario configurado.
-- Al pulsar *Confirmar cita* se abre WhatsApp con servicio, fecha, hora, nombre, teléfono y correo. MAJOBELLA confirma la cita respondiendo.
-- La clienta puede guardar la cita en Google Calendar o descargar el archivo `.ics` (Apple Calendar, Outlook).
-- La web no conoce las citas ya tomadas. Por eso la confirmación final la hace el estudio.
+Las reservas se guardan en una hoja de Google de MAJOBELLA y la cita se aparta pagando un depósito con PayPal. Para activarlo sigue `backend/google-apps-script/INSTALAR.md`.
 
-**Con backend** (Google Apps Script incluido):
-- Sigue los pasos al inicio de `backend/google-apps-script/Code.gs` y pega la URL `/exec` en `booking.apiUrl`.
-- La web solo mostrará horas libres en el calendario de MAJOBELLA.
-- Al confirmar, la cita se crea en ese calendario y la clienta recibe la invitación por correo.
-- El script rechaza horarios ocupados para evitar dobles reservas.
+**Con el backend activo** (`booking.apiUrl` y `payments.paypalClientId` en `js/config.js`):
+
+1. **Elegir la cita.** La clienta elige servicio, día y hora. Los días llenos y las horas ya reservadas se ven en gris para todas, con o sin sesión. La agenda se actualiza al volver a la pestaña y cada dos minutos.
+2. **Pagar el depósito.** Al continuar, ve el depósito (50% del total, en RD$ y en US$) y paga con PayPal (tarjeta o cuenta). Mientras paga, el horario queda apartado 15 minutos.
+3. **Confirmación.** Con el pago:
+   - la cita pasa a **confirmada** en la hoja;
+   - se agenda en Google Calendar;
+   - la clienta recibe un correo y MAJOBELLA un aviso.
+4. **Saldo.** El otro 50% se paga al terminar:
+   - en efectivo (se marca en el dashboard);
+   - o con PayPal desde **Citas**.
+5. **Cancelación.** Desde **Citas**:
+   - con 24 h o más de aviso se reembolsa el depósito automáticamente;
+   - con menos aviso no se reembolsa.
+
+   Las horas y el porcentaje se cambian en la pestaña **Ajustes** de la hoja.
+
+PayPal no cobra en pesos dominicanos. Por eso el depósito se cobra en dólares con la tasa de **Ajustes → tasaUSD**. La web muestra ambos montos antes de pagar.
+
+**Dashboard** (`admin.html`):
+- Solo entran los correos de Google en `ADMIN_EMAILS` (propiedad del script); el backend lo verifica en cada consulta.
+- Muestra:
+  - citas por día, semana o mes;
+  - cobrado y por cobrar;
+  - cancelaciones;
+  - horas y servicios más reservados.
+- Permite:
+  - marcar el saldo cobrado en efectivo;
+  - marcar citas realizadas o "no asistió";
+  - cancelar con o sin reembolso;
+  - bloquear horarios.
+- `admin.html?demo` muestra el dashboard con datos de ejemplo.
+
+**WhatsApp** es para dudas e información: botón flotante, contacto y "¿Dudas?" en cada cita. No confirma reservas.
+
+**Sin backend** (`booking.apiUrl` vacío), modo temporal:
+- La cita se envía como solicitud por WhatsApp y el estudio la confirma.
+- La web no conoce las horas ya reservadas.
 
 ### Contrato de la API
 
-Si más adelante se usa otro backend (Node, Firebase, Supabase, un sistema de reservas…), solo tiene que responder igual:
+Implementado en `backend/google-apps-script/Code.gs`; otro backend podría responder igual:
 
-- `GET {apiUrl}?action=availability&date=AAAA-MM-DD` → `{ "busy": [{ "start": ISO, "end": ISO }] }`
-- `POST {apiUrl}` con JSON `{ "action": "create", services, date, time, start, end, durationMinutes, totalPrice, currency, client: { name, phone, email, notes } }` → `{ "ok": true, "id": "…" }` o `{ "ok": false, "error": "…" }`
-
-Las cancelaciones y reprogramaciones se pueden añadir con nuevas acciones (`cancel`, `reschedule`) usando el `id` devuelto.
+- `GET ?action=catalog` → `{ services, payments: { usdRate, depositPercent, holdMinutes, cancelHours, paypalEnv }, schedule }`
+- `GET ?action=busy&from=AAAA-MM-DD&to=AAAA-MM-DD` → `{ busy: [{ start, end }] }` (sin datos personales)
+- `POST { action: 'hold', services: [ids], date, time, client }` → `{ id, manageToken, orderId, depositUSD, … }`
+- `POST { action: 'capture', id, orderId }` → `{ appointment }`
+- `POST { action: 'release' | 'cancel' | 'balanceOrder' | 'balanceCapture', id, token | idToken, … }`
+- `POST { action: 'myAppointments', idToken }` · `{ action: 'lookup', items: [{ id, token }] }`
+- `POST { action: 'adminList' | 'adminUpdate' | 'adminBlock', idToken, … }` (solo administradoras)
 
 ## Experiencia de la clienta
 
@@ -71,8 +106,8 @@ Las cancelaciones y reprogramaciones se pueden añadir con nuevas acciones (`can
 - Al añadir uno o varios servicios aparece abajo una barra con los servicios, el tiempo total y el precio total, y el botón **Agendar estos servicios**.
 - **Citas** muestra las citas próximas y anteriores de la clienta:
   - sin iniciar sesión: las citas reservadas desde ese dispositivo (se guardan en el navegador);
-  - con Google y el backend activos: las citas de la agenda de MAJOBELLA, en cualquier dispositivo, con opción de cancelar.
-- Reprogramar y cancelar sin backend se hace por WhatsApp con un mensaje ya preparado.
+  - con el backend: el estado real de cada cita y sus pagos (y con Google, en cualquier dispositivo); se puede pagar el saldo y cancelar.
+- Sin backend, reprogramar y cancelar se hace por WhatsApp con un mensaje ya preparado.
 
 ## Rostro y cejas
 

@@ -1,9 +1,9 @@
-/* MAJOBELLA · Reserva: servicio → fecha → hora → datos → confirmar
-   Pensada para tardar menos de un minuto:
+/* MAJOBELLA · Reserva: servicio → fecha → hora → datos → depósito con PayPal
+   - Los días y horas ya reservados se ven en gris para todas (con o sin sesión).
    - "Primer horario disponible" elige fecha y hora en un toque.
-   - Los próximos días aparecen como accesos rápidos; el calendario completo es opcional.
-   - Los datos de la clienta se recuerdan en el dispositivo (si lo acepta) o se completan con Google.
-   - Cada paso se marca al completarse y el resumen muestra la hora de término. */
+   - La cita se aparta pagando el depósito (config.payments.depositPercent) con PayPal;
+     el saldo se paga al terminar, en efectivo o con PayPal desde "Citas".
+   - Sin backend configurado, la reserva se envía como solicitud por WhatsApp (modo temporal). */
 (function (M) {
   const WEEK = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
   const WEEK_FULL = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
@@ -24,26 +24,42 @@
     const slotsBox = $('bk-slots'), slotsMsg = $('bk-slots-msg');
     const form = $('bk-form'), confirmBtn = $('bk-confirm'), missing = $('bk-missing');
     const modeNote = $('bk-mode'), result = $('bk-result'), policy = $('bk-policy');
+    const pay = { panel: $('bk-pay'), info: $('bk-pay-info'), timer: $('bk-pay-timer'), box: $('bk-paypal'), msg: $('bk-pay-msg'), back: $('bk-pay-back') };
     const steps = [...document.querySelectorAll('.booking-flow .step')];
     const signinHint = $('bk-signin-hint'), remember = $('bk-remember'), savedNote = $('bk-saved-note');
-    const sum = { svc: $('sum-service'), date: $('sum-date'), time: $('sum-time'), dur: $('sum-duration'), price: $('sum-price') };
+    const sum = { svc: $('sum-service'), date: $('sum-date'), time: $('sum-time'), dur: $('sum-duration'), price: $('sum-price'), dep: $('sum-deposit'), bal: $('sum-balance') };
     const P = M.config.policies || {};
+    const PAY = M.config.payments;
+    const API = M.BookingAPI;
 
     const t0 = M.parseKey(M.todayKey());
     let view = { y: t0.y, m: t0.m };
     let slotReq = 0, fastReq = 0, firstSlot = null;
+    let hold = null, holdTimer = null, paying = false, takenNotice = false;
 
-    /* Modo de confirmación según la configuración */
-    const mode = M.BookingAPI.enabled() ? 'api' : (M.WhatsApp.isConfigured() ? 'whatsapp' : 'none');
-    modeNote.textContent = {
-      api: 'Solo ves horas libres en la agenda de MAJOBELLA. La confirmación es inmediata.',
-      whatsapp: 'Al confirmar se abre WhatsApp con tu cita lista para enviar. MAJOBELLA te responde para confirmarla.',
-      none: 'Reserva en línea pendiente de activar: falta el número de WhatsApp o la conexión de agenda en js/config.js.',
+    /* ---- Modo de reserva ---- */
+    const mode = API.enabled()
+      ? (M.PayPal.configured() ? 'pay' : 'paysoon')
+      : (M.WhatsApp.isConfigured() ? 'request' : 'none');
+    document.querySelectorAll('[data-pay-only]').forEach((n) => { n.hidden = mode !== 'pay'; });
+    confirmBtn.textContent = mode === 'pay' ? 'Continuar al pago del depósito' : mode === 'request' ? 'Enviar solicitud' : 'Confirmar cita';
+    const sandbox = PAY.paypalEnv === 'sandbox';
+    modeNote.innerHTML = {
+      pay: `Pagas el depósito con PayPal (tarjeta o cuenta) y tu cita queda confirmada al instante. Te llega un correo con todos los detalles.${sandbox ? ' <strong>Modo de prueba: no se hacen cobros reales.</strong>' : ''}`,
+      paysoon: 'Los pagos en línea se están activando. Si tienes dudas, escríbenos por WhatsApp.',
+      request: 'La reserva con depósito en línea se activa pronto. Por ahora tu cita se envía como solicitud y te confirmamos por WhatsApp.',
+      none: 'Reserva en línea pendiente de activar.',
     }[mode];
-    policy.textContent = [
-      P.changeHours ? `Puedes cambiar o cancelar hasta ${P.changeHours} horas antes.` : '',
-      P.arriveEarlyMinutes ? `Te recomendamos llegar ${P.arriveEarlyMinutes} minutos antes.` : '',
-    ].filter(Boolean).join(' ');
+    function renderPolicy() {
+      const pct = PAY.depositPercent;
+      policy.textContent = [
+        mode === 'pay' ? `Apartas tu cita con el ${pct}% y pagas el resto al terminar, en efectivo o con PayPal.` : '',
+        mode === 'pay' && P.changeHours ? `Si cancelas con ${P.changeHours} horas o más de aviso, te devolvemos el depósito.` : '',
+        mode !== 'pay' && P.changeHours ? `Puedes cambiar o cancelar hasta ${P.changeHours} horas antes.` : '',
+        P.arriveEarlyMinutes ? `Te recomendamos llegar ${P.arriveEarlyMinutes} minutos antes.` : '',
+      ].filter(Boolean).join(' ');
+    }
+    renderPolicy();
 
     /* ---- 1. Servicios ---- */
     svcBox.innerHTML = M.services.map((s) => `
@@ -53,13 +69,15 @@
       </label>`).join('');
     svcBox.addEventListener('change', (e) => { if (e.target.matches('input')) M.toggleService(e.target.value, 'booking'); });
 
-    /* ---- 2. Fecha: accesos rápidos, primer horario y calendario completo ---- */
-    function nextBookableDays(n) {
+    /* ---- 2. Fecha ---- */
+    const minutesNow = () => M.totals().minutes || M.config.schedule.slotStepMinutes;
+
+    function nextOpenDays(n) {
       const out = [];
       for (let i = 0; i <= M.config.schedule.maxDaysAhead && out.length < n; i++) {
         const d = new Date(Date.UTC(t0.y, t0.m, t0.d + i));
         const key = M.dateKey(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-        if (M.Schedule.isBookableDay(key)) out.push({ key, i });
+        if (M.Schedule.isOpenDay(key)) out.push({ key, i });
       }
       return out;
     }
@@ -71,16 +89,18 @@
       return w.charAt(0).toUpperCase() + w.slice(1);
     }
     function renderQuick() {
-      quick.innerHTML = nextBookableDays(6).map((day) => {
+      const min = minutesNow();
+      quick.innerHTML = nextOpenDays(6).map((day) => {
         const { d } = M.parseKey(day.key);
+        const full = API.dayStatus(day.key, min) === 'full';
         const sel = day.key === M.state.dateKey;
-        return `<button type="button" class="qday${sel ? ' is-selected' : ''}" data-key="${day.key}" aria-pressed="${sel}" aria-label="${M.weekdayName(day.key)} ${M.dayMonth(day.key)}">
-          <span class="qd-w">${dayLabel(day)}</span><span class="qd-d">${d}</span></button>`;
+        return `<button type="button" class="qday${sel ? ' is-selected' : ''}${full ? ' is-full' : ''}" data-key="${day.key}" aria-pressed="${sel}" ${full ? 'disabled' : ''} aria-label="${M.weekdayName(day.key)} ${M.dayMonth(day.key)}${full ? ', completo' : ''}">
+          <span class="qd-w">${dayLabel(day)}</span><span class="qd-d">${d}</span>${full ? '<span class="qd-full">Completo</span>' : ''}</button>`;
       }).join('');
     }
     quick.addEventListener('click', (e) => {
       const b = e.target.closest('.qday');
-      if (b) M.set({ dateKey: b.dataset.key, time: null }, 'booking-date');
+      if (b && !b.disabled) M.set({ dateKey: b.dataset.key, time: null }, 'booking-date');
     });
     calToggle.addEventListener('click', () => {
       const open = calendar.hidden;
@@ -98,16 +118,18 @@
       let html = WEEK.map((d, i) => `<span class="cal-dow" aria-hidden="true" title="${WEEK_FULL[i]}">${d}</span>`).join('');
       for (let i = 0; i < lead; i++) html += '<span class="cal-pad"></span>';
       const today = M.todayKey();
+      const min = minutesNow();
       for (let d = 1; d <= days; d++) {
         const key = M.dateKey(view.y, view.m, d);
-        const ok = M.Schedule.isBookableDay(key);
+        const status = API.dayStatus(key, min);
+        const ok = status === 'open' || status === 'unknown';
         const sel = key === M.state.dateKey;
-        html += `<button type="button" class="cal-day${sel ? ' is-selected' : ''}${key === today ? ' is-today' : ''}" data-key="${key}" ${ok ? '' : 'disabled'} aria-pressed="${sel}" aria-label="${M.weekdayName(key)} ${M.dayMonth(key)}${ok ? '' : ', no disponible'}">${d}</button>`;
+        html += `<button type="button" class="cal-day${sel ? ' is-selected' : ''}${key === today ? ' is-today' : ''}${status === 'full' ? ' is-full' : ''}" data-key="${key}" ${ok ? '' : 'disabled'} aria-pressed="${sel}" aria-label="${M.weekdayName(key)} ${M.dayMonth(key)}${status === 'full' ? ', completo' : ok ? '' : ', no disponible'}">${d}</button>`;
       }
       calGrid.innerHTML = html;
-      const cur = view.y * 12 + view.m, min = t0.y * 12 + t0.m;
+      const cur = view.y * 12 + view.m, minM = t0.y * 12 + t0.m;
       const maxD = new Date(Date.UTC(t0.y, t0.m, t0.d + M.config.schedule.maxDaysAhead));
-      prevBtn.disabled = cur <= min;
+      prevBtn.disabled = cur <= minM;
       nextBtn.disabled = cur >= maxD.getUTCFullYear() * 12 + maxD.getUTCMonth();
     }
     prevBtn.addEventListener('click', () => { view = view.m === 0 ? { y: view.y - 1, m: 11 } : { y: view.y, m: view.m - 1 }; renderCalendar(); });
@@ -126,14 +148,14 @@
       fastest.hidden = false;
       fastestLabel.textContent = 'Buscando…';
       fastestBtn.disabled = true;
-      for (const day of nextBookableDays(14)) {
+      for (const day of nextOpenDays(21)) {
         let res;
-        try { res = await M.BookingAPI.availability(day.key, t.minutes); } catch (e) { break; }
+        try { res = await API.availability(day.key, t.minutes); } catch (e) { break; }
         if (req !== fastReq) return;
         if (res.slots.length) { firstSlot = { key: day.key, time: res.slots[0], i: day.i }; break; }
       }
       if (req !== fastReq) return;
-      if (!firstSlot) { fastestLabel.textContent = 'Sin horarios en las próximas dos semanas'; return; }
+      if (!firstSlot) { fastestLabel.textContent = API.busyError() ? 'No pudimos consultar la agenda' : 'Sin horarios en las próximas semanas'; return; }
       const when = firstSlot.i === 0 ? 'Hoy' : firstSlot.i === 1 ? 'Mañana' : `${M.weekdayName(firstSlot.key)} ${M.dayMonth(firstSlot.key)}`;
       fastestLabel.textContent = `${when}, ${M.fmtTime12(firstSlot.time)}`;
       fastestBtn.disabled = false;
@@ -144,37 +166,43 @@
       guide('#step-datos');
     });
 
-    /* ---- 3. Horas ---- */
+    /* ---- 3. Horas (las reservadas se ven en gris) ---- */
     async function renderSlots() {
       const { dateKey } = M.state;
       const t = M.totals();
-      slotsBox.innerHTML = '';
-      if (!t.items.length) { slotsMsg.textContent = 'Elige primero un servicio: la duración define las horas disponibles.'; return; }
-      if (!dateKey) { slotsMsg.textContent = 'Elige un día para ver las horas disponibles.'; return; }
-      slotsMsg.textContent = 'Buscando horas disponibles…';
+      if (!t.items.length) { slotsBox.innerHTML = ''; slotsMsg.textContent = 'Elige primero un servicio: la duración define las horas disponibles.'; return; }
+      if (!dateKey) { slotsBox.innerHTML = ''; slotsMsg.textContent = 'Elige un día para ver las horas disponibles.'; return; }
       const req = ++slotReq;
+      if (!slotsBox.children.length) slotsMsg.textContent = 'Buscando horas disponibles…';
       let res;
-      try { res = await M.BookingAPI.availability(dateKey, t.minutes); }
-      catch (err) { if (req === slotReq) slotsMsg.textContent = 'No pudimos consultar la agenda. Intenta de nuevo en unos minutos o escríbenos por WhatsApp.'; return; }
+      try { res = await API.availability(dateKey, t.minutes); }
+      catch (err) { if (req === slotReq) { slotsBox.innerHTML = ''; slotsMsg.textContent = 'No pudimos consultar la agenda. Intenta de nuevo en unos minutos.'; } return; }
       if (req !== slotReq) return;
-      if (!res.slots.length) { slotsMsg.textContent = 'Ese día ya no quedan horas para esta duración. Prueba con otro día o usa "Primer horario disponible".'; return; }
-      slotsMsg.textContent = '';
+      // Si la hora elegida acaba de ocuparse, se libera la selección
+      if (M.state.time && !res.slots.includes(M.state.time)) { takenNotice = true; M.set({ time: null }, 'booking-taken'); return; }
+      if (!res.all.length) { slotsBox.innerHTML = ''; slotsMsg.textContent = 'Ese día ya no quedan horas para esta duración. Prueba con otro día o usa "Primer horario disponible".'; return; }
+      slotsMsg.textContent = takenNotice ? 'La hora que habías elegido acaba de reservarse. Elige otra, por favor.'
+        : res.slots.length ? '' : 'Ese día ya está completo para esta duración. Prueba con otro día o usa "Primer horario disponible".';
+      takenNotice = false;
       const groups = { 'Mañana': [], 'Tarde': [] };
-      res.slots.forEach((s) => (parseInt(s, 10) < 12 ? groups['Mañana'] : groups['Tarde']).push(s));
+      res.all.forEach((s) => (parseInt(s.time, 10) < 12 ? groups['Mañana'] : groups['Tarde']).push(s));
+      const anyBusy = res.all.some((s) => s.busy);
       slotsBox.innerHTML = Object.entries(groups).filter(([, v]) => v.length).map(([label, v]) => `
         <div class="slot-group">
           <p class="slot-label">${label}</p>
-          <div class="slot-row">${v.map((s) => `<button type="button" class="slot${s === M.state.time ? ' is-selected' : ''}" data-time="${s}" aria-pressed="${s === M.state.time}">${M.fmtTime12(s)}</button>`).join('')}</div>
-        </div>`).join('');
+          <div class="slot-row">${v.map((s) => {
+            const sel = s.time === M.state.time;
+            return `<button type="button" class="slot${sel ? ' is-selected' : ''}${s.busy ? ' is-busy' : ''}" data-time="${s.time}" aria-pressed="${sel}" ${s.busy ? `disabled aria-label="${M.fmtTime12(s.time)}, reservado"` : ''}>${M.fmtTime12(s.time)}</button>`;
+          }).join('')}</div>
+        </div>`).join('') + (anyBusy ? '<p class="slot-legend"><span class="sl-box" aria-hidden="true"></span>En gris: horarios ya reservados</p>' : '');
     }
     slotsBox.addEventListener('click', (e) => {
       const b = e.target.closest('.slot');
-      if (!b) return;
+      if (!b || b.disabled) return;
       M.set({ time: b.dataset.time }, 'booking-slot');
       if (!valid.name() || !valid.phone() || !valid.email()) guide('#step-datos');
     });
 
-    /* En pantallas pequeñas, lleva suavemente al siguiente paso */
     function guide(sel) {
       if (!isNarrow()) return;
       setTimeout(() => M.scrollTo(sel), 250);
@@ -187,13 +215,12 @@
       phone: () => fields.phone.value.replace(/\D/g, '').length >= 10,
       email: () => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(fields.email.value.trim()),
     };
-    Object.values(fields).forEach((f) => f.addEventListener('input', renderSummary));
+    Object.values(fields).forEach((f) => f.addEventListener('input', () => { closePay(); renderSummary(); }));
     Object.entries(valid).forEach(([k, fn]) => {
       fields[k].addEventListener('blur', () => fields[k].closest('.field').classList.toggle('has-error', !!fields[k].value && !fn()));
       fields[k].addEventListener('input', () => { if (fn()) fields[k].closest('.field').classList.remove('has-error'); });
     });
 
-    // Datos recordados de una reserva anterior en este dispositivo
     const saved = loadClient();
     if (saved) {
       fields.name.value = saved.name || '';
@@ -245,10 +272,14 @@
       sum.time.textContent = st.time ? `${M.fmtTime12(st.time)} – ${M.fmtTime12(endTime(st.time, t.minutes))}` : '—';
       sum.dur.textContent = t.minutes ? M.fmtDuration(t.minutes) : '—';
       sum.price.textContent = t.items.length ? (t.hasFrom ? 'Desde ' : '') + M.fmtPrice(t.price) : '—';
+      if (mode === 'pay') {
+        const dep = M.deposit(t.price);
+        sum.dep.innerHTML = t.items.length ? `${M.fmtPrice(dep.depositRD)}<small>${M.fmtUSD(dep.depositUSD)} con PayPal</small>` : '—';
+        sum.bal.innerHTML = t.items.length ? `${t.hasFrom ? 'Desde ' : ''}${M.fmtPrice(dep.balanceRD)}<small>efectivo o PayPal</small>` : '—';
+      }
       const miss = missingList();
-      missing.textContent = miss.length ? `Falta ${miss.length > 1 ? miss.slice(0, -1).join(', ') + ' y ' + miss.slice(-1) : miss[0]}.` : 'Todo listo.';
-      confirmBtn.disabled = !!miss.length || mode === 'none';
-      // Pasos completados
+      missing.textContent = miss.length ? `Falta ${miss.length > 1 ? miss.slice(0, -1).join(', ') + ' y ' + miss.slice(-1) : miss[0]}.` : (pay.panel.hidden ? 'Todo listo.' : '');
+      confirmBtn.disabled = !!miss.length || mode === 'none' || mode === 'paysoon';
       const done = [!!t.items.length, !!st.dateKey, !!st.time, valid.name() && valid.phone() && valid.email()];
       steps.forEach((s, i) => s.classList.toggle('is-done', !!done[i]));
     }
@@ -262,7 +293,7 @@
         date: M.state.dateKey, time: M.state.time,
         start: start.toISOString(), end: end.toISOString(),
         durationMinutes: t.minutes, totalPrice: t.price, currency: M.config.currency.symbol,
-        client: { name: fields.name.value.trim(), phone: fields.phone.value.trim(), email: fields.email.value.trim(), notes: fields.notes.value.trim(), googleSub: M.Auth.user ? M.Auth.user.sub : null },
+        client: { name: fields.name.value.trim(), phone: fields.phone.value.trim(), email: fields.email.value.trim(), notes: fields.notes.value.trim() },
       };
     }
 
@@ -276,29 +307,34 @@
     M.calendarEvent = function (a, pending) {
       const names = a.services.map((s) => s.name).join(' + ');
       const prep = M.prepFor(a.services.map((s) => s.id)).map(({ p }) => `- ${p}`);
+      const payLine = a.payment ? `Depósito pagado: ${M.fmtPrice(a.payment.depositRD)}. Saldo al terminar: ${M.fmtPrice(a.payment.balanceRD)}.` : '';
       return {
         title: `Cita en MAJOBELLA · ${names}`,
         start: new Date(a.start), end: new Date(a.end),
         description: [
           `Servicio: ${names}`, `Duración: ${M.fmtDuration(a.durationMinutes)}`, `Precio: ${M.fmtPrice(a.totalPrice)}`,
-          pending ? 'Estado: pendiente de confirmación por WhatsApp.' : 'Estado: confirmada.',
+          pending ? 'Estado: solicitud enviada, pendiente de confirmación.' : 'Estado: confirmada.',
+          payLine,
+          a.id && !String(a.id).startsWith('web-') ? `Código de reserva: ${a.id}` : '',
           prep.length ? `\nAntes de tu cita:\n${prep.join('\n')}` : '',
-        ].join('\n'),
+        ].filter(Boolean).join('\n'),
         location: M.config.contact.address || 'MAJOBELLA Beauty Studio',
       };
     };
 
     function showResult(a, kind, waLink) {
-      const evt = M.calendarEvent(a, kind === 'whatsapp');
+      const evt = M.calendarEvent(a, kind === 'request');
       const g = M.CalendarLinks.googleUrl(evt);
       const prep = M.prepFor(a.services.map((s) => s.id));
+      const p = a.payment;
       result.hidden = false;
       result.innerHTML = `
-        <p class="result-title">${kind === 'api' ? '¡Listo! Tu cita está confirmada.' : 'Tu cita está lista para enviar.'}</p>
-        <p class="result-text">${kind === 'api'
-          ? `Te esperamos el ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)}.`
-          : 'Envía el mensaje que se abrió en WhatsApp y MAJOBELLA te responderá para confirmarla.'}</p>
-        ${prep.length ? `<div class="result-prep"><p class="rp-title">Para tu cita</p><ul>${prep.map(({ p }) => `<li>${M.escapeHtml(p)}</li>`).join('')}</ul></div>` : ''}
+        <p class="result-title">${kind === 'paid' ? '¡Listo! Tu cita está confirmada.' : 'Tu solicitud está lista para enviar.'}</p>
+        <p class="result-text">${kind === 'paid'
+          ? `Te esperamos el ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)}. Recibimos tu depósito de ${M.fmtPrice(p.depositRD)} (${M.fmtUSD(p.depositUSD)}); al terminar pagas ${M.fmtPrice(p.balanceRD)} en efectivo o con PayPal. Te enviamos la confirmación a ${M.escapeHtml(a.client.email)}.`
+          : 'Envía el mensaje que se abrió en WhatsApp y MAJOBELLA te responderá para confirmar tu cita.'}</p>
+        ${kind === 'paid' ? `<p class="result-code">Código de reserva <strong>${M.escapeHtml(a.id)}</strong></p>` : ''}
+        ${prep.length ? `<div class="result-prep"><p class="rp-title">Para tu cita</p><ul>${prep.map(({ p: x }) => `<li>${M.escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
         <div class="result-actions">
           <a class="btn btn-line" href="${g}" target="_blank" rel="noopener">Google Calendar</a>
           <button type="button" class="btn btn-line" id="bk-ics">Apple / Outlook (.ics)</button>
@@ -316,28 +352,126 @@
       else forgetClient();
     }
 
-    confirmBtn.addEventListener('click', async () => {
+    /* ---- 5. Pago del depósito ---- */
+    const sig = () => JSON.stringify([M.state.selected, M.state.dateKey, M.state.time, fields.name.value, fields.phone.value, fields.email.value]);
+
+    function payMessage(text, tone) {
+      pay.msg.textContent = text || '';
+      pay.msg.className = `pay-msg${tone ? ` is-${tone}` : ''}`;
+    }
+
+    function stopTimer() { clearInterval(holdTimer); holdTimer = null; pay.timer.hidden = true; }
+    function startTimer() {
+      stopTimer();
+      pay.timer.hidden = false;
+      const tick = () => {
+        if (!hold) return stopTimer();
+        const left = Math.max(0, new Date(hold.expiresAt).getTime() - Date.now());
+        const mm = Math.floor(left / 60000), ss = Math.floor((left % 60000) / 1000);
+        pay.timer.textContent = `Te apartamos este horario por ${mm}:${String(ss).padStart(2, '0')} mientras pagas.`;
+        if (!left) {
+          hold = null; stopTimer();
+          payMessage('Se acabó el tiempo para pagar y el horario se liberó. Puedes intentarlo de nuevo.', 'warn');
+          API.refreshBusy(true).catch(() => {});
+        }
+      };
+      tick();
+      holdTimer = setInterval(tick, 1000);
+    }
+
+    function releaseHold() {
+      if (!hold) return;
+      API.release(hold.id, hold.manageToken);
+      hold = null; stopTimer();
+    }
+
+    function closePay() {
+      if (pay.panel.hidden || paying) return;
+      releaseHold();
+      pay.panel.hidden = true;
+      pay.box.innerHTML = '';
+      payMessage('');
+      confirmBtn.hidden = false;
+    }
+
+    async function openPay() {
+      const t = M.totals();
+      const dep = M.deposit(t.price);
+      pay.info.innerHTML = `Hoy pagas <strong>${M.fmtUSD(dep.depositUSD)}</strong> (${M.fmtPrice(dep.depositRD)}, el ${PAY.depositPercent}% de ${M.fmtPrice(t.price)}). Al terminar pagas ${M.fmtPrice(dep.balanceRD)} en efectivo o con PayPal. <span class="pay-rate">Tasa: RD$ ${PAY.usdRate} por US$ 1.</span>`;
+      payMessage('');
+      confirmBtn.hidden = true;
+      pay.panel.hidden = false;
+      renderSummary();
+      if (!M.reduceMotion()) gsap.from(pay.panel, { opacity: 0, y: 10, duration: 0.5, ease: 'power2.out' });
+      const opened = sig();
+      try {
+        await M.PayPal.render(pay.box, {
+          createOrder: async () => {
+            payMessage('');
+            if (hold && hold.sig === opened && new Date(hold.expiresAt).getTime() - Date.now() > 60000) return hold.orderId;
+            releaseHold();
+            try {
+              const a = appointment();
+              const res = await API.hold(a, M.Auth.token);
+              hold = { ...res, sig: opened, appt: a };
+              startTimer();
+              if (Number(res.depositUSD) !== dep.depositUSD) {
+                pay.info.innerHTML = `Hoy pagas <strong>${M.fmtUSD(res.depositUSD)}</strong> (${M.fmtPrice(res.depositRD)}). Al terminar pagas ${M.fmtPrice(res.balanceRD)} en efectivo o con PayPal.`;
+              }
+              return res.orderId;
+            } catch (err) {
+              payMessage(err.message, 'error');
+              API.refreshBusy(true).catch(() => {});
+              throw err;
+            }
+          },
+          onApprove: async (orderId) => {
+            if (!hold) { payMessage('El horario se liberó antes de completar el pago. No se te cobró; inténtalo de nuevo.', 'error'); return; }
+            paying = true;
+            payMessage('Confirmando tu pago…');
+            const h = hold;
+            try {
+              const res = await API.capture(h.id, orderId);
+              const ap = res.appointment;
+              stopTimer(); hold = null;
+              const record = { ...h.appt, ...ap, client: { ...h.appt.client, ...ap.client }, token: h.manageToken, remote: true, createdAt: new Date().toISOString() };
+              M.Appointments.add(record);
+              rememberClient(record);
+              paying = false;
+              pay.panel.hidden = true; pay.box.innerHTML = ''; confirmBtn.hidden = false;
+              showResult(record, 'paid');
+              API.refreshBusy(true).catch(() => {});
+            } catch (err) {
+              paying = false;
+              stopTimer(); hold = null;
+              payMessage(err.message, 'error');
+              API.refreshBusy(true).catch(() => {});
+            }
+          },
+          onCancel: () => {
+            releaseHold();
+            payMessage('Cerraste PayPal sin pagar. Tu horario quedó libre; puedes intentarlo otra vez.', 'warn');
+            API.refreshBusy(true).catch(() => {});
+          },
+          onError: () => {
+            releaseHold();
+            if (!pay.msg.textContent) payMessage('PayPal no pudo procesar el pago. No se te cobró; intenta de nuevo o usa otra tarjeta.', 'error');
+          },
+        });
+      } catch (err) {
+        payMessage(err.message, 'error');
+      }
+    }
+    pay.back.addEventListener('click', () => { closePay(); renderSummary(); });
+
+    confirmBtn.addEventListener('click', () => {
       if (missingList().length) return;
       const a = appointment();
-      if (mode === 'api') {
-        confirmBtn.disabled = true;
-        const label = confirmBtn.textContent;
-        confirmBtn.textContent = 'Confirmando…';
-        try {
-          const res = await M.BookingAPI.create(a, M.Auth.token);
-          M.Appointments.add({ ...a, id: res.id || `web-${Date.now()}`, status: 'confirmada', remote: true, createdAt: new Date().toISOString() });
-          rememberClient(a);
-          showResult(a, 'api');
-        } catch (err) {
-          result.hidden = false;
-          result.innerHTML = `<p class="result-title">No pudimos confirmar la cita.</p><p class="result-text">${M.escapeHtml(err.message)} Elige otra hora o escríbenos por WhatsApp.</p>`;
-          findFastest(); renderSlots();
-        } finally {
-          confirmBtn.textContent = label;
-          renderSummary();
-        }
-      } else if (mode === 'whatsapp') {
-        const msg = M.WhatsApp.buildMessage({ services: M.totals().items, dateKey: a.date, time: a.time, name: a.client.name })
+      result.hidden = true;
+      if (mode === 'pay') {
+        openPay();
+      } else if (mode === 'request') {
+        const msg = M.WhatsApp.buildMessage({ services: M.totals().items, dateKey: a.date, time: a.time, name: a.client.name }, 'Hola, quiero solicitar una cita en MAJOBELLA.')
           + `\n\nTeléfono: ${a.client.phone}\nCorreo: ${a.client.email}${a.client.notes ? `\nNota: ${a.client.notes}` : ''}`;
         const link = M.WhatsApp.link(msg);
         const tmp = document.createElement('a');
@@ -345,13 +479,22 @@
         document.body.appendChild(tmp); tmp.click(); tmp.remove();
         M.Appointments.add({ ...a, id: `web-${Date.now()}`, status: 'pendiente', remote: false, createdAt: new Date().toISOString() });
         rememberClient(a);
-        showResult(a, 'whatsapp', link);
+        showResult(a, 'request', link);
       }
     });
     form.addEventListener('submit', (e) => e.preventDefault());
 
+    /* ---- Agenda en vivo: se actualiza al volver a la pestaña y cada dos minutos ---- */
+    if (API.enabled()) {
+      API.onBusy(() => { renderQuick(); renderCalendar(); renderSlots(); findFastest(); });
+      API.refreshBusy().catch(() => {});
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') API.refreshBusy().catch(() => {}); });
+      setInterval(() => { if (document.visibilityState === 'visible' && !paying) API.refreshBusy(true).catch(() => {}); }, 120000);
+    }
+
     /* ---- Sincronización con el estado compartido ---- */
     M.on((st, source) => {
+      closePay();
       svcBox.querySelectorAll('input').forEach((i) => { i.checked = st.selected.includes(i.value); });
       if (st.dateKey) {
         const { y, m } = M.parseKey(st.dateKey);
@@ -367,11 +510,13 @@
       } else {
         renderSlots();
       }
-      if (source !== 'booking-slot' && source !== 'booking-date' && source !== 'booking-fast') findFastest();
+      if (!['booking-slot', 'booking-date', 'booking-fast', 'booking-taken'].includes(source)) findFastest();
       if (source === 'booking-date') guide('#step-hora');
       result.hidden = true;
       renderSummary();
     });
+
+    M.refreshBookingCatalog = () => { renderPolicy(); renderQuick(); renderCalendar(); renderSlots(); findFastest(); renderSummary(); };
 
     renderQuick();
     renderCalendar();

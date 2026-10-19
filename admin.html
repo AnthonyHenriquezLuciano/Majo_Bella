@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agenda MAJOBELLA</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<!--MJB:BODY-START-->
+<header class="ad-header">
+  <a class="ad-brand" href="index.html" aria-label="Ir a la web de MAJOBELLA"><img src="assets/logo-majobella.png" alt="MAJOBELLA" width="900" height="351"></a>
+  <p class="ad-kicker">Agenda</p>
+  <div class="ad-user" id="ad-user"></div>
+</header>
+
+<div class="ad-banner" id="ad-banner" hidden></div>
+
+<!-- Inicio de sesión -->
+<main class="ad-gate" id="ad-gate">
+  <div class="gate-card">
+    <h1>Tu agenda de reservas</h1>
+    <p id="gate-text">Inicia sesión con la cuenta de Google autorizada del estudio.</p>
+    <div class="gate-google" data-google-button></div>
+    <p class="gate-msg" id="gate-msg" aria-live="polite"></p>
+    <a class="gate-demo" href="?demo">Ver con datos de ejemplo</a>
+  </div>
+</main>
+
+<!-- Dashboard -->
+<main class="ad-main" id="ad-main" hidden>
+  <div class="ad-toolbar">
+    <div class="seg" role="tablist" aria-label="Vista">
+      <button type="button" role="tab" data-view="day">Día</button>
+      <button type="button" role="tab" data-view="week">Semana</button>
+      <button type="button" role="tab" data-view="month">Mes</button>
+    </div>
+    <div class="ad-nav">
+      <button type="button" class="icon-btn" id="ad-prev" aria-label="Anterior">‹</button>
+      <h1 class="ad-title" id="ad-title" aria-live="polite"></h1>
+      <button type="button" class="icon-btn" id="ad-next" aria-label="Siguiente">›</button>
+      <button type="button" class="chip-btn" id="ad-today">Hoy</button>
+    </div>
+    <div class="ad-tools">
+      <button type="button" class="chip-btn" id="ad-refresh">Actualizar</button>
+      <button type="button" class="chip-btn" id="ad-block-open">Bloquear horario</button>
+      <a class="chip-btn" id="ad-sheet" target="_blank" rel="noopener" hidden>Abrir hoja</a>
+    </div>
+  </div>
+
+  <section class="kpis" id="ad-kpis" aria-label="Resumen del periodo"></section>
+
+  <div class="ad-grid">
+    <section class="ad-panel ad-agenda" aria-labelledby="agenda-h">
+      <div class="panel-head">
+        <h2 id="agenda-h">Reservas</h2>
+        <label class="filter"><span>Mostrar</span>
+          <select id="ad-filter">
+            <option value="activas">Activas</option>
+            <option value="todas">Todas</option>
+            <option value="saldo">Con saldo pendiente</option>
+            <option value="canceladas">Canceladas</option>
+          </select>
+        </label>
+      </div>
+      <div class="month-grid" id="ad-month" hidden></div>
+      <div class="agenda" id="ad-list" aria-live="polite"></div>
+    </section>
+
+    <aside class="ad-side">
+      <section class="ad-panel" aria-labelledby="chart1-h">
+        <div class="panel-head"><h2 id="chart1-h">Citas por día</h2></div>
+        <div class="chart" id="ad-chart-days"></div>
+      </section>
+      <section class="ad-panel" aria-labelledby="chart2-h">
+        <div class="panel-head"><h2 id="chart2-h">Horas más reservadas</h2></div>
+        <div class="chart" id="ad-chart-hours"></div>
+      </section>
+      <section class="ad-panel" aria-labelledby="chart3-h">
+        <div class="panel-head"><h2 id="chart3-h">Servicios del periodo</h2></div>
+        <div class="svc-bars" id="ad-services"></div>
+      </section>
+      <p class="ad-settings" id="ad-settings"></p>
+    </aside>
+  </div>
+</main>
+
+<!-- Bloquear horario -->
+<dialog class="ad-dialog" id="ad-block">
+  <form method="dialog" id="ad-block-form">
+    <h2>Bloquear horario</h2>
+    <p>Las clientas verán ese tiempo en gris y no podrán reservarlo.</p>
+    <label>Fecha<input type="date" name="date" required></label>
+    <div class="row2">
+      <label>Desde<input type="time" name="from" value="10:00" step="1800"></label>
+      <label>Hasta<input type="time" name="to" value="17:00" step="1800"></label>
+    </div>
+    <label>Motivo <span class="opt">(solo lo ves tú)</span><input name="reason" placeholder="Vacaciones, cita por teléfono…" maxlength="120"></label>
+    <p class="dlg-msg" id="ad-block-msg" aria-live="polite"></p>
+    <div class="dlg-actions">
+      <button type="button" class="chip-btn" value="cancel" id="ad-block-cancel">Cerrar</button>
+      <button type="submit" class="btn-dark" id="ad-block-save">Bloquear</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="ad-tip" id="ad-tip" role="status" hidden></div>
+<div class="ad-toast" id="ad-toast" role="status" hidden></div>
+<!--MJB:BODY-END-->
+
+<script src="js/config.js"></script>
+<script src="js/data/services.js"></script>
+<script src="js/core/utils.js"></script>
+<script src="js/integrations/booking-api.js"></script>
+<script src="js/integrations/google-auth.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

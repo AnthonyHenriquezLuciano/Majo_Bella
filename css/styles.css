@@ -689,3 +689,44 @@ body.modal-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; }
 }
+
+/* ---- Agenda ocupada (en gris) ---- */
+.qday:disabled, .qday.is-full { background: #f1f1f1; border-color: #e3e3e3; color: #a3a3a3; cursor: not-allowed; }
+.qd-full { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.qday.is-full { height: 80px; }
+.cal-day.is-full { background: #efefef; color: #a8a8a8; text-decoration: line-through; text-decoration-color: rgba(0, 0, 0, 0.25); }
+.slot.is-busy, .slot:disabled { background: #efefef; border-color: #e3e3e3; color: #a8a8a8; cursor: not-allowed; text-decoration: line-through; text-decoration-color: rgba(0, 0, 0, 0.25); }
+.slot.is-busy:hover { border-color: #e3e3e3; }
+.slot-legend { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13.5px; color: var(--muted); }
+.sl-box { width: 14px; height: 14px; background: #efefef; border: 1px solid #e3e3e3; }
+
+/* ---- Depósito y PayPal ---- */
+.sum-list dd small { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.sum-pay dt { color: var(--ink); }
+.pay-panel { display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--ink); }
+.pay-title { margin: 0; font-size: 11.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink); }
+.pay-info { margin: 0; font-size: 15.5px; color: var(--text); line-height: 1.55; }
+.pay-info strong { font-weight: 600; color: var(--ink); }
+.pay-rate { display: block; font-size: 13px; color: var(--muted); margin-top: 4px; }
+.pay-timer { margin: 0; font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.pay-buttons { min-height: 50px; position: relative; z-index: 0; }
+.pp-loading { margin: 0; font-size: 14px; color: var(--muted); font-style: italic; }
+.pay-msg { margin: 0; font-size: 14.5px; color: var(--muted); }
+.pay-msg:empty { display: none; }
+.pay-msg.is-error { color: var(--error); }
+.pay-msg.is-warn { color: var(--ink); }
+.pay-back { align-self: flex-start; font-size: 14px; }
+.result-code { margin: 0; font-size: 14px; color: var(--muted); }
+.result-code strong { color: var(--ink); font-weight: 600; letter-spacing: 0.04em; }
+
+/* ---- Citas: pagos ---- */
+.cita-pay { margin: 4px 0 0; font-size: 14px; color: var(--ink); }
+.cita-warn { margin: 10px 0 0; font-size: 14px; color: var(--ink); }
+.cita-paybox { margin-top: 12px; padding: 16px; border: 1px solid var(--line-strong); display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
+.cpb-info, .cpb-msg { margin: 0; font-size: 14.5px; color: var(--muted); }
+.cpb-msg:empty { display: none; }
+.cita-paybox .link-inline { align-self: flex-start; font-size: 14px; }
+.cita-status.st-completada { background: var(--ink); color: #fff; }
+
+/* ---- Contacto ---- */
+.contact-ctas { display: flex; flex-wrap: wrap; gap: 10px; }

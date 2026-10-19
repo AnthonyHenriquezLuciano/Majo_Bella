@@ -13,8 +13,16 @@ window.MAJOBELLA_FAQ = [
     a: 'Sí. Añade todos los que quieras y verás el precio y el tiempo total antes de elegir la hora. Solo te mostramos horarios donde caben todos.',
   },
   {
+    q: '¿Cómo se aparta la cita?',
+    a: 'Pagas el 50% del total con PayPal (con tarjeta o con tu cuenta) y la cita queda confirmada al instante; te llega un correo. El otro 50% lo pagas al terminar, en efectivo o con PayPal desde la sección Citas.',
+  },
+  {
+    q: '¿Por qué el depósito aparece en dólares?',
+    a: 'PayPal no cobra en pesos dominicanos, así que el depósito se convierte a dólares con la tasa del día que fija el estudio. Siempre ves el monto en RD$ y en US$ antes de pagar.',
+  },
+  {
     q: '¿Cómo cambio o cancelo mi cita?',
-    a: 'Desde la sección Citas puedes reprogramar o cancelar. Te pedimos hacerlo con la antelación indicada en la política de cambios, así otra clienta puede usar ese espacio.',
+    a: 'Desde la sección Citas puedes cancelar. Si lo haces con al menos 24 horas de aviso te devolvemos el depósito completo en PayPal; con menos tiempo el depósito no se devuelve. Para cambiar la fecha, cancela y reserva de nuevo, o escríbenos por WhatsApp.',
   },
   {
     q: '¿Duele la micropigmentación?',

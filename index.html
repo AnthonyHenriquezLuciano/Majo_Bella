@@ -71,7 +71,7 @@
           <a class="btn btn-primary" href="#reservar">Agendar cita</a>
           <a class="btn btn-ghost" href="#servicios">Ver servicios</a>
         </div>
-        <a class="hero-wa" data-hero data-wa href="#contacto">O escríbenos por WhatsApp</a>
+        <a class="hero-wa" data-hero data-wa href="#contacto">¿Tienes dudas? Escríbenos por WhatsApp</a>
       </div>
 
       <div class="hero-visual">
@@ -248,8 +248,18 @@
             <div><dt>Horario</dt><dd id="sum-time">—</dd></div>
             <div><dt>Duración</dt><dd id="sum-duration">—</dd></div>
             <div><dt>Precio</dt><dd id="sum-price">—</dd></div>
+            <div class="sum-pay" data-pay-only hidden><dt>Depósito hoy</dt><dd id="sum-deposit">—</dd></div>
+            <div class="sum-pay" data-pay-only hidden><dt>Al terminar</dt><dd id="sum-balance">—</dd></div>
           </dl>
           <button type="button" class="btn btn-primary btn-block" id="bk-confirm" disabled>Confirmar cita</button>
+          <div class="pay-panel" id="bk-pay" hidden>
+            <p class="pay-title">Aparta tu cita con el depósito</p>
+            <p class="pay-info" id="bk-pay-info"></p>
+            <p class="pay-timer" id="bk-pay-timer" aria-live="polite" hidden></p>
+            <div class="pay-buttons" id="bk-paypal"></div>
+            <p class="pay-msg" id="bk-pay-msg" aria-live="assertive"></p>
+            <button type="button" class="link-inline pay-back" id="bk-pay-back">Cambiar algo de la cita</button>
+          </div>
           <p class="sum-missing" id="bk-missing" aria-live="polite"></p>
           <p class="sum-policy" id="bk-policy"></p>
           <p class="sum-mode" id="bk-mode"></p>
@@ -267,7 +277,7 @@
           <p class="label">Mis citas</p>
           <h2 class="display">Tus citas</h2>
         </div>
-        <div class="section-head-side"><p>Consulta tus próximas citas y tu historial, añádelas a tu calendario o pide un cambio.</p></div>
+        <div class="section-head-side"><p>Consulta tus citas y tus pagos, añádelas a tu calendario, paga el saldo al terminar o cancela si lo necesitas.</p></div>
       </div>
       <div class="citas-grid">
         <div class="account" id="account" aria-live="polite"></div>
@@ -300,9 +310,12 @@
     <div class="container contact-grid">
       <div class="contact-copy" data-reveal>
         <p class="label">Contacto</p>
-        <h2 class="display">Hablemos de tu próxima cita</h2>
-        <p>Escríbenos para resolver dudas, pedir una valoración o agendar directamente por WhatsApp.</p>
-        <a class="btn btn-primary" data-wa href="#contacto">Contactar por WhatsApp</a>
+        <h2 class="display">¿Tienes alguna duda?</h2>
+        <p>Escríbenos por WhatsApp para pedir información, una valoración o resolver cualquier pregunta. Las citas se reservan aquí en la web.</p>
+        <div class="contact-ctas">
+          <a class="btn btn-primary" data-wa href="#contacto">Preguntar por WhatsApp</a>
+          <a class="btn btn-line" href="#reservar">Reservar en línea</a>
+        </div>
         <p class="wa-note" id="wa-note" hidden>Falta el número de WhatsApp: agrégalo en <code>js/config.js</code>.</p>
       </div>
       <dl class="contact-info" data-reveal="stagger">
@@ -364,9 +377,9 @@
   </div>
 </div>
 
-<a class="wa-float" data-wa href="#contacto" aria-label="Escribir a MAJOBELLA por WhatsApp">
+<a class="wa-float" data-wa href="#contacto" aria-label="¿Dudas? Escribir a MAJOBELLA por WhatsApp">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2c-4.9 0-8.8 3.7-8.8 8.3 0 1.7.5 3.2 1.4 4.5L3.6 20.6l4.7-1.3c1.1.6 2.4.9 3.7.9 4.9 0 8.8-3.7 8.8-8.3S16.9 3.2 12 3.2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9.2 8.6c.2-.4.4-.4.6-.4h.4c.2 0 .3.1.4.3l.6 1.4c.1.2 0 .4-.1.5l-.4.5c-.1.1-.1.3 0 .4.6 1 1.4 1.7 2.4 2.2.2.1.3.1.4-.1l.5-.6c.1-.2.3-.2.5-.1l1.4.7c.2.1.3.2.3.4 0 .5-.2 1.1-.7 1.4-.5.3-1.2.4-2.1.1-1.6-.5-3-1.7-3.9-3.1-.6-.9-.9-1.8-.7-2.6.1-.4.2-.7.4-.9z" fill="currentColor"/></svg>
-  <span>WhatsApp</span>
+  <span>¿Dudas?</span>
 </a>
 <!--MJB:BODY-END-->
 
@@ -380,6 +393,7 @@
 <script src="js/integrations/whatsapp.js"></script>
 <script src="js/integrations/calendar.js"></script>
 <script src="js/integrations/booking-api.js"></script>
+<script src="js/integrations/paypal.js"></script>
 <script src="js/integrations/google-auth.js"></script>
 <script src="js/integrations/appointments.js"></script>
 <script src="js/components/nav.js"></script>

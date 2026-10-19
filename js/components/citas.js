@@ -45,43 +45,76 @@
     }
 
     /* ---- Lista ---- */
-    function statusOf(a) {
-      if (a.status === 'cancelada' || a.status === 'cancelacion-solicitada') return a.status;
-      return a.status || 'pendiente';
+    const PAYMODE = () => M.BookingAPI.enabled() && M.PayPal.configured();
+    const cancelHours = () => (M.config.policies && M.config.policies.changeHours) || 24;
+    const hoursLeft = (a) => (new Date(a.start).getTime() - Date.now()) / 3600000;
+    let payingId = null;
+
+    function paymentLine(a) {
+      const p = a.payment;
+      if (!p) return '';
+      const parts = [];
+      if (p.refund === 'reembolsado') parts.push(`Depósito de ${M.fmtPrice(p.depositRD)} reembolsado`);
+      else if (p.depositPaid) parts.push(`Depósito pagado: ${M.fmtPrice(p.depositRD)}`);
+      if (a.status !== 'cancelada') {
+        parts.push(p.balanceStatus === 'pagado'
+          ? `Saldo pagado${p.balanceMethod ? ` (${p.balanceMethod === 'efectivo' ? 'efectivo' : 'PayPal'})` : ''}`
+          : `Saldo al terminar: ${M.fmtPrice(p.balanceRD)}`);
+      }
+      return `<p class="cita-pay">${parts.join(' · ')}</p>`;
     }
 
     function item(a, past) {
-      const { d, m } = M.parseKey(a.date);
-      const y = M.parseKey(a.date).y;
+      const { y, m, d } = M.parseKey(a.date);
       const names = (a.services || []).map((s) => s.name).join(' + ');
-      const st = statusOf(a);
+      const st = a.status || 'pendiente';
       const label = past && st === 'confirmada' ? 'Realizada' : M.STATUS[st] || st;
       const cancelled = st === 'cancelada' || st === 'cancelacion-solicitada';
       const ids = (a.services || []).map((s) => s.id).filter((id) => M.serviceById[id]);
       const prep = !past && !cancelled ? M.prepFor(ids) : [];
       const again = ids.length ? `<button type="button" class="btn btn-quiet" data-again="${ids.join(',')}">Volver a reservar</button>` : '';
-      const actions = past || cancelled ? (again ? `<div class="cita-actions">${again}</div>` : '') : `
+      const remote = a.remote && M.BookingAPI.enabled() && M.Appointments.auth(a);
+      const balanceDue = remote && a.payment && a.payment.depositPaid && a.payment.balanceStatus !== 'pagado'
+        && ['confirmada', 'completada'].includes(st) && PAYMODE()
+        && (st === 'completada' || new Date(a.start).getTime() <= Date.now() + 15 * 60000);
+      const payBtn = balanceDue ? `<button type="button" class="btn btn-line" data-balance="${M.escapeHtml(a.id)}">Pagar saldo con PayPal</button>` : '';
+      const payBox = payingId === a.id ? `<div class="cita-paybox"><p class="cpb-info">Saldo: <strong>${M.fmtPrice(a.payment.balanceRD)}</strong>, se cobra en dólares con la tasa del día.</p><div class="cpb-buttons" id="cpb-${M.escapeHtml(a.id)}"></div><p class="cpb-msg" aria-live="polite"></p><button type="button" class="link-inline" data-balance-close>Cerrar</button></div>` : '';
+
+      let actions;
+      if (past || cancelled) {
+        actions = (payBtn || again) ? `<div class="cita-actions">${payBtn}${again}</div>${payBox}` : '';
+      } else {
+        const cancelBtn = canCancel(a) ? `<button type="button" class="btn btn-quiet" data-cancel="${M.escapeHtml(a.id)}">${pendingCancel === a.id ? cancelConfirmText(a) : 'Cancelar cita'}</button>` : '';
+        const question = M.WhatsApp.isConfigured() ? `<a class="btn btn-quiet" href="${waLink(a)}" target="_blank" rel="noopener">${remote ? '¿Dudas? WhatsApp' : 'Reprogramar'}</a>` : '';
+        actions = `
         ${prep.length ? `<details class="cita-prep"><summary>Antes de tu cita</summary><ul>${prep.map(({ p }) => `<li>${M.escapeHtml(p)}</li>`).join('')}</ul></details>` : ''}
         <div class="cita-actions">
           <a class="btn btn-line" href="${calendarUrl(a)}" target="_blank" rel="noopener">Añadir al calendario</a>
-          ${M.WhatsApp.isConfigured() ? `<a class="btn btn-quiet" href="${waLink(a, 'reprogramar')}" target="_blank" rel="noopener">Reprogramar</a>` : ''}
-          ${canCancel(a) ? `<button type="button" class="btn btn-quiet" data-cancel="${M.escapeHtml(a.id)}">${pendingCancel === a.id ? 'Toca otra vez para cancelar' : 'Cancelar cita'}</button>` : ''}
-        </div>`;
+          ${payBtn}${question}${cancelBtn}
+        </div>${payBox}
+        ${pendingCancel === a.id && remote ? `<p class="cita-warn">${hoursLeft(a) >= cancelHours() ? `Faltan más de ${cancelHours()} horas: te devolvemos el depósito completo en PayPal.` : `Faltan menos de ${cancelHours()} horas: según la política, el depósito no se devuelve.`}</p>` : ''}`;
+      }
       return `
         <li class="cita${cancelled ? ' is-cancelled' : ''}">
           <div class="cita-date" aria-hidden="true"><span class="cd-day">${d}</span><span class="cd-month">${MONTH.format(Date.UTC(y, m, d)).replace('.', '')}</span></div>
           <div class="cita-body">
             <p class="cita-when">${M.weekdayName(a.date)} · ${M.fmtTime12(a.time)}</p>
             <p class="cita-what">${M.escapeHtml(names)}</p>
-            <p class="cita-meta">${M.fmtDuration(a.durationMinutes)} · ${M.fmtPrice(a.totalPrice)}</p>
+            <p class="cita-meta">${M.fmtDuration(a.durationMinutes)} · ${M.fmtPrice(a.totalPrice)}${a.id && !String(a.id).startsWith('web-') ? ` · ${M.escapeHtml(a.id)}` : ''}</p>
+            ${paymentLine(a)}
             ${actions}
           </div>
           <span class="cita-status st-${st}">${label}</span>
         </li>`;
     }
 
+    function cancelConfirmText(a) {
+      if (!(a.remote && M.BookingAPI.enabled())) return 'Toca otra vez para cancelar';
+      return hoursLeft(a) >= cancelHours() ? 'Toca otra vez: cancelar y reembolsar' : 'Toca otra vez: cancelar sin reembolso';
+    }
     function canCancel(a) {
-      return (a.remote && M.BookingAPI.enabled() && M.Auth.token) || M.WhatsApp.isConfigured();
+      if (a.remote && M.BookingAPI.enabled()) return a.status === 'confirmada' && !!M.Appointments.auth(a);
+      return M.WhatsApp.isConfigured();
     }
     function calendarUrl(a) {
       const names = (a.services || []).map((s) => s.name).join(' + ');
@@ -92,8 +125,9 @@
     }
     function waLink(a, kind) {
       const names = (a.services || []).map((s) => s.name).join(' + ');
-      const verb = kind === 'cancelar' ? 'cancelar' : 'reprogramar';
-      return M.WhatsApp.link(`Hola, quiero ${verb} mi cita en MAJOBELLA.\n\nServicio: ${names}\n\nFecha: ${M.weekdayName(a.date)} ${M.dayMonth(a.date)}\n\nHora: ${M.fmtTime12(a.time)}${a.client && a.client.name ? `\n\nNombre: ${a.client.name}` : ''}`);
+      const intro = kind === 'cancelar' ? 'Hola, quiero cancelar mi cita en MAJOBELLA.'
+        : a.remote ? 'Hola, tengo una pregunta sobre mi cita en MAJOBELLA.' : 'Hola, quiero reprogramar mi cita en MAJOBELLA.';
+      return M.WhatsApp.link(`${intro}\n\nServicio: ${names}\n\nFecha: ${M.weekdayName(a.date)} ${M.dayMonth(a.date)}\n\nHora: ${M.fmtTime12(a.time)}${a.id && !String(a.id).startsWith('web-') ? `\n\nCódigo: ${a.id}` : ''}${a.client && a.client.name ? `\n\nNombre: ${a.client.name}` : ''}`);
     }
 
     async function renderList() {
@@ -101,8 +135,9 @@
       const { items, source: src, error } = await M.Appointments.list();
       list.removeAttribute('aria-busy');
       const now = Date.now();
-      const upcoming = items.filter((a) => new Date(a.end).getTime() >= now).sort((a, b) => a.start.localeCompare(b.start));
-      const past = items.filter((a) => new Date(a.end).getTime() < now).sort((a, b) => b.start.localeCompare(a.start));
+      const isPast = (a) => new Date(a.end).getTime() < now || a.status === 'completada' || a.status === 'no-asistio';
+      const upcoming = items.filter((a) => !isPast(a)).sort((a, b) => a.start.localeCompare(b.start));
+      const past = items.filter(isPast).sort((a, b) => b.start.localeCompare(a.start));
       tabs.forEach((t) => {
         const n = t.dataset.view === 'proximas' ? upcoming.length : past.length;
         t.querySelector('.n').textContent = n;
@@ -112,9 +147,43 @@
         ? rows.map((a) => item(a, view === 'anteriores')).join('')
         : `<li class="citas-empty"><p>${view === 'proximas' ? 'No tienes citas próximas.' : 'Aún no hay citas anteriores.'}</p>${view === 'proximas' ? '<a class="btn btn-primary" href="#reservar">Agendar cita</a>' : ''}</li>`;
       source.textContent = src === 'agenda'
-        ? 'Sincronizadas con la agenda de MAJOBELLA.'
-        : (error ? `No pudimos leer la agenda (${error}). Se muestran las citas de este dispositivo.` : 'Se muestran las citas reservadas desde este dispositivo.');
+        ? 'Actualizadas con la agenda de MAJOBELLA.'
+        : (error ? `No pudimos leer la agenda (${error}). Se muestran las citas guardadas en este dispositivo.` : 'Se muestran las citas reservadas desde este dispositivo.');
       list._items = items;
+      if (payingId) mountBalance(payingId);
+    }
+
+    /* Pago del saldo con PayPal */
+    async function mountBalance(id) {
+      const box = document.getElementById(`cpb-${id}`);
+      const a = (list._items || []).find((x) => x.id === id);
+      if (!box || !a) return;
+      const msg = box.parentElement.querySelector('.cpb-msg');
+      const auth = M.Appointments.auth(a);
+      try {
+        await M.PayPal.render(box, {
+          createOrder: async () => {
+            msg.textContent = '';
+            try {
+              const r = await M.BookingAPI.balanceOrder(id, auth);
+              msg.textContent = `Pagarás ${M.fmtUSD(r.balanceUSD)} (${M.fmtPrice(r.balanceRD)}).`;
+              return r.orderId;
+            } catch (err) { msg.textContent = err.message; throw err; }
+          },
+          onApprove: async (orderId) => {
+            msg.textContent = 'Confirmando tu pago…';
+            try {
+              const r = await M.BookingAPI.balanceCapture(id, orderId, auth);
+              M.Appointments.update(id, { payment: r.appointment.payment, status: r.appointment.status });
+              payingId = null;
+              M.toast && M.toast('¡Gracias! Tu saldo quedó pagado.');
+              renderList();
+            } catch (err) { msg.textContent = err.message; }
+          },
+          onCancel: () => { msg.textContent = 'Cerraste PayPal sin pagar.'; },
+          onError: () => { if (!msg.textContent) msg.textContent = 'PayPal no pudo procesar el pago. Intenta de nuevo.'; },
+        });
+      } catch (err) { msg.textContent = err.message; }
     }
 
     tabs.forEach((t) => t.addEventListener('click', () => {
@@ -126,17 +195,24 @@
     list.addEventListener('click', async (e) => {
       const again = e.target.closest('[data-again]');
       if (again) { M.selectOnly(again.dataset.again.split(','), 'citas'); M.scrollTo('#reservar'); return; }
+      const bal = e.target.closest('[data-balance]');
+      if (bal) { payingId = bal.dataset.balance; renderList(); return; }
+      if (e.target.closest('[data-balance-close]')) { payingId = null; renderList(); return; }
       const b = e.target.closest('[data-cancel]');
       if (!b) return;
       const id = b.dataset.cancel;
       const a = (list._items || []).find((x) => x.id === id);
       if (!a) return;
-      if (pendingCancel !== id) { pendingCancel = id; renderList(); setTimeout(() => { if (pendingCancel === id) { pendingCancel = null; renderList(); } }, 5000); return; }
+      if (pendingCancel !== id) { pendingCancel = id; renderList(); setTimeout(() => { if (pendingCancel === id) { pendingCancel = null; renderList(); } }, 8000); return; }
       pendingCancel = null;
-      if (a.remote && M.BookingAPI.enabled() && M.Auth.token) {
+      if (a.remote && M.BookingAPI.enabled()) {
         b.disabled = true; b.textContent = 'Cancelando…';
-        try { await M.BookingAPI.cancel(id, M.Auth.token); M.Appointments.update(id, { status: 'cancelada' }); }
-        catch (err) { source.textContent = err.message; }
+        try {
+          const r = await M.BookingAPI.cancel(id, M.Appointments.auth(a));
+          M.Appointments.update(id, { status: 'cancelada', payment: r.appointment && r.appointment.payment });
+          M.toast && M.toast(r.refunded ? 'Cita cancelada. Te devolvimos el depósito en PayPal.' : 'Cita cancelada.');
+          M.BookingAPI.refreshBusy(true).catch(() => {});
+        } catch (err) { source.textContent = err.message; }
         renderList();
       } else {
         const tmp = document.createElement('a');
