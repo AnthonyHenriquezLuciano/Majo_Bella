@@ -1,0 +1,25 @@
+{
+  "id": "./app/",
+  "name": "MAJOBELLA Beauty Studio",
+  "short_name": "MAJOBELLA",
+  "description": "Reserva tus citas, mira tus próximas visitas, tus tarjetas de regalo y paquetes de MAJOBELLA Beauty Studio.",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "./app/?fuente=app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "categories": ["beauty", "lifestyle"],
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Reservar cita", "short_name": "Reservar", "url": "./app/#reservar", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Mis citas", "short_name": "Citas", "url": "./app/#citas", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Mi billetera", "short_name": "Billetera", "url": "./app/#billetera", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

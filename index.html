@@ -9,6 +9,9 @@
 <link rel="canonical" href="https://anthonyhenriquezluciano.github.io/Majo_Bella/">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MAJOBELLA">
 
 <!-- Vista previa al compartir (WhatsApp, Instagram, Facebook) -->
 <meta property="og:type" content="website">
@@ -60,7 +63,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261019h">
+<link rel="stylesheet" href="css/styles.css?v=20261019i">
 </head>
 <body>
 <!--MJB:BODY-START-->
@@ -98,6 +101,7 @@
 
 <div class="mobile-menu" id="mobile-menu" hidden>
   <nav aria-label="Menú móvil">
+    <a class="mobile-app" href="app/" data-get-app><span class="mobile-app-ic" aria-hidden="true"><img src="assets/icon-192.png" alt=""></span><span><b>Instala la app MAJOBELLA</b><small>Tus citas, tarjetas y paquetes en tu celular</small></span></a>
     <ul>
       <li><a href="#inicio">Inicio</a></li>
       <li><a href="#sobre">Sobre MAJOBELLA</a></li>
@@ -480,7 +484,7 @@
           <p class="label">Mis citas</p>
           <h2 class="display">Tus citas</h2>
         </div>
-        <div class="section-head-side"><p>Consulta tus citas y tus pagos, añádelas a tu calendario, paga el saldo al terminar o cancela si lo necesitas.</p></div>
+        <div class="section-head-side"><p>Consulta tus citas y tus pagos, añádelas a tu calendario, paga el saldo al terminar o cancela si lo necesitas.</p><a class="link-app" href="app/#citas">Ver mis citas en la app <span aria-hidden="true">→</span></a></div>
       </div>
       <div class="citas-grid">
         <div class="account" id="account" aria-live="polite"></div>
@@ -613,6 +617,7 @@
       <a href="#contacto">Contacto</a>
       <a href="#regalar" data-nav-for="regalar" hidden>Tarjetas de regalo</a>
       <a href="#paquetes" data-nav-for="paquetes" hidden>Paquetes</a>
+      <a href="app/" data-get-app>App para el celular</a>
     </nav>
     <div class="footer-social">
       <a data-social="instagram">Instagram</a>
@@ -625,6 +630,13 @@
     <nav class="footer-legal" aria-label="Legal"><a href="privacidad.html">Privacidad</a><a href="cancelacion.html">Cancelación y reembolsos</a></nav>
   </div>
 </footer>
+
+<div class="app-nudge" id="app-nudge" hidden role="dialog" aria-label="Instala la app">
+  <img src="assets/icon-192.png" alt="" width="44" height="44">
+  <p><b>La app MAJOBELLA</b><span>Reserva y mira tus citas desde tu celular.</span></p>
+  <a class="btn btn-primary btn-sm" href="app/" data-get-app>Instalar</a>
+  <button type="button" class="app-nudge-x" aria-label="Cerrar" data-nudge-x>×</button>
+</div>
 
 <div class="auth-modal" id="auth-modal" hidden>
   <div class="am-backdrop"></div>
@@ -656,32 +668,34 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/config.js?v=20261019h"></script>
-<script src="js/data/services.js?v=20261019h"></script>
-<script src="js/data/faq.js?v=20261019h"></script>
-<script src="js/data/brows.js?v=20261019h"></script>
-<script src="js/core/utils.js?v=20261019h"></script>
-<script src="js/integrations/whatsapp.js?v=20261019h"></script>
-<script src="js/integrations/calendar.js?v=20261019h"></script>
-<script src="js/integrations/booking-api.js?v=20261019h"></script>
-<script src="js/integrations/paypal.js?v=20261019h"></script>
-<script src="js/integrations/google-auth.js?v=20261019h"></script>
-<script src="js/integrations/appointments.js?v=20261019h"></script>
-<script src="js/integrations/giftcard.js?v=20261019h"></script>
-<script src="js/components/nav.js?v=20261019h"></script>
-<script src="js/components/auth-modal.js?v=20261019h"></script>
-<script src="js/components/face.js?v=20261019h"></script>
-<script src="js/components/brows.js?v=20261019h"></script>
-<script src="js/components/hero.js?v=20261019h"></script>
-<script src="js/components/services.js?v=20261019h"></script>
-<script src="js/components/selection-bar.js?v=20261019h"></script>
-<script src="js/components/booking.js?v=20261019h"></script>
-<script src="js/components/citas.js?v=20261019h"></script>
-<script src="js/components/contact.js?v=20261019h"></script>
-<script src="js/components/site.js?v=20261019h"></script>
-<script src="js/components/giftshop.js?v=20261019h"></script>
-<script src="js/components/packages.js?v=20261019h"></script>
-<script src="js/components/reveal.js?v=20261019h"></script>
-<script src="js/main.js?v=20261019h"></script>
+<script src="js/config.js?v=20261019i"></script>
+<script src="js/data/services.js?v=20261019i"></script>
+<script src="js/data/faq.js?v=20261019i"></script>
+<script src="js/data/brows.js?v=20261019i"></script>
+<script src="js/core/utils.js?v=20261019i"></script>
+<script src="js/integrations/whatsapp.js?v=20261019i"></script>
+<script src="js/integrations/calendar.js?v=20261019i"></script>
+<script src="js/integrations/booking-api.js?v=20261019i"></script>
+<script src="js/integrations/paypal.js?v=20261019i"></script>
+<script src="js/integrations/google-auth.js?v=20261019i"></script>
+<script src="js/integrations/appointments.js?v=20261019i"></script>
+<script src="js/integrations/giftcard.js?v=20261019i"></script>
+<script src="js/components/nav.js?v=20261019i"></script>
+<script src="js/components/auth-modal.js?v=20261019i"></script>
+<script src="js/components/face.js?v=20261019i"></script>
+<script src="js/components/brows.js?v=20261019i"></script>
+<script src="js/components/hero.js?v=20261019i"></script>
+<script src="js/components/services.js?v=20261019i"></script>
+<script src="js/components/selection-bar.js?v=20261019i"></script>
+<script src="js/components/booking.js?v=20261019i"></script>
+<script src="js/components/citas.js?v=20261019i"></script>
+<script src="js/components/contact.js?v=20261019i"></script>
+<script src="js/components/site.js?v=20261019i"></script>
+<script src="js/components/giftshop.js?v=20261019i"></script>
+<script src="js/components/packages.js?v=20261019i"></script>
+<script src="js/integrations/install.js?v=20261019i"></script>
+<script src="js/components/getapp.js?v=20261019i"></script>
+<script src="js/components/reveal.js?v=20261019i"></script>
+<script src="js/main.js?v=20261019i"></script>
 </body>
 </html>

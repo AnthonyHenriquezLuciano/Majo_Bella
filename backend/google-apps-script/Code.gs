@@ -272,6 +272,7 @@ function doPost(e) {
     bonoOrder: L(bonoOrder_),
     bonoCapture: L(bonoCapture_),
     loyalty: N(loyalty_),
+    walletLookup: N(walletLookup_),
     waitlistJoin: L(waitlistJoin_),
     consentInfo: N(consentInfo_),
     consentSign: L(consentSign_),
@@ -1766,6 +1767,28 @@ function bonoCapture_(d) {
 function bonoOut_(b) {
   const svc = servicesMap_()[b.servicio];
   return { codigo: b.codigo, nombre: b.nombre, sesiones: Number(b.sesiones) || 0, servicio: b.servicio, serviceName: svc ? svc.name : b.servicio, vence: b.vence };
+}
+
+/* La app consulta el saldo de las tarjetas de regalo y paquetes que la clienta guardó (quien tiene el código puede verlo) */
+function walletLookup_(d) {
+  const today = todayKey_();
+  const codes = (d.codes || []).slice(0, 20).map(normCode_).filter(Boolean);
+  const svcs = servicesMap_();
+  const items = codes.map(function (c) {
+    const g = findGift_(c);
+    if (g && g.estado !== 'pendiente') {
+      const expired = !!(g.vence && today > g.vence);
+      return { code: c, type: 'gift', amountRD: Number(g.montoRD) || 0, balanceRD: Number(g.saldoRD) || 0, to: g.para || '', from: g.comprador || '', message: g.mensaje || '', expires: g.vence || '', status: g.estado === 'anulada' ? 'anulada' : expired ? 'vencida' : (Number(g.saldoRD) > 0 ? 'activa' : 'agotada') };
+    }
+    const b = findBono_(c);
+    if (b && b.estado !== 'pendiente') {
+      const expired = !!(b.vence && today > b.vence);
+      const svc = svcs[b.servicio];
+      return { code: c, type: 'package', name: b.nombre, service: b.servicio, serviceName: svc ? svc.name : b.servicio, sessions: Number(b.sesiones) || 0, used: Number(b.usadas) || 0, expires: b.vence || '', status: b.estado === 'anulado' ? 'anulado' : expired ? 'vencido' : b.estado };
+    }
+    return { code: c, type: 'unknown', status: 'no encontrado' };
+  });
+  return { ok: true, items: items };
 }
 
 /* =========================================================================

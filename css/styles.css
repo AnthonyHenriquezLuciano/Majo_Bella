@@ -1002,3 +1002,19 @@ body.modal-open { overflow: hidden; }
 .lc-prize.is-on { background: #111; color: #fff; border-style: solid; }
 .lc-text { margin: 0; font-size: 15px; }
 .consent .cs-q, .consent .cs-text p { max-width: none; }
+
+/* ---------- App para el celular (botones de instalar) ---------- */
+.mobile-app { display: flex; align-items: center; gap: 14px; margin: 16px 0 10px; padding: 14px 16px; border: 1px solid var(--line, #e6e6e6); text-decoration: none; color: var(--ink); background: #fafafa; }
+.mobile-app-ic img { width: 44px; height: 44px; display: block; border-radius: 11px; }
+.mobile-app b { display: block; font-family: var(--serif); font-weight: 400; font-size: 17px; }
+.mobile-app small { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.link-app { font-family: var(--serif); color: var(--ink); text-decoration: underline; text-underline-offset: 5px; }
+.app-nudge { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; background: #fff; border: 1px solid var(--line, #e6e6e6); box-shadow: 0 14px 40px rgba(0,0,0,.14); border-radius: 16px; transform: translateY(140%); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.app-nudge.is-in { transform: none; }
+.app-nudge img { border-radius: 11px; flex: none; }
+.app-nudge p { margin: 0; flex: 1; min-width: 0; line-height: 1.25; }
+.app-nudge p b { display: block; font-family: var(--serif); font-weight: 400; font-size: 16px; }
+.app-nudge p span { display: block; color: var(--muted); font-size: 13px; }
+.app-nudge .btn { flex: none; }
+.app-nudge-x { flex: none; width: 32px; height: 32px; border: 0; background: none; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; }
+@media (min-width: 761px) { .app-nudge { display: none !important; } }

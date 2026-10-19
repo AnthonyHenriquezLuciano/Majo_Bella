@@ -26,6 +26,10 @@ js/components/packages.js       Compra de paquetes de sesiones con PayPal
 consentimiento.html, js/consent.js  Consentimiento digital con cuestionario de salud y firma
 privacidad.html, cancelacion.html  Políticas de privacidad y de cancelación/reembolsos/tarjetas
 sitemap.xml, assets/og-image.jpg   Google (sitemap) y vista previa al compartir en WhatsApp/redes
+app/ (index.html, app.css, app.js)  App para el celular (PWA): inicio, reservar, mis citas, billetera y perfil
+manifest.webmanifest, sw.js     Instalación de la app (icono, nombre) y funcionamiento sin conexión
+js/integrations/install.js      Botón «Instalar la app» (Android: aviso del navegador · iPhone: pasos)
+js/components/getapp.js         Botones de la web que llevan a instalar la app
 admin.html, js/admin/*.js       Dashboard privado: agenda, clientas, dinero, promociones (paquetes y fidelidad), web, correos y ajustes
 backend/google-apps-script/     Backend gratuito: Google Sheets + PayPal + Google Calendar (ver INSTALAR.md)
 assets/                         Logos, monograma, favicon y fuentes
@@ -94,6 +98,18 @@ Implementado en `backend/google-apps-script/Code.gs`; otro backend podría respo
 - `POST { action: 'loyalty', client }` · `{ action: 'waitlistJoin', date, franja, services, client }` · `{ action: 'consentInfo' | 'consentSign', c, … }` · `{ action: 'bonoOrder' | 'bonoCapture', … }`
 - `POST { action: 'giftOrder', montoRD, correo, correoPara, de, para, mensaje }` → `{ id, orderId }` · `{ action: 'giftCapture', id, orderId }` → `{ gift: { codigo, … } }`
 - `POST { action: 'adminList' | 'adminUpdate' | 'adminBlock', idToken, … }` (solo administradoras)
+
+## App para el celular
+
+La app vive en `app/` (https://anthonyhenriquezluciano.github.io/Majo_Bella/app/) y se instala en la pantalla de inicio como cualquier app. No es la página: es una experiencia aparte, pensada solo para el celular, con barra inferior de pestañas y hojas que se deslizan desde abajo.
+
+- **Inicio**: saludo, próxima cita con cuenta regresiva, accesos rápidos, promociones, servicios y tarjeta de fidelidad.
+- **Reservar** (botón central): servicios → día y hora (primer horario libre y lista de espera) → confirmar y pagar el depósito con PayPal, con códigos de descuento, tarjetas de regalo y paquetes.
+- **Mis citas**: próximas y anteriores; en cada cita: calendario, cómo llegar, WhatsApp, firmar el consentimiento, pagar el saldo, cancelar (con aviso de reembolso) y reservar de nuevo.
+- **Billetera**: tarjetas de regalo (con saldo) y paquetes (sesiones usadas) guardados en el celular; agregar un código, usarlo en la próxima cita, compartirlo, descargar la tarjeta y comprar tarjetas o paquetes.
+- **Perfil**: datos (nombre, teléfono, correo y cumpleaños), inicio de sesión con Google, instalar la app, cómo llegar, horario, WhatsApp, Instagram y políticas.
+- **Instalar**: en Android aparece el botón «Instalar la app»; en iPhone se muestran los pasos (Compartir → Agregar a inicio). En la web hay accesos en el menú del celular, en «Tus citas», en el pie de página y un aviso discreto (una sola vez).
+- **Actualizar la app**: al cambiar archivos, sube el número `?v=` en `app/index.html` y la constante `VERSION`/lista de `sw.js` para que los celulares descarguen lo nuevo.
 
 ## Experiencia de la clienta
 

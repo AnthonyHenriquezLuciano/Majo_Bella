@@ -169,3 +169,14 @@ Se revisan cada hora (activador `tareasProgramadas`). Los avisos de reseña, ret
 - **Paquetes** (Promociones): creas el paquete (servicio, sesiones, precio, validez). Si lo marcas «en la web», se compra con PayPal en la sección Paquetes. También lo vendes en el estudio con **+ Vender paquete**.
 - La clienta escribe el código del paquete al reservar: cubre ese servicio completo y descuenta una sesión. Si cancela con aviso, la sesión vuelve al paquete.
 - **Premio de fidelidad** (Promociones): cada N visitas realizadas, la siguiente cita tiene un descuento. Se aplica solo al reservar con el mismo correo o teléfono y compite con las promociones (gana el mayor).
+
+## App para el celular
+
+La app (`/app/`) usa el mismo backend. La **Billetera** consulta el saldo de tarjetas y paquetes con la acción `walletLookup`, que viene en esta versión de `Code.gs`: actualiza el código (pasos de «Actualizar el código») para que funcione.
+
+Cómo la instala la clienta:
+
+- **Android (Chrome)**: abre la web o `…/Majo_Bella/app/` y toca **Instalar la app** (menú del celular, «Tus citas», pie de página o el aviso de abajo).
+- **iPhone (Safari)**: abre la app y toca **Compartir** → **Agregar a inicio** → **Agregar**. La app muestra estos pasos.
+
+Para compartirla, manda el enlace `https://anthonyhenriquezluciano.github.io/Majo_Bella/app/?instalar=1` (abre directamente la bienvenida con el botón de instalar).

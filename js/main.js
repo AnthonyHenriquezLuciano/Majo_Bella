@@ -37,6 +37,7 @@
     M.initSite();
     M.initGiftShop();
     M.initPackages();
+    if (M.initGetApp) M.initGetApp();
     M.initReveal();
     deepLink();
   }

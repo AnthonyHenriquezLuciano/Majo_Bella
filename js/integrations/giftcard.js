@@ -10,7 +10,7 @@
       const img = new Image();
       img.onload = () => resolve(img);
       img.onerror = () => resolve(null);
-      img.src = 'assets/logo-majobella.png';
+      img.src = (M.assetBase || '') + 'assets/logo-majobella.png';
     });
   }
 
