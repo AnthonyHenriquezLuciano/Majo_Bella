@@ -48,14 +48,19 @@
     const PAYMODE = () => M.BookingAPI.enabled() && M.PayPal.configured();
     const cancelHours = () => (M.config.policies && M.config.policies.changeHours) || 24;
     const hoursLeft = (a) => (new Date(a.start).getTime() - Date.now()) / 3600000;
-    let payingId = null;
+    let payingId = null, proofId = null, moveId = null;
+    const move = { days: null, key: null, time: null, slots: null, busy: false, msg: '' };
+    const esc = M.escapeHtml;
 
     function paymentLine(a) {
       const p = a.payment;
       if (!p) return '';
       const parts = [];
       if (p.refund === 'reembolsado') parts.push(`Depósito de ${M.fmtPrice(p.depositRD)} reembolsado`);
-      else if (p.depositPaid) parts.push(`Depósito pagado: ${M.fmtPrice(p.depositRD)}`);
+      else if (p.refund === 'pendiente') parts.push(`Te devolveremos el depósito de ${M.fmtPrice(p.depositRD)} por transferencia`);
+      else if (a.status === 'por-confirmar') parts.push(`Comprobante recibido: estamos confirmando tu depósito de ${M.fmtPrice(p.depositRD)}`);
+      else if (a.status === 'retenida') parts.push(`Depósito por transferencia: ${M.fmtPrice(p.depositRD)}`);
+      else if (p.depositPaid) parts.push(`Depósito pagado: ${M.fmtPrice(p.depositRD)}${p.depositMethod === 'transferencia' ? ' (transferencia)' : ''}`);
       if (a.status !== 'cancelada') {
         parts.push(p.balanceStatus === 'pagado'
           ? `Saldo pagado${p.balanceMethod ? ` (${p.balanceMethod === 'efectivo' ? 'efectivo' : 'PayPal'})` : ''}`
@@ -74,7 +79,7 @@
       const { y, m, d } = M.parseKey(a.date);
       const names = (a.services || []).map((s) => s.name).join(' + ');
       const st = a.status || 'pendiente';
-      const label = past && st === 'confirmada' ? 'Realizada' : M.STATUS[st] || st;
+      const label = past && st === 'confirmada' ? 'Realizada' : st === 'retenida' ? 'Falta el comprobante' : M.STATUS[st] || st;
       const cancelled = st === 'cancelada' || st === 'cancelacion-solicitada';
       const ids = (a.services || []).map((s) => s.id).filter((id) => M.serviceById[id]);
       const prep = !past && !cancelled ? M.prepFor(ids) : [];
@@ -91,14 +96,22 @@
         actions = (payBtn || again) ? `<div class="cita-actions">${payBtn}${again}</div>${payBox}` : '';
       } else {
         const cancelBtn = canCancel(a) ? `<button type="button" class="btn btn-quiet" data-cancel="${M.escapeHtml(a.id)}">${pendingCancel === a.id ? cancelConfirmText(a) : 'Cancelar cita'}</button>` : '';
+        const rc = M.Reschedule.check(a);
+        const moveBtn = rc.ok ? `<button type="button" class="btn btn-line" data-move="${esc(a.id)}">${moveId === a.id ? 'Cerrar' : 'Cambiar fecha'}</button>` : '';
+        const waiting = st === 'retenida' && M.Appointments.waitingProof(a);
         const question = M.WhatsApp.isConfigured() ? `<a class="btn btn-quiet" href="${waLink(a)}" target="_blank" rel="noopener">${remote ? '¿Dudas? WhatsApp' : 'Reprogramar'}</a>` : '';
         actions = `
+        ${waiting ? `<div class="cita-proof"><p>Tienes hasta las <b>${M.Transfer.deadlineText(a)}</b> para transferir <b>${M.fmtPrice(a.payment.depositRD)}</b> y subir el comprobante. Si no, el horario se libera.</p>
+          ${proofId === a.id ? proofBox(a) : `<button type="button" class="btn btn-primary btn-sm" data-proof="${esc(a.id)}">Subir comprobante</button>`}</div>` : ''}
+        ${st === 'por-confirmar' ? '<p class="cita-consent">Recibimos tu comprobante. Te confirmamos por correo en cuanto veamos el depósito.</p>' : ''}
         ${prep.length ? `<details class="cita-prep"><summary>Antes de tu cita</summary><ul>${prep.map(({ p }) => `<li>${M.escapeHtml(p)}</li>`).join('')}</ul></details>` : ''}
         <div class="cita-actions">
           <a class="btn btn-line" href="${calendarUrl(a)}" target="_blank" rel="noopener">Añadir al calendario</a>
-          ${payBtn}${question}${cancelBtn}
+          ${payBtn}${moveBtn}${question}${cancelBtn}
         </div>${payBox}
-        ${pendingCancel === a.id && remote ? `<p class="cita-warn">${hoursLeft(a) >= cancelHours() ? `Faltan más de ${cancelHours()} horas: te devolvemos el depósito completo en PayPal.` : `Faltan menos de ${cancelHours()} horas: según la política, el depósito no se devuelve.`}</p>` : ''}`;
+        ${moveId === a.id ? moveBox(a) : ''}
+        ${!rc.ok && ['used', 'late'].includes(rc.reason) && remote && st === 'confirmada' ? `<p class="cita-hint">${esc(M.Reschedule.reasonText(rc))}</p>` : ''}
+        ${pendingCancel === a.id && remote ? `<p class="cita-warn">${hoursLeft(a) >= cancelHours() ? `Faltan más de ${cancelHours()} horas: te devolvemos el depósito completo ${a.payment && a.payment.depositMethod === 'transferencia' ? 'por transferencia' : 'en PayPal'}.` : `Faltan menos de ${cancelHours()} horas: según la política, el depósito no se devuelve.`}</p>` : ''}`;
       }
       return `
         <li class="cita${cancelled ? ' is-cancelled' : ''}">
@@ -119,8 +132,33 @@
       if (!(a.remote && M.BookingAPI.enabled())) return 'Toca otra vez para cancelar';
       return hoursLeft(a) >= cancelHours() ? 'Toca otra vez: cancelar y reembolsar' : 'Toca otra vez: cancelar sin reembolso';
     }
+    /* Subir el comprobante de la transferencia */
+    function proofBox(a) {
+      const accs = M.Transfer.accounts();
+      return `<div class="cita-proofbox">
+        ${accs.length ? M.Transfer.accountsHtml(accs, { name: `pf-${esc(a.id)}` }) : ''}
+        <label class="tf-file"><input type="file" accept="image/*,application/pdf" data-proof-file="${esc(a.id)}"><span>Elegir la foto o el PDF</span></label>
+        <label class="field tf-ref"><span>Número de referencia <em>(opcional)</em></span><input data-proof-ref maxlength="60" autocomplete="off"></label>
+        <div class="cita-actions"><button type="button" class="btn btn-primary btn-sm" data-proof-send="${esc(a.id)}" disabled>Enviar comprobante</button><button type="button" class="link-inline" data-proof-close>Cerrar</button></div>
+        <p class="cpb-msg" aria-live="polite"></p></div>`;
+    }
+    const proofFiles = {};
+
+    /* Cambiar la fecha */
+    function moveBox(a) {
+      if (!move.days) return '<div class="cita-move"><p class="cpb-msg">Buscando horarios libres…</p></div>';
+      const days = move.days.filter((d) => d.free > 0);
+      return `<div class="cita-move">
+        <p class="cm-title">Elige el nuevo día</p>
+        <div class="cm-days">${days.length ? days.map((d) => `<button type="button" class="cm-day${d.key === move.key ? ' is-on' : ''}" data-move-day="${d.key}"><b>${M.parseKey(d.key).d}</b><span>${esc(M.weekdayName(d.key).slice(0, 3))}</span></button>`).join('') : '<p class="cpb-msg">No hay horarios libres en las próximas semanas. Escríbenos por WhatsApp.</p>'}</div>
+        ${move.key ? `<p class="cm-title">Hora</p><div class="cm-slots">${move.slots == null ? '<p class="cpb-msg">Cargando…</p>' : move.slots.map((t) => `<button type="button" class="slot${t === move.time ? ' is-selected' : ''}" data-move-time="${t}">${M.fmtTime12(t)}</button>`).join('')}</div>` : ''}
+        ${move.key && move.time ? `<button type="button" class="btn btn-primary btn-sm" data-move-save="${esc(a.id)}"${move.busy ? ' disabled' : ''}>${move.busy ? 'Cambiando…' : `Cambiar al ${esc(M.weekdayName(move.key).toLowerCase())} ${esc(M.dayMonth(move.key))}, ${M.fmtTime12(move.time)}`}</button>` : ''}
+        <p class="cm-note">${a.changes && a.changes.max > 1 ? `Puedes cambiarla ${M.Appointments.changesLeft(a)} ${M.Appointments.changesLeft(a) === 1 ? 'vez' : 'veces'} más.` : 'Puedes cambiar la fecha una vez.'} Tu depósito pasa a la nueva cita.</p>
+        ${move.msg ? `<p class="cpb-msg is-error">${esc(move.msg)}</p>` : ''}</div>`;
+    }
+
     function canCancel(a) {
-      if (a.remote && M.BookingAPI.enabled()) return a.status === 'confirmada' && !!M.Appointments.auth(a);
+      if (a.remote && M.BookingAPI.enabled()) return ['confirmada', 'por-confirmar'].includes(a.status) && !!M.Appointments.auth(a);
       return M.WhatsApp.isConfigured();
     }
     function calendarUrl(a) {
@@ -141,6 +179,12 @@
       list.setAttribute('aria-busy', 'true');
       const { items, source: src, error } = await M.Appointments.list();
       list.removeAttribute('aria-busy');
+      list._items = items; list._src = src; list._error = error;
+      paint();
+    }
+    /* Vuelve a dibujar con los datos ya cargados (sin consultar la agenda) */
+    function paint() {
+      const items = list._items || [], src = list._src, error = list._error;
       const now = Date.now();
       const isPast = (a) => new Date(a.end).getTime() < now || a.status === 'completada' || a.status === 'no-asistio';
       const upcoming = items.filter((a) => !isPast(a)).sort((a, b) => a.start.localeCompare(b.start));
@@ -156,7 +200,6 @@
       source.textContent = src === 'agenda'
         ? 'Actualizadas con la agenda de MAJOBELLA.'
         : (error ? `No pudimos leer la agenda (${error}). Se muestran las citas guardadas en este dispositivo.` : 'Se muestran las citas reservadas desde este dispositivo.');
-      list._items = items;
       if (payingId) mountBalance(payingId);
       renderLoyalty();
     }
@@ -211,28 +254,90 @@
     tabs.forEach((t) => t.addEventListener('click', () => {
       view = t.dataset.view;
       tabs.forEach((x) => { const on = x === t; x.classList.toggle('is-active', on); x.setAttribute('aria-selected', String(on)); });
-      renderList();
+      paint();
     }));
 
+    M.Transfer.bindCopy(list);
+    list.addEventListener('change', async (e) => {
+      const inp = e.target.closest('[data-proof-file]');
+      if (!inp) return;
+      const box = inp.closest('.cita-proofbox');
+      const msg = box.querySelector('.cpb-msg'), send = box.querySelector('[data-proof-send]');
+      send.disabled = true;
+      try { msg.textContent = 'Preparando…'; proofFiles[inp.dataset.proofFile] = await M.Transfer.prepare(inp.files[0]); msg.textContent = inp.files[0].name; send.disabled = false; }
+      catch (err) { msg.textContent = err.message; }
+    });
     list.addEventListener('click', async (e) => {
+      const pf = e.target.closest('[data-proof]');
+      if (pf) { proofId = pf.dataset.proof; paint(); return; }
+      if (e.target.closest('[data-proof-close]')) { proofId = null; paint(); return; }
+      const ps = e.target.closest('[data-proof-send]');
+      if (ps) {
+        const id = ps.dataset.proofSend, a = (list._items || []).find((x) => x.id === id), box = ps.closest('.cita-proofbox');
+        const file = proofFiles[id];
+        if (!a || !file) return;
+        ps.disabled = true; ps.textContent = 'Enviando…';
+        try {
+          const r = await M.BookingAPI.transferProof(id, M.Appointments.auth(a), file, M.Transfer.pickedAccount(box, `pf-${id}`), box.querySelector('[data-proof-ref]').value.trim());
+          M.Appointments.update(id, { status: r.appointment.status, payment: r.appointment.payment });
+          proofId = null; delete proofFiles[id];
+          M.toast && M.toast('Comprobante enviado. Te confirmamos pronto.');
+          renderList();
+        } catch (err) { box.querySelector('.cpb-msg').textContent = err.message; ps.disabled = false; ps.textContent = 'Enviar comprobante'; }
+        return;
+      }
+      const mv = e.target.closest('[data-move]');
+      if (mv) {
+        const id = mv.dataset.move;
+        if (moveId === id) { moveId = null; paint(); return; }
+        moveId = id; Object.assign(move, { days: null, key: null, time: null, slots: null, busy: false, msg: '' });
+        paint();
+        const a = (list._items || []).find((x) => x.id === id);
+        move.days = await M.Reschedule.days(a, 21);
+        if (moveId === id) paint();
+        return;
+      }
+      const md = e.target.closest('[data-move-day]');
+      if (md) {
+        const a = (list._items || []).find((x) => x.id === moveId);
+        move.key = md.dataset.moveDay; move.time = null; move.slots = null; move.msg = '';
+        paint();
+        move.slots = await M.Reschedule.slots(a, move.key);
+        paint();
+        return;
+      }
+      const mt = e.target.closest('[data-move-time]');
+      if (mt) { move.time = mt.dataset.moveTime; paint(); return; }
+      const ms = e.target.closest('[data-move-save]');
+      if (ms) {
+        const a = (list._items || []).find((x) => x.id === moveId);
+        move.busy = true; move.msg = ''; paint();
+        try {
+          const ap = await M.Reschedule.save(a, move.key, move.time);
+          moveId = null; move.busy = false;
+          M.toast && M.toast(`Listo: tu cita ahora es el ${M.weekdayName(ap.date).toLowerCase()} ${M.dayMonth(ap.date)} a las ${M.fmtTime12(ap.time)}.`);
+        } catch (err) { move.busy = false; move.msg = err.message; paint(); return; }
+        renderList();
+        return;
+      }
       const again = e.target.closest('[data-again]');
       if (again) { M.selectOnly(again.dataset.again.split(','), 'citas'); M.scrollTo('#reservar'); return; }
       const bal = e.target.closest('[data-balance]');
-      if (bal) { payingId = bal.dataset.balance; renderList(); return; }
-      if (e.target.closest('[data-balance-close]')) { payingId = null; renderList(); return; }
+      if (bal) { payingId = bal.dataset.balance; paint(); return; }
+      if (e.target.closest('[data-balance-close]')) { payingId = null; paint(); return; }
       const b = e.target.closest('[data-cancel]');
       if (!b) return;
       const id = b.dataset.cancel;
       const a = (list._items || []).find((x) => x.id === id);
       if (!a) return;
-      if (pendingCancel !== id) { pendingCancel = id; renderList(); setTimeout(() => { if (pendingCancel === id) { pendingCancel = null; renderList(); } }, 8000); return; }
+      if (pendingCancel !== id) { pendingCancel = id; paint(); setTimeout(() => { if (pendingCancel === id) { pendingCancel = null; paint(); } }, 8000); return; }
       pendingCancel = null;
       if (a.remote && M.BookingAPI.enabled()) {
         b.disabled = true; b.textContent = 'Cancelando…';
         try {
           const r = await M.BookingAPI.cancel(id, M.Appointments.auth(a));
           M.Appointments.update(id, { status: 'cancelada', payment: r.appointment && r.appointment.payment });
-          M.toast && M.toast(r.refunded ? 'Cita cancelada. Te devolvimos el depósito en PayPal.' : 'Cita cancelada.');
+          M.toast && M.toast(r.refunded ? 'Cita cancelada. Te devolvimos el depósito en PayPal.' : r.refundManual ? 'Cita cancelada. Te devolveremos el depósito por transferencia.' : 'Cita cancelada.');
           M.BookingAPI.refreshBusy(true).catch(() => {});
         } catch (err) { source.textContent = err.message; }
         renderList();

@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261019h">
+<link rel="stylesheet" href="css/styles.css?v=20261019j">
 </head>
 <body class="legal-page">
 <header class="legal-header">
@@ -35,17 +35,18 @@
 <p class="legal-lead">En MAJOBELLA Beauty Studio cuidamos tus datos con el mismo detalle que tu piel. Aquí explicamos qué información recogemos, para qué la usamos y cómo puedes pedir que la corrijamos o la borremos.</p>
 
 <nav class="legal-toc" aria-label="En esta página">
-  <a href="#quien">Quién es responsable</a><a href="#datos">Qué datos recogemos</a><a href="#uso">Para qué los usamos</a><a href="#donde">Dónde se guardan</a><a href="#fotos">Fotos y consentimiento</a><a href="#dispositivo">Datos en tu dispositivo</a><a href="#tiempo">Cuánto tiempo</a><a href="#derechos">Tus derechos</a>
+  <a href="#quien">Quién es responsable</a><a href="#datos">Qué datos recogemos</a><a href="#uso">Para qué los usamos</a><a href="#donde">Dónde se guardan</a><a href="#fotos">Fotos y consentimiento</a><a href="#dispositivo">Datos en tu dispositivo</a><a href="#tiempo">Cuánto tiempo</a><a href="#derechos">Tus derechos</a><a href="terminos.html">Términos y condiciones</a>
 </nav>
 
 <h2 id="quien">1. Quién es responsable</h2>
-<p>MAJOBELLA Beauty Studio, en Santo Domingo, República Dominicana. Para cualquier consulta sobre tus datos escríbenos por WhatsApp al <a href="https://wa.me/18299784986" target="_blank" rel="noopener">829-978-4986</a>.</p>
+<p><strong data-v="bizName">MAJOBELLA Beauty Studio</strong><span data-biz-rnc hidden> (RNC/cédula <span data-v="bizRnc"></span>)</span> es responsable de los datos que nos das al reservar y al visitarnos. Dirección: <span data-v="bizAddress">Santo Domingo, República Dominicana</span>. Para cualquier consulta sobre tus datos escríbenos por WhatsApp al <a href="https://wa.me/18299784986" target="_blank" rel="noopener">829-978-4986</a><span data-biz-mail hidden> o al correo <a href="#"></a></span>.</p>
 
 <h2 id="datos">2. Qué datos recogemos</h2>
 <ul>
   <li><strong>Al reservar:</strong> tu nombre, teléfono, correo (si lo escribes), los servicios, el día y la hora, y la nota que quieras dejarnos. También, si lo eliges, cómo nos conociste.</li>
   <li><strong>Al iniciar sesión con Google</strong> (opcional): tu nombre, correo y foto de perfil, para mostrarte tus citas en cualquier dispositivo.</li>
-  <li><strong>Al pagar:</strong> el pago lo procesa PayPal. Nosotros solo recibimos la confirmación, el monto y los identificadores de la operación. <strong>Nunca vemos ni guardamos los datos de tu tarjeta.</strong></li>
+  <li><strong>Al pagar con PayPal:</strong> el pago lo procesa PayPal. Nosotros solo recibimos la confirmación, el monto y los identificadores de la operación. <strong>Nunca vemos ni guardamos los datos de tu tarjeta.</strong></li>
+  <li><strong>Al pagar por transferencia:</strong> la foto o el PDF del comprobante que subes, el número de referencia (si lo escribes) y la cuenta a la que transferiste. Solo los usamos para confirmar tu depósito y, si corresponde, devolvértelo. Si hay que devolverte un depósito, te pediremos los datos de la cuenta donde quieres recibirlo.</li>
   <li><strong>Al comprar una tarjeta de regalo:</strong> tu nombre y correo, el nombre y correo de quien la recibe (si los escribes) y la dedicatoria.</li>
   <li><strong>Tu cumpleaños</strong> (solo día y mes, si lo escribes), para enviarte un regalo ese día.</li>
   <li><strong>Consentimiento digital:</strong> tus respuestas al cuestionario de salud y tu firma. Se guardan en un PDF dentro de tu ficha privada y te enviamos una copia.</li>
@@ -68,7 +69,8 @@
   <li><strong>Google</strong> (hoja de cálculo, Drive, Calendar y correo de la cuenta del estudio): guarda las reservas y la ficha de cada clienta. Las fotos y consentimientos se guardan en una carpeta privada a la que solo accede el estudio.</li>
   <li><strong>PayPal</strong>: procesa los pagos y reembolsos con sus propias políticas de seguridad.</li>
   <li><strong>Google Maps</strong>: el mapa de la sección de contacto se carga desde Google.</li>
-  <li><strong>GitHub Pages</strong>: aloja esta página web.</li>
+  <li><strong>GitHub Pages</strong>: aloja esta página web y la app.</li>
+  <li><strong>Cloudflare Turnstile</strong> (si está activo): comprueba que quien reserva o compra no es un robot. Analiza datos técnicos del navegador, no tus datos de reserva.</li>
 </ul>
 <p>Estos servicios pueden almacenar información fuera de la República Dominicana. Solo compartiríamos datos con autoridades cuando la ley lo exija.</p>
 
@@ -80,6 +82,8 @@
 <ul>
   <li>tus citas, para que puedas verlas y gestionarlas en la sección «Citas»;</li>
   <li>tu sesión de Google, si inicias sesión;</li>
+  <li>en la app, tus datos para reservar más rápido (si los guardas) y los códigos de tus tarjetas de regalo y paquetes;</li>
+  <li>un identificador anónimo del dispositivo, que solo sirve para frenar a quien prueba muchos códigos equivocados seguidos;</li>
   <li>el enlace por el que llegaste (por ejemplo, desde Instagram), para registrar en tu reserva cómo nos conociste;</li>
   <li>si cerraste el anuncio de la parte de arriba.</li>
 </ul>
@@ -89,33 +93,25 @@
 <p>Guardamos tu historial mientras seas clienta del estudio, y el tiempo que exijan las obligaciones legales y contables. Si nos pides borrarlo, lo haremos salvo lo que la ley nos obligue a conservar.</p>
 
 <h2 id="derechos">8. Tus derechos</h2>
-<p>Puedes pedirnos en cualquier momento ver qué datos tenemos de ti, corregirlos, borrarlos o dejar de usarlos para algún fin, conforme a la Ley 172-13 sobre protección de datos personales de la República Dominicana. Escríbenos por <a href="https://wa.me/18299784986" target="_blank" rel="noopener">WhatsApp</a> y te responderemos lo antes posible.</p>
+<p>Conforme a la Ley 172-13 sobre protección integral de los datos personales de la República Dominicana, puedes pedirnos en cualquier momento:</p>
+<ul>
+  <li><strong>Acceso:</strong> saber qué datos tenemos de ti y para qué los usamos.</li>
+  <li><strong>Rectificación:</strong> corregir datos incompletos o equivocados.</li>
+  <li><strong>Cancelación:</strong> que borremos tus datos, salvo lo que la ley nos obligue a conservar (por ejemplo, registros contables de pagos).</li>
+  <li><strong>Oposición:</strong> que dejemos de usarlos para algún fin, como los recordatorios o el correo de cumpleaños.</li>
+</ul>
+<p>Escríbenos por <a href="https://wa.me/18299784986" target="_blank" rel="noopener">WhatsApp</a><span data-biz-mail hidden> o al correo <a href="#"></a></span>. Para proteger tus datos, podemos pedirte que confirmes que eres tú (por ejemplo, escribiéndonos desde el teléfono o el correo con el que reservaste). Respondemos en un plazo máximo de 10 días hábiles.</p>
 
 <h2>9. Cambios</h2>
 <p>Si cambiamos esta política, publicaremos aquí la nueva versión con su fecha.</p>
 </main>
 <footer class="legal-footer">
   <div class="container">
-    <p><a href="./">Inicio</a> · <a href="privacidad.html">Privacidad</a> · <a href="cancelacion.html">Cancelación y reembolsos</a> · <a data-wa-plain href="https://wa.me/18299784986" target="_blank" rel="noopener">WhatsApp 829-978-4986</a></p>
+    <p><a href="./">Inicio</a> · <a href="privacidad.html">Privacidad</a> · <a href="cancelacion.html">Cancelación y reembolsos</a> · <a href="terminos.html">Términos</a> · <a data-wa-plain href="https://wa.me/18299784986" target="_blank" rel="noopener">WhatsApp 829-978-4986</a></p>
     <p>© <span data-year>2026</span> MAJOBELLA Beauty Studio · Santo Domingo, República Dominicana</p>
   </div>
 </footer>
-<script src="js/config.js?v=20261019h"></script>
-<script>
-/* Completa los valores con los ajustes actuales del estudio (si el sistema de reservas responde) */
-(function () {
-  document.querySelectorAll('[data-year]').forEach(function (n) { n.textContent = new Date().getFullYear(); });
-  var C = window.MAJOBELLA_CONFIG || {};
-  var url = C.booking && C.booking.apiUrl;
-  if (!url || !window.fetch) return;
-  fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 'action=catalog').then(function (r) { return r.json(); }).then(function (d) {
-    if (!d || !d.ok) return;
-    var p = d.payments || {}, g = d.giftShop || {};
-    var set = function (k, v) { if (v) document.querySelectorAll('[data-v="' + k + '"]').forEach(function (n) { n.textContent = v; }); };
-    set('cancelHours', p.cancelHours); set('holdMinutes', p.holdMinutes); set('usdRate', p.usdRate);
-    if (g.validDays) set('giftValid', g.validDays % 365 === 0 ? (g.validDays / 365 === 1 ? '12 meses' : (g.validDays / 365) + ' años') : g.validDays + ' días');
-  }).catch(function () {});
-})();
-</script>
+<script src="js/config.js?v=20261019j"></script>
+<script src="js/legal.js?v=20261019j"></script>
 </body>
 </html>

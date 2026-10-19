@@ -371,7 +371,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .ob-steps li b { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 13px; flex: none; }
 .ob-steps svg { width: 20px; height: 20px; vertical-align: -4px; }
 
-.toast { position: fixed; left: 50%; bottom: calc(var(--tab-h) + var(--safe-b) + 18px); z-index: 70; transform: translateX(-50%); max-width: calc(min(100vw, var(--appw)) - 40px); margin: 0; padding: 12px 18px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 14.5px; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, .2); animation: toast .3s var(--ease) both; }
+.toast { position: fixed; left: 50%; bottom: calc(var(--tab-h) + var(--safe-b) + 18px); z-index: 70; transform: translateX(-50%); max-width: calc(min(100vw, var(--appw)) - 40px); margin: 0; padding: 12px 18px; border-radius: 18px; background: var(--ink); color: #fff; font-size: 14.5px; line-height: 1.4; text-align: center; width: max-content; box-shadow: 0 8px 24px rgba(0, 0, 0, .2); animation: toast .3s var(--ease) both; }
 @keyframes toast { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
 .skeleton { border-radius: var(--r-lg); background: linear-gradient(90deg, var(--surface) 0%, #efeeea 50%, var(--surface) 100%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
@@ -381,3 +381,39 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 }
 .topbar .tb-action.spin svg { animation: tbspin .8s linear; }
 @keyframes tbspin { to { transform: rotate(360deg); } }
+
+/* ---------- Transferencia, cambiar fecha y billetera unida ---------- */
+.method { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; border: 1px solid var(--line-strong); border-radius: var(--r-lg); background: #fff; text-align: left; cursor: pointer; color: inherit; font: inherit; font-size: 16px; }
+.method .ri { width: 42px; height: 42px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; flex: none; }
+.method .ri svg { width: 22px; height: 22px; }
+.method .rt { flex: 1; min-width: 0; font-weight: 600; }
+.method .rt small { display: block; font-weight: 400; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.method .chev { width: 18px; height: 18px; color: var(--faint); }
+.tf-steps { margin: 4px 0 18px; padding-left: 22px; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.tf-steps li + li { margin-top: 6px; }
+.tf-amount { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 15px; color: var(--muted); }
+.tf-amount b { font-family: var(--serif); font-weight: 400; font-size: 28px; color: var(--ink); }
+.tf-accounts { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.tf-acc { padding: 14px 16px; border-radius: var(--r-lg); background: var(--surface); display: flex; flex-direction: column; gap: 3px; }
+.tf-pick { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.tf-pick input { width: 18px; height: 18px; accent-color: #111; }
+.tf-bank { margin: 0; font-weight: 600; font-size: 15px; }
+.tf-bank span { font-weight: 400; color: var(--muted); }
+.tf-num { margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tf-num b { font-size: 19px; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.tf-holder, .tf-note { margin: 0; font-size: 13.5px; color: var(--muted); }
+.tf-copy { flex: none; height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); }
+.tf-copy.is-done { background: var(--ink); color: #fff; }
+.tf-amount .tf-copy { margin-left: auto; }
+.tf-file { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 58px; padding: 12px 16px; border: 1.5px dashed var(--line-strong); border-radius: var(--r-lg); font-weight: 600; font-size: 15px; cursor: pointer; overflow: hidden; }
+.tf-file svg { width: 20px; height: 20px; flex: none; }
+.tf-file span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tf-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.tf-preview { display: block; max-width: 100%; max-height: 200px; margin: 12px auto 0; border-radius: 12px; border: 1px solid var(--line); object-fit: contain; }
+.sync-card { margin-top: 14px; }
+.sync-card b { display: block; font-family: var(--serif); font-weight: 400; font-size: 18px; }
+.sync-card p { margin: 4px 0 12px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.sync-card .btn svg { width: 18px; height: 18px; }
+.btn svg { width: 19px; height: 19px; }
+.captcha-box { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 200; }
+.captcha-box:empty { display: none; }

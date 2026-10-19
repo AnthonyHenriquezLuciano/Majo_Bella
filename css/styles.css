@@ -1018,3 +1018,53 @@ body.modal-open { overflow: hidden; }
 .app-nudge .btn { flex: none; }
 .app-nudge-x { flex: none; width: 32px; height: 32px; border: 0; background: none; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; }
 @media (min-width: 761px) { .app-nudge { display: none !important; } }
+
+/* ---------- Depósito por transferencia ---------- */
+.pay-methods { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line-strong); }
+.pay-method { min-height: 44px; border: 0; background: transparent; font: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
+.pay-method + .pay-method { border-left: 1px solid var(--line-strong); }
+.pay-method.is-on { background: var(--ink); color: #fff; }
+.pay-pp[hidden], .tf-panel[hidden] { display: none; }
+.tf-panel { display: flex; flex-direction: column; gap: 14px; }
+.tf-steps { margin: 0; padding-left: 20px; color: var(--text); font-size: 15px; line-height: 1.6; }
+.tf-amount { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 16px; }
+.tf-amount b { font-size: 22px; font-weight: 600; color: var(--ink); }
+.tf-accounts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.tf-acc { border: 1px solid var(--line); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; background: #fafafa; }
+.tf-pick { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 4px; cursor: pointer; }
+.tf-pick input { accent-color: #111; }
+.tf-bank { margin: 0; font-weight: 600; color: var(--ink); }
+.tf-bank span { font-weight: 400; color: var(--muted); }
+.tf-num { margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tf-num b { font-size: 19px; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.tf-holder, .tf-note { margin: 0; font-size: 14px; color: var(--muted); }
+.tf-copy { border: 1px solid var(--line-strong); background: #fff; border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 12px; cursor: pointer; color: var(--ink); }
+.tf-copy.is-done { background: var(--ink); color: #fff; border-color: var(--ink); }
+.tf-upload { display: flex; flex-direction: column; gap: 12px; }
+.tf-file { position: relative; display: flex; align-items: center; justify-content: center; min-height: 52px; padding: 10px 16px; border: 1px dashed var(--line-strong); cursor: pointer; text-align: center; font-size: 14.5px; color: var(--ink); overflow: hidden; }
+.tf-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.tf-file:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tf-preview { max-width: 100%; max-height: 220px; object-fit: contain; border: 1px solid var(--line); align-self: flex-start; }
+.tf-ref > span { font-size: 11.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+.tf-ref em { font-style: normal; font-weight: 400; letter-spacing: 0; text-transform: none; }
+.tf-later { margin: 0; font-size: 13.5px; color: var(--muted); }
+.cita-proof { margin: 12px 0 4px; padding: 14px 16px; border: 1px solid var(--ink); display: flex; flex-direction: column; gap: 10px; }
+.cita-proof p { margin: 0; font-size: 15px; }
+.cita-proofbox { display: flex; flex-direction: column; gap: 12px; }
+.cita-hint { margin: 8px 0 0; font-size: 13.5px; color: var(--muted); }
+.cita-move { margin-top: 14px; padding: 16px; border: 1px solid var(--line-strong); display: flex; flex-direction: column; gap: 10px; }
+.cm-title { margin: 0; font-size: 11.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+.cm-days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.cm-day { flex: none; width: 58px; padding: 8px 0; border: 1px solid var(--line-strong); background: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; font: inherit; color: var(--ink); }
+.cm-day b { font-size: 18px; font-weight: 400; }
+.cm-day span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.cm-day.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.cm-day.is-on span { color: rgba(255,255,255,.7); }
+.cm-slots { display: flex; flex-wrap: wrap; gap: 8px; }
+.cm-slots .slot { min-width: 92px; }
+.cm-note { margin: 0; font-size: 13.5px; color: var(--muted); }
+.cpb-msg.is-error { color: var(--error); }
+.cita-status.st-por-confirmar, .cita-status.st-retenida { background: #f6efe0; color: #6b4e12; }
+.captcha-box { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 9999; }
+.captcha-box:empty { display: none; }
+@media (max-width: 560px) { .pay-method { font-size: 11px; letter-spacing: 0.08em; } }

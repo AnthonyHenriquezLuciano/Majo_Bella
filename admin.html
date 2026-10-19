@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/admin.css?v=20261019h">
+<link rel="stylesheet" href="css/admin.css?v=20261019j">
 </head>
 <body>
 <!--MJB:BODY-START-->
@@ -72,6 +72,7 @@
         <button type="button" class="btn-dark" id="ag-new">+ Nueva cita</button>
       </div>
     </div>
+    <section class="ad-panel pend-panel" id="ag-pending" aria-label="Pendientes" hidden></section>
     <section class="kpis" id="ag-kpis" aria-label="Resumen del periodo"></section>
     <div class="ad-grid">
       <section class="ad-panel" aria-labelledby="agenda-h">
@@ -400,6 +401,23 @@
         </table>
       </div>
     </section>
+    <div class="ad-cols" id="aj-extra">
+      <section class="ad-panel" id="aj-transfer-panel">
+        <div class="panel-head"><h2>Pago por transferencia</h2><button type="button" class="chip-btn" id="aj-acc-add">+ Añadir cuenta</button></div>
+        <p class="panel-note">La clienta elige transferencia al reservar, ve estas cuentas, transfiere y sube la foto del comprobante. Su horario queda apartado y tú confirmas la cita en Agenda → Pendientes.</p>
+        <div class="set-row" id="aj-transfer-set"></div>
+        <ul class="acc-list" id="aj-accounts"></ul>
+      </section>
+      <section class="ad-panel" id="aj-security-panel">
+        <div class="panel-head"><h2>Seguridad</h2></div>
+        <div id="aj-security"></div>
+      </section>
+    </div>
+    <section class="ad-panel" id="aj-errors-panel">
+      <div class="panel-head"><h2>Avisos del sistema</h2><button type="button" class="chip-btn" id="aj-err-all">Marcar todos como revisados</button></div>
+      <p class="panel-note">Cobros que necesitan revisión, correos que no salieron y tareas automáticas que fallaron. También te llegan por correo (como mucho uno cada 3 horas por tipo; los de cobros, siempre).</p>
+      <ul class="err-list" id="aj-errors"></ul>
+    </section>
     <div class="savebar"><span>Los cambios se aplican en la web al guardar.</span><button type="button" class="btn-dark" id="aj-save">Guardar ajustes</button></div>
   </section>
 </main>
@@ -505,6 +523,65 @@
   </form>
 </dialog>
 
+
+<!-- Transferencia: revisar comprobante -->
+<dialog class="ad-dialog wide" id="dlg-tf" aria-labelledby="tf-h">
+  <form id="tf-form" novalidate>
+    <div class="dlg-head"><h2 id="tf-h">Revisar transferencia</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <div class="tf-review">
+      <div class="tf-proof" id="tf-proof"><p class="hint">Cargando comprobante…</p></div>
+      <div class="tf-info" id="tf-info"></div>
+    </div>
+    <fieldset class="fs" id="tf-reject" hidden><legend>Rechazar</legend>
+      <label>Motivo
+        <select name="motivo">
+          <option>No recibimos la transferencia.</option>
+          <option>El monto recibido no coincide con el depósito.</option>
+          <option>El comprobante no se ve bien o no corresponde.</option>
+          <option value="otro">Otro motivo…</option>
+        </select>
+      </label>
+      <label id="tf-otro" hidden>Escribe el motivo<input name="otro" maxlength="200"></label>
+      <label class="chk"><input type="checkbox" name="notify" checked><span>Avisarle por correo (con enlace a WhatsApp)</span></label>
+    </fieldset>
+    <p class="dlg-msg" id="tf-msg" aria-live="polite"></p>
+    <div class="dlg-actions">
+      <button type="button" class="chip-btn" data-close>Cerrar</button>
+      <button type="button" class="chip-btn" id="tf-no">Rechazar…</button>
+      <button type="button" class="chip-btn" id="tf-force" hidden>Confirmar de todos modos</button>
+      <button type="button" class="btn-dark" id="tf-ok">Llegó el dinero: confirmar cita</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Cuenta bancaria -->
+<dialog class="ad-dialog" id="dlg-acc" aria-labelledby="ac-h">
+  <form id="acc-form" novalidate>
+    <div class="dlg-head"><h2 id="ac-h">Cuenta para transferencias</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <p>La clienta la ve al pagar por transferencia, con un botón para copiar el número.</p>
+    <div class="row2">
+      <label>Banco<input name="banco" maxlength="60" required placeholder="Banco Popular" list="acc-banks"></label>
+      <label>Tipo<select name="tipo"><option>Ahorros</option><option>Corriente</option></select></label>
+    </div>
+    <datalist id="acc-banks"><option value="Banco Popular"><option value="Banreservas"><option value="BHD"><option value="Scotiabank"><option value="Banco Santa Cruz"><option value="Banco Caribe"><option value="Asociación Popular (APAP)"><option value="Qik"></datalist>
+    <label>Número de cuenta<input name="numero" maxlength="40" required inputmode="numeric"></label>
+    <div class="row2">
+      <label>Titular<input name="titular" maxlength="80" required></label>
+      <label>Cédula o RNC <span class="opt">(opcional)</span><input name="documento" maxlength="30"></label>
+    </div>
+    <label>Nota para la clienta <span class="opt">(opcional)</span><input name="nota" maxlength="160" placeholder="Desde otros bancos puede tardar unas horas."></label>
+    <div class="row2">
+      <label>Orden <span class="opt">(menor = primero)</span><input name="orden" type="number" step="1" value="0"></label>
+      <label class="chk" style="align-self:end"><input type="checkbox" name="activa" checked><span>Mostrar en la web</span></label>
+    </div>
+    <p class="dlg-msg" id="acc-msg" aria-live="polite"></p>
+    <div class="dlg-actions">
+      <button type="button" class="chip-btn" id="acc-del" hidden>Eliminar</button>
+      <button type="button" class="chip-btn" data-close>Cerrar</button>
+      <button type="submit" class="btn-dark" id="acc-save">Guardar</button>
+    </div>
+  </form>
+</dialog>
 
 <!-- Paquete -->
 <dialog class="ad-dialog" id="dlg-pkg" aria-labelledby="pk-h">
@@ -682,22 +759,24 @@
 <div class="ad-toast" id="ad-toast" role="status" hidden></div>
 <!--MJB:BODY-END-->
 
-<script src="js/config.js?v=20261019h"></script>
-<script src="js/data/services.js?v=20261019h"></script>
-<script src="js/core/utils.js?v=20261019h"></script>
-<script src="js/integrations/booking-api.js?v=20261019h"></script>
-<script src="js/integrations/google-auth.js?v=20261019h"></script>
-<script src="js/admin/core.js?v=20261019h"></script>
-<script src="js/admin/demo.js?v=20261019h"></script>
-<script src="js/admin/agenda.js?v=20261019h"></script>
-<script src="js/admin/clientes.js?v=20261019h"></script>
-<script src="js/admin/dinero.js?v=20261019h"></script>
-<script src="js/integrations/giftcard.js?v=20261019h"></script>
-<script src="js/admin/promos.js?v=20261019h"></script>
-<script src="js/admin/paquetes.js?v=20261019h"></script>
-<script src="js/admin/web.js?v=20261019h"></script>
-<script src="js/admin/correos.js?v=20261019h"></script>
-<script src="js/admin/ajustes.js?v=20261019h"></script>
+<script src="js/config.js?v=20261019j"></script>
+<script src="js/data/services.js?v=20261019j"></script>
+<script src="js/core/utils.js?v=20261019j"></script>
+<script src="js/integrations/booking-api.js?v=20261019j"></script>
+<script src="js/integrations/google-auth.js?v=20261019j"></script>
+<script src="js/admin/core.js?v=20261019j"></script>
+<script src="js/admin/demo.js?v=20261019j"></script>
+<script src="js/admin/agenda.js?v=20261019j"></script>
+<script src="js/admin/clientes.js?v=20261019j"></script>
+<script src="js/admin/dinero.js?v=20261019j"></script>
+<script src="js/integrations/giftcard.js?v=20261019j"></script>
+<script src="js/admin/promos.js?v=20261019j"></script>
+<script src="js/admin/paquetes.js?v=20261019j"></script>
+<script src="js/admin/web.js?v=20261019j"></script>
+<script src="js/admin/correos.js?v=20261019j"></script>
+<script src="js/admin/ajustes.js?v=20261019j"></script>
+<script src="js/admin/transferencias.js?v=20261019j"></script>
+<script src="js/admin/sistema.js?v=20261019j"></script>
 <script>window.MJB.Admin.start();</script>
 </body>
 </html>

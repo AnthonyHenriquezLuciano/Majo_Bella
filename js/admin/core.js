@@ -8,7 +8,7 @@
   const esc = (A.esc = M.escapeHtml);
   A.DEMO = new URLSearchParams(location.search).has('demo');
   A.ACTIVE = ['confirmada', 'completada', 'no-asistio'];
-  A.STATUS = { retenida: 'Pagando', expirada: 'Pago sin completar', confirmada: 'Confirmada', completada: 'Realizada', 'no-asistio': 'No asistió', cancelada: 'Cancelada', bloqueo: 'Bloqueado' };
+  A.STATUS = { retenida: 'Pagando', 'por-confirmar': 'Por confirmar', expirada: 'Pago sin completar', confirmada: 'Confirmada', completada: 'Realizada', 'no-asistio': 'No asistió', cancelada: 'Cancelada', bloqueo: 'Bloqueado' };
   A.data = null;
   A.METHOD = { efectivo: 'Efectivo', transferencia: 'Transferencia', paypal: 'PayPal', tarjeta: 'Tarjeta', 'tarjeta de regalo': 'Tarjeta de regalo', cortesia: 'Cortesía' };
   A.methodName = (m) => A.METHOD[m] || m || '';
@@ -86,11 +86,19 @@
   A.call = async (action, payload = {}) => {
     if (A.DEMO) return A.demo.handle(action, payload);
     try {
-      return await M.BookingAPI.post({ action, idToken: M.Auth.token, ...payload }, 'No se pudo completar la acción.');
+      return await M.BookingAPI.post({ action, idToken: M.Auth.token, device_label: A.deviceLabel(), ...payload }, 'No se pudo completar la acción.');
     } catch (err) {
       if (/sesión expiró|no tiene acceso/i.test(err.message)) { M.Auth.signOut(); A.showGate(err.message); }
       throw err;
     }
+  };
+
+  /* "iPhone · Safari", "Windows · Chrome"… para el registro de accesos */
+  A.deviceLabel = () => {
+    const ua = navigator.userAgent || '';
+    const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Mac OS X/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : /Linux/.test(ua) ? 'Linux' : 'Otro';
+    const br = /Edg\//.test(ua) ? 'Edge' : /CriOS|Chrome\//.test(ua) ? 'Chrome' : /FxiOS|Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Navegador';
+    return `${os} · ${br}`;
   };
 
   A.load = async () => {

@@ -10,6 +10,8 @@
      POST { action: 'cancel', id, token|idToken }
      POST { action: 'balanceOrder' | 'balanceCapture', id, token|idToken, orderId }
      POST { action: 'myAppointments', idToken } · { action: 'lookup', items: [{ id, token }] }
+     POST { action: 'hold', method: 'transferencia' } → aparta el horario; luego 'transferProof' con el comprobante
+     POST { action: 'reschedule', id, token|idToken, date, time } · { action: 'myWallet', idToken } · { action: 'walletEmail', email }
    Implementado en backend/google-apps-script/Code.gs */
 (function (M) {
   const SCH = M.config.schedule;
@@ -60,6 +62,15 @@
   const busyCache = { at: 0, list: [], pending: null, error: null };
   const busyListeners = new Set();
 
+  /* Identificador anónimo del dispositivo (para limitar intentos con códigos equivocados) */
+  M.deviceId = () => {
+    try {
+      let id = localStorage.getItem('mjb.device.v1');
+      if (!id) { id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`; localStorage.setItem('mjb.device.v1', id); }
+      return id;
+    } catch (e) { return ''; }
+  };
+
   M.BookingAPI = {
     enabled() { return !!(API.apiUrl && API.apiUrl.trim()); },
     url(params) { return `${API.apiUrl}${API.apiUrl.includes('?') ? '&' : '?'}${new URLSearchParams(params)}`; },
@@ -78,7 +89,7 @@
       if (!this.enabled()) throw new Error('No hay backend configurado.');
       let res;
       try {
-        res = await fetch(API.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+        res = await fetch(API.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ device: M.deviceId() }, body)) });
       } catch (e) { throw new Error('Sin conexión. Revisa tu internet e intenta de nuevo.'); }
       const data = await res.json().catch(() => ({ ok: false, error: 'Respuesta no válida del servidor.' }));
       if (!res.ok || !data.ok) { const err = new Error(data.error || fallbackError); err.data = data; throw err; }
@@ -113,6 +124,10 @@
       });
       M.loyalty = data.loyalty || { enabled: false };
       M.waitlistInfo = data.waitlist || { enabled: false };
+      M.transfer = data.transfer || { enabled: false, accounts: [] };
+      M.rescheduleInfo = data.reschedule || { max: 1 };
+      M.security = data.security || {};
+      if (M.onCatalog) M.onCatalog.forEach((fn) => { try { fn(data); } catch (e) { /* nada */ } });
       return true;
     },
 
@@ -163,8 +178,21 @@
       return { slots: all.filter((x) => !x.busy).map((x) => x.time), all, source: 'agenda' };
     },
 
+    /* Horas libres para cambiar una cita (su propio horario no cuenta como ocupado) */
+    async availabilityFor(a, key) {
+      const minutes = a.durationMinutes || 30;
+      const base = M.Schedule.baseSlots(key, minutes);
+      if (!this.enabled()) return base;
+      await this.refreshBusy();
+      const own = [new Date(a.start).getTime(), new Date(a.end).getTime()];
+      return base.filter((t) => {
+        const s = M.studioDate(key, t).getTime(), e = s + minutes * 60000;
+        return !busyCache.list.some(([bs, be]) => !(bs === own[0] && be === own[1]) && s < be && e > bs);
+      }).filter((t) => !(key === a.date && t === a.time));
+    },
+
     /* ---- Reserva con depósito ---- */
-    hold(appointment, idToken) {
+    async hold(appointment, idToken, opts = {}) {
       return this.post({
         action: 'hold',
         services: appointment.services.map((s) => s.id),
@@ -172,16 +200,23 @@
         client: appointment.client, idToken: idToken || null, birthday: appointment.client.birthday || '',
         code: M.Pricing.code || '', giftCode: M.Pricing.gift || '',
         origen: appointment.origen || '', canal: M.Origin.channel(),
+        method: opts.method || 'paypal', captcha: M.Captcha ? await M.Captcha.token() : '',
       }, 'No se pudo apartar el horario.');
     },
+    transferProof(id, auth, file, accountId, ref) {
+      return this.post({ action: 'transferProof', id, ...auth, mime: file.mime, data: file.data, accountId: accountId || '', ref: ref || '' }, 'No se pudo enviar el comprobante.');
+    },
+    reschedule(id, auth, date, time) { return this.post({ action: 'reschedule', id, ...auth, date, time }, 'No se pudo cambiar la cita.'); },
+    myWallet(idToken) { return this.post({ action: 'myWallet', idToken }, 'No se pudo cargar tu billetera.'); },
+    async walletEmail(email) { return this.post({ action: 'walletEmail', email, captcha: M.Captcha ? await M.Captcha.token() : '' }, 'No se pudo enviar el correo.'); },
     checkCode(serviceIds, code, giftCode) {
       return this.post({ action: 'checkCode', services: serviceIds, code: code || '', giftCode: giftCode || '', client: M.Pricing.client || null }, 'No se pudo revisar el código.');
     },
     loyalty(client) { return this.post({ action: 'loyalty', client }, 'No se pudo revisar tu premio.'); },
-    waitlistJoin(d) { return this.post(Object.assign({ action: 'waitlistJoin' }, d), 'No se pudo guardar tu lugar en la lista.'); },
-    bonoOrder(d) { return this.post(Object.assign({ action: 'bonoOrder' }, d), 'No se pudo preparar el pago del paquete.'); },
+    async waitlistJoin(d) { return this.post(Object.assign({ action: 'waitlistJoin', captcha: M.Captcha ? await M.Captcha.token() : '' }, d), 'No se pudo guardar tu lugar en la lista.'); },
+    async bonoOrder(d) { return this.post(Object.assign({ action: 'bonoOrder', captcha: M.Captcha ? await M.Captcha.token() : '' }, d), 'No se pudo preparar el pago del paquete.'); },
     bonoCapture(id, orderId) { return this.post({ action: 'bonoCapture', id, orderId }, 'No se pudo confirmar el pago del paquete.'); },
-    giftOrder(d) { return this.post(Object.assign({ action: 'giftOrder' }, d), 'No se pudo preparar el pago de la tarjeta.'); },
+    async giftOrder(d) { return this.post(Object.assign({ action: 'giftOrder', captcha: M.Captcha ? await M.Captcha.token() : '' }, d), 'No se pudo preparar el pago de la tarjeta.'); },
     giftCapture(id, orderId) { return this.post({ action: 'giftCapture', id, orderId }, 'No se pudo confirmar el pago de la tarjeta.'); },
     capture(id, orderId) { return this.post({ action: 'capture', id, orderId }, 'No se pudo confirmar el pago.'); },
     release(id, token) { return this.post({ action: 'release', id, token }, '').catch(() => null); },

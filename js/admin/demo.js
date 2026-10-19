@@ -146,6 +146,41 @@
   items.push(Object.assign(makeAppt(people[0], A.addDays(today, -40), '10:00', [svc('micropigmentacion')]), { status: 'completada' }));
   items[items.length - 1].payment.balanceStatus = 'pagado'; items[items.length - 1].payment.balanceMethod = 'efectivo'; items[items.length - 1].payment.balancePaidAt = items[items.length - 1].end;
 
+  /* Transferencias por revisar, una esperando comprobante y un depósito por devolver */
+  const accounts = [
+    { id: 'CTA-DEMO1', banco: 'Banco Popular', tipo: 'Ahorros', numero: '812345678', titular: 'María José Bella', documento: '001-0000000-1', nota: '', activa: 'si', orden: 1, creada: nowIso() },
+    { id: 'CTA-DEMO2', banco: 'Banreservas', tipo: 'Corriente', numero: '9600001112', titular: 'MAJOBELLA SRL', documento: '', nota: 'Desde otros bancos puede tardar unas horas.', activa: 'si', orden: 2, creada: nowIso() },
+  ];
+  const transferDemo = (p, days, time, ids, status) => {
+    let key = A.addDays(today, days);
+    while (!M.Schedule.hoursFor(key)) key = A.addDays(key, 1);
+    const a = makeAppt(p, key, time, ids.map(svc));
+    a.status = status;
+    a.payment.depositMethod = 'transferencia'; a.payment.depositPaid = false; a.payment.depositPaidAt = ''; a.payment.depositUSD = '';
+    a.payment.transfer = { deadline: status === 'retenida' ? new Date(Date.now() + 40 * 60000).toISOString() : '', proof: status === 'por-confirmar', sentAt: status === 'por-confirmar' ? new Date(Date.now() - (35 + days * 50) * 60000).toISOString() : '', account: 'CTA-DEMO1' };
+    a.holdUntil = status === 'retenida' ? a.payment.transfer.deadline : '';
+    a.createdAt = new Date(Date.now() - 3 * 3600000).toISOString();
+    items.push(a);
+    return a;
+  };
+  const t1 = transferDemo(people[3], 2, '11:00', ['pestanas'], 'por-confirmar');
+  t1.transferRef = '00451287'; t1.proofId = 'ARC-TRF1';
+  const t2 = transferDemo(people[5], 4, '15:00', ['faciales'], 'por-confirmar');
+  t2.proofId = 'ARC-TRF2'; t2.payment.transfer.account = 'CTA-DEMO2';
+  transferDemo(people[7], 5, '10:00', ['cejas'], 'retenida');
+  const rf = transferDemo(people[8], 6, '12:00', ['micropigmentacion'], 'cancelada');
+  rf.cancelledBy = 'clienta'; rf.cancelledAt = nowIso(); rf.payment.depositPaid = true; rf.payment.refund = 'pendiente'; rf.payment.refundDetail = 'pendiente: devolver por transferencia'; rf.refundPending = true;
+  const errors = [
+    { row: 3, fecha: new Date(Date.now() - 5 * 3600000).toISOString(), tipo: 'correo', mensaje: 'No se pudo enviar «Tu cita se acerca» a clienta@ejemplo: Service invoked too many times for one day: email.', ref: 'MJB-DEMO', detalle: '', avisado: nowIso(), resuelto: '' },
+    { row: 2, fecha: new Date(Date.now() - 3 * 86400000).toISOString(), tipo: 'automatizacion', mensaje: 'recordatorios: Exceeded maximum execution time', ref: '', detalle: '', avisado: '', resuelto: nowIso() },
+  ];
+  const security = {
+    admins: ['majo@ejemplo.com'], turnstile: { siteKey: false, secret: false }, paypalEnv: 'sandbox',
+    sheet: { access: 'PRIVATE', editors: ['majo@ejemplo.com'], viewers: [] }, folder: { access: 'PRIVATE', editors: [], viewers: [] },
+    accesses: [{ email: 'majo@ejemplo.com', at: nowIso(), device: 'iPhone · Safari' }, { email: 'majo@ejemplo.com', at: new Date(Date.now() - 86400000).toISOString(), device: 'Mac · Chrome' }],
+    inactivityMinutes: 30,
+  };
+
   /* Imagen de ejemplo para las fotos */
   function demoImage(label) {
     const c = document.createElement('canvas');
@@ -155,14 +190,14 @@
     g.addColorStop(0, label === 'Antes' ? '#e9e2dc' : '#f3dfe2'); g.addColorStop(1, '#ffffff');
     x.fillStyle = g; x.fillRect(0, 0, 900, 600);
     x.fillStyle = '#111'; x.font = '42px Georgia, serif'; x.textAlign = 'center';
-    x.fillText(`Foto de ejemplo · ${label}`, 450, 310);
+    x.fillText(label === 'Comprobante' ? 'Comprobante de ejemplo · RD$ 900' : `Foto de ejemplo · ${label}`, 450, 310);
     return c.toDataURL('image/jpeg', 0.8).split(',')[1];
   }
   const pdfStub = btoa('%PDF-1.1\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 144]/Contents 4 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Times-Roman>>>>>>>>endobj 4 0 obj<</Length 58>>stream\nBT /F1 18 Tf 30 70 Td (Consentimiento de ejemplo) Tj ET\nendstream endobj\ntrailer<</Root 1 0 R>>\n%%EOF');
   const uploaded = {};
 
   const db = () => ({
-    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, services, gallery, reviews, packages, bonos, waitlist, emails,
+    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, services, gallery, reviews, packages, bonos, waitlist, emails, accounts, errors, security,
     automation: { trigger: true, quota: 96, lastRun: { at: new Date(Date.now() - 22 * 60000).toISOString(), out: {} } },
     consentDefault: 'Declaro que la información que di sobre mi salud es verdadera y completa…\n\n(Texto general de ejemplo.)',
     schedule: { hours: M.config.schedule.hours, blocked: ['2026-12-25', '2027-01-01'], minNotice: 3, maxDays: 60, step: 30 },
@@ -184,7 +219,8 @@
           if (d.op === 'saldoEfectivo' || d.op === 'saldoTransferencia') { p.balanceStatus = 'pagado'; p.balanceMethod = d.op === 'saldoEfectivo' ? 'efectivo' : 'transferencia'; p.balancePaidAt = nowIso(); }
           if (d.op === 'saldoPendiente') { p.balanceStatus = 'pendiente'; p.balanceMethod = ''; p.balancePaidAt = ''; }
           if (d.op === 'nota') a.internalNote = d.note;
-          if (d.op === 'cancelar') { a.status = 'cancelada'; a.cancelledBy = 'estudio'; a.cancelledAt = nowIso(); if (d.refund) { p.refund = p.depositMethod === 'paypal' ? 'reembolsado' : ''; p.refundDetail = p.depositMethod === 'paypal' ? 'reembolsado (demo)' : 'devolver a mano (pago fuera de PayPal)'; } }
+          if (d.op === 'cancelar') { a.status = 'cancelada'; a.cancelledBy = 'estudio'; a.cancelledAt = nowIso(); if (d.refund) { p.refund = p.depositMethod === 'paypal' ? 'reembolsado' : 'pendiente'; p.refundDetail = p.depositMethod === 'paypal' ? 'reembolsado (demo)' : 'pendiente: devolver por transferencia'; a.refundPending = p.depositMethod !== 'paypal'; } }
+          if (d.op === 'reembolsoHecho') { p.refund = 'reembolsado'; p.refundDetail = `reembolsado a mano · ${today}`; a.refundPending = false; }
           return { ok: true, item: clone(a) };
         }
         case 'adminCreate': {
@@ -242,6 +278,7 @@
           return { ok: true, file: clone(f) };
         }
         case 'adminFile': {
+          if (/^ARC-TRF/.test(d.id)) return { ok: true, mime: 'image/jpeg', name: 'comprobante.jpg', data: demoImage('Comprobante') };
           const f = files.find((x) => x.id === d.id);
           const data = uploaded[f.id] || (f.mime === 'application/pdf' ? pdfStub : demoImage(f.tipo === 'antes' ? 'Antes' : 'Después'));
           return { ok: true, mime: f.mime, name: f.nombre, data };
@@ -335,10 +372,25 @@
           waitlist[i].estado = d.estado || waitlist[i].estado; return { ok: true, item: clone(waitlist[i]) };
         }
         case 'adminEmailPreview': {
-          const TITLE = { confirmacion: '¡Te esperamos, Ana!', recordatorio: 'Tu cita es mañana, Ana', resena: '¿Cómo te sentiste, Ana?', retoque: 'Es momento de tu retoque', cumpleanos: '¡Feliz cumpleaños, Ana!', espera: 'Se liberó un horario', paquete: '¡Gracias, Ana!', cancelacion: 'Cancelaste tu cita', consentimiento: 'Recibimos tu consentimiento' };
+          const TITLE = { transferencia: 'Gracias, Ana', transferenciaRechazada: 'No pudimos confirmar tu cita', cambio: 'Tu cita cambió de horario', billetera: 'Tus códigos', confirmacion: '¡Te esperamos, Ana!', recordatorio: 'Tu cita es mañana, Ana', resena: '¿Cómo te sentiste, Ana?', retoque: 'Es momento de tu retoque', cumpleanos: '¡Feliz cumpleaños, Ana!', espera: 'Se liberó un horario', paquete: '¡Gracias, Ana!', cancelacion: 'Cancelaste tu cita', consentimiento: 'Recibimos tu consentimiento' };
           const html = `<!doctype html><body style="margin:0;background:#f4f4f2;font-family:Georgia,serif"><div style="max-width:560px;margin:28px auto;background:#fff;border:1px solid #e6e6e6"><div style="text-align:center;padding:30px;border-bottom:1px solid #111"><img src="assets/logo-majobella.png" width="170" alt="MAJOBELLA"></div><div style="padding:30px 36px"><p style="letter-spacing:4px;font-size:11px;color:#6b6b6b">EJEMPLO</p><h1 style="font-weight:normal">${TITLE[d.tipo] || 'Correo'}</h1><p style="color:#333">En el modo demo se muestra un ejemplo simplificado. Con la hoja conectada verás el correo real con los datos de la cita.</p></div><div style="background:#111;color:#fff;text-align:center;padding:22px;letter-spacing:5px;font-size:12px">MÁS YO, MÁS BELLA.</div></div></body>`;
           return { ok: true, subject: `${TITLE[d.tipo] || 'Correo'} · MAJOBELLA`, html };
         }
+        case 'adminSaveAccount': {
+          const v = Object.assign({}, d.account);
+          if (!v.banco || !v.numero || !v.titular) return Promise.reject(new Error('Escribe el banco, el número de cuenta y el titular.'));
+          const r = accounts.find((x) => x.id === v.id);
+          if (r) Object.assign(r, v); else { v.id = uid('CTA'); v.creada = nowIso(); accounts.push(v); }
+          return { ok: true, account: clone(r || v), accounts: clone(accounts) };
+        }
+        case 'adminDeleteAccount': { const i = accounts.findIndex((x) => x.id === d.id); if (i >= 0) accounts.splice(i, 1); return { ok: true, accounts: clone(accounts) }; }
+        case 'adminTransferReview': {
+          const a = find(d.id);
+          if (d.decision === 'confirmar') { a.status = 'confirmada'; a.payment.depositPaid = true; a.payment.depositPaidAt = nowIso(); a.reviewedAt = nowIso(); a.holdUntil = ''; }
+          else { a.status = 'cancelada'; a.cancelledBy = 'estudio: transferencia rechazada'; a.cancelledAt = nowIso(); a.internalNote = `Transferencia rechazada: ${d.reason}`; }
+          return { ok: true, item: clone(a) };
+        }
+        case 'adminResolveErrors': { errors.forEach((e) => { if (!e.resuelto && (d.all || String(e.row) === String(d.row))) e.resuelto = nowIso(); }); return { ok: true, errors: clone(errors) }; }
         case 'adminEmailTest': return { ok: true, to: 'tu-correo@ejemplo.com (demo: no se envía)' };
         case 'adminRunAutomations': return { ok: true, result: { recordatorios: 0, resenas: 0, retoques: 0, cumpleanos: 0, espera: 0 }, automation: { trigger: true, quota: 96, lastRun: { at: nowIso(), out: {} } }, emails: clone(emails) };
         default: throw new Error('Acción no disponible en el ejemplo.');

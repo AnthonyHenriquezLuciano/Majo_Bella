@@ -13,13 +13,17 @@
     get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
   };
-  const K = { profile: 'mjb.client.v1', wallet: 'mjb.wallet.v1', onboard: 'mjb.app.onboard.v1', banner: 'mjb.app.banner.v1' };
+  const K = { profile: 'mjb.client.v1', wallet: 'mjb.wallet.v1', hidden: 'mjb.wallet.hidden.v1', onboard: 'mjb.app.onboard.v1', banner: 'mjb.app.banner.v1' };
   const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const MSHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const WSHORT = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 
   const I = {
+    card: '<svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>',
+    bank: '<svg viewBox="0 0 24 24"><path d="M3.5 9.5L12 4.5l8.5 5M5.5 10v7.5M10 10v7.5M14 10v7.5M18.5 10v7.5M3.5 19.5h17"/></svg>',
+    up: '<svg viewBox="0 0 24 24"><path d="M12 15.5V4.5M8 8.5l4-4 4 4M5 14.5v3a2 2 0 002 2h10a2 2 0 002-2v-3"/></svg>',
+    mail: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 7l8 6 8-6"/></svg>',
     plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
     check: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
     chev: '<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>',
@@ -62,7 +66,7 @@
   const longDate = (key) => { const p = M.parseKey(key); return `${p.d} de ${MONTHS[p.m]}`; };
   const longDateY = (key) => { const p = M.parseKey(key); return `${p.d} de ${MONTHS[p.m]} de ${p.y}`; };
   const whenText = (a) => `${M.weekdayName(a.date)} ${longDate(a.date)} · ${M.fmtTime12(a.time)}`;
-  const isUpcoming = (a) => new Date(a.end).getTime() > Date.now() && !['cancelada', 'completada', 'no-asistio', 'expirada', 'retenida'].includes(a.status);
+  const isUpcoming = (a) => new Date(a.end).getTime() > Date.now() && !['cancelada', 'completada', 'no-asistio', 'expirada'].includes(a.status) && (a.status !== 'retenida' || M.Appointments.waitingProof(a));
   const names = (a) => (a.services || []).map((s) => s.name).join(' + ');
   const mapsUrl = () => C.contact.mapsUrl || (C.contact.lat ? `https://maps.google.com/?q=${C.contact.lat},${C.contact.lng}` : '');
   const waUrl = (text) => M.WhatsApp.link(text || C.whatsapp.greeting);
@@ -210,12 +214,30 @@
     list.unshift({ code, at: new Date().toISOString() });
     store.set(K.wallet, list.slice(0, 20));
   }
-  function removeFromWallet(code) { store.set(K.wallet, walletCodes().filter((c) => c.code !== code)); app.wallet = app.wallet.filter((w) => w.code !== code); }
+  function removeFromWallet(code) {
+    store.set(K.wallet, walletCodes().filter((c) => c.code !== code));
+    store.set(K.hidden, [...new Set([...(store.get(K.hidden, []) || []), code])]);
+    app.wallet = app.wallet.filter((w) => w.code !== code);
+  }
+  /* Códigos guardados en este celular + (con Google) los comprados o recibidos con su correo */
   async function loadWallet() {
-    const codes = walletCodes().map((c) => c.code);
-    if (!codes.length || !API.enabled()) { app.wallet = []; app.walletLoaded = true; return; }
-    try { const r = await API.post({ action: 'walletLookup', codes }, 'No se pudo leer tu billetera.'); app.wallet = r.items || []; }
-    catch (e) { app.walletError = e.message; }
+    if (!API.enabled()) { app.wallet = []; app.walletLoaded = true; return; }
+    const hidden = store.get(K.hidden, []) || [];
+    let items = [];
+    if (M.Auth.user && M.Auth.token) {
+      try {
+        const r = await API.myWallet(M.Auth.token);
+        items = (r.items || []).filter((x) => !hidden.includes(x.code));
+        items.forEach((x) => { if (!walletCodes().some((c) => c.code === x.code)) addToWallet(x.code); });
+      } catch (e) { app.walletError = e.message; }
+    }
+    const codes = walletCodes().map((c) => c.code).filter((c) => !items.some((x) => x.code === c));
+    if (codes.length) {
+      try { const r = await API.post({ action: 'walletLookup', codes }, 'No se pudo leer tu billetera.'); items = items.concat(r.items || []); }
+      catch (e) { app.walletError = e.message; }
+    }
+    const order = walletCodes().map((c) => c.code);
+    app.wallet = items.sort((a, b) => order.indexOf(a.code) - order.indexOf(b.code));
     app.walletLoaded = true;
   }
 
@@ -537,7 +559,7 @@
         <div class="total"><dt>Depósito hoy</dt><dd>${M.fmtPrice(pr.depositRD)}${pr.depositRD > 0 ? `<small>${M.fmtUSD(pr.depositUSD)} con PayPal</small>` : `<small>${pr.giftAppliedRD > 0 ? 'cubierto' : 'no requiere depósito'}</small>`}</dd></div>
         <div><dt>Al terminar</dt><dd>${from}${M.fmtPrice(pr.balanceRD)}<small>efectivo, transferencia o PayPal</small></dd></div>`;
       const hrs = (C.policies && C.policies.changeHours) || 24;
-      $('bk-policy').innerHTML = `${pr.depositRD > 0 ? `Si cancelas con ${hrs} horas o más de aviso, te devolvemos el depósito. ` : ''}Llega 10 minutos antes. <a href="../cancelacion.html">Política de cancelación</a>`;
+      $('bk-policy').innerHTML = `${pr.depositRD > 0 ? `Con ${hrs} horas o más de aviso puedes cambiar la fecha o cancelar y te devolvemos el depósito. ` : ''}Llega 10 minutos antes. Al reservar aceptas los <a href="../terminos.html">términos</a> y la <a href="../cancelacion.html">política de cancelación</a>.`;
       const label = pr.depositRD > 0 ? `Pagar ${M.fmtPrice(pr.depositRD)}` : 'Confirmar cita';
       setActionbar(`<div class="ab-text"><b>${from}${M.fmtPrice(pr.totalRD)}</b><small>${pr.depositRD > 0 ? `Hoy ${M.fmtPrice(pr.depositRD)} · resto al terminar` : 'Sin pago hoy'}</small></div><button type="button" class="btn" id="bk-pay">${label}</button>`);
     },
@@ -602,7 +624,75 @@
         } catch (err) { toast(err.message); btn.disabled = false; btn.textContent = 'Confirmar cita'; API.refreshBusy(true).catch(() => {}); }
         return;
       }
-      this.paySheet(a, pr);
+      const pp = M.PayPal.configured(), tf = M.Transfer.enabled();
+      if (pp && tf) this.methodSheet(a, pr);
+      else if (tf) this.transferSheet(a, pr);
+      else this.paySheet(a, pr);
+    },
+    methodSheet(a, pr) {
+      openSheet(sheetHead('¿Cómo pagas el depósito?', `${M.fmtPrice(pr.depositRD)} hoy · ${M.fmtPrice(pr.balanceRD)} al terminar`) + `
+        <div class="stack">
+          <button type="button" class="method press" data-method="paypal"><span class="ri">${I.card}</span><span class="rt">PayPal o tarjeta<small>${M.fmtUSD(pr.depositUSD)} · tu cita queda confirmada al instante</small></span>${I.chev}</button>
+          <button type="button" class="method press" data-method="transferencia"><span class="ri">${I.bank}</span><span class="rt">Transferencia bancaria<small>${M.fmtPrice(pr.depositRD)} en pesos · subes el comprobante y te confirmamos</small></span>${I.chev}</button>
+        </div>`, {
+        onMount: (b) => b.addEventListener('click', (e) => {
+          const m = e.target.closest('[data-method]');
+          if (!m) return;
+          if (m.dataset.method === 'paypal') this.paySheet(a, pr); else this.transferSheet(a, pr);
+        }),
+      });
+    },
+
+    /* ---- Depósito por transferencia ---- */
+    transferSheet(a, pr) {
+      this.tfSent = false;
+      const render = (b) => {
+        const h = this.hold && this.hold.transfer ? this.hold : null;
+        if (!h) {
+          b.innerHTML = sheetHead('Pago por transferencia', `Depósito de ${M.fmtPrice(pr.depositRD)} en pesos`) + `
+            <ol class="tf-steps"><li><b>Te apartamos el horario</b> por ${M.Transfer.minutes()} minutos.</li><li><b>Transfieres</b> desde la app de tu banco.</li><li><b>Subes la foto</b> del comprobante y te confirmamos.</li></ol>
+            <button type="button" class="btn btn-block" id="tf-hold">Apartar mi horario</button><p class="msg" id="tf-msg"></p>`;
+          b.querySelector('#tf-hold').addEventListener('click', async (e) => {
+            const btn = e.currentTarget; btn.disabled = true; btn.textContent = 'Apartando…';
+            try {
+              const res = await API.hold(a, M.Auth.token, { method: 'transferencia' });
+              if (res.confirmed) { closeSheet(() => this.finish(a, res, res.appointment)); return; }
+              this.hold = { ...res, transfer: true };
+              const record = { ...a, id: res.id, status: 'retenida', token: res.manageToken, remote: true, createdAt: new Date().toISOString(),
+                payment: { depositRD: res.depositRD, balanceRD: res.balanceRD, depositPaid: false, depositMethod: 'transferencia', transfer: { deadline: res.expiresAt, proof: false } } };
+              M.Appointments.add(record);
+              vibrate(8);
+              render(b);
+            } catch (err) { btn.disabled = false; btn.textContent = 'Apartar mi horario'; const m = b.querySelector('#tf-msg'); m.className = 'msg err'; m.textContent = err.message; API.refreshBusy(true).catch(() => {}); }
+          });
+          return;
+        }
+        b.innerHTML = sheetHead('Transfiere y sube el comprobante', '') + `
+          <p class="note" style="margin-top:0"><span class="timer" id="pay-timer">${I.clock}<span></span></span></p>
+          ${proofHtml(h.accounts || M.Transfer.accounts(), h.depositRD, 'tf')}
+          <p class="note">¿Lo haces luego? Cierra esta ventana: tu horario queda apartado y lo subes desde <b>Mis citas</b>.</p>`;
+        this.startTimer(b);
+        mountProof(b, 'tf', async (file, account, ref) => {
+          const res = await API.transferProof(h.id, { token: h.manageToken }, file, account, ref);
+          this.tfSent = true; this.paid = true;
+          M.Appointments.update(h.id, { status: res.appointment.status, payment: res.appointment.payment });
+          const done = this.hold; this.hold = null; this.stopTimer();
+          closeSheet(() => this.finish(a, done, res.appointment));
+        });
+      };
+      openSheet('', {
+        onMount: (b) => render(b),
+        onClose: () => {
+          this.stopTimer();
+          if (this.hold && this.hold.transfer && !this.tfSent) {
+            const h = this.hold; this.hold = null;
+            toast(`Tu horario está apartado hasta las ${M.Transfer.deadlineText({ payment: { transfer: { deadline: h.expiresAt } } })}: sube el comprobante desde Mis citas`);
+            this.ids = []; this.date = null; this.time = null;
+            app.apptsAt = 0; loadAppts(true);
+            setTimeout(() => { location.hash = '#citas'; }, 30);
+          }
+        },
+      });
     },
     paySheet(a, pr) {
       const sigNow = JSON.stringify([this.ids, this.date, this.time, a.client.email]);
@@ -682,10 +772,11 @@
       if (!r) { this.go(1); return; }
       const consent = r.consent && r.consent.needed && !r.consent.signed && r.consent.url;
       const cal = M.CalendarLinks.googleUrl({ title: `Cita en MAJOBELLA · ${names(r)}`, start: new Date(r.start), end: new Date(r.end), description: `Código: ${r.id}`, location: C.contact.address || 'MAJOBELLA Beauty Studio' });
+      const waiting = r.status === 'por-confirmar';
       $('s-reservar').innerHTML = `
-        <div class="done"><div class="ring">${I.check}</div><h2>¡Cita confirmada!</h2>
+        <div class="done"><div class="ring">${I.check}</div><h2>${waiting ? '¡Comprobante enviado!' : '¡Cita confirmada!'}</h2>
           <p>${esc(names(r))}<br><b style="color:var(--ink)">${esc(whenText(r))}</b></p>
-          <p style="font-size:14px">Te enviamos la confirmación a ${esc(r.client && r.client.email)}.</p></div>
+          <p style="font-size:14px">${waiting ? 'Tu horario está apartado. Te confirmamos la cita por correo en cuanto veamos el depósito.' : `Te enviamos la confirmación a ${esc(r.client && r.client.email)}.`}</p></div>
         ${consent ? `<div class="warn-box" style="margin-bottom:12px">Antes de tu cita, firma el consentimiento. Toma 2 minutos.</div><a class="btn btn-block" href="${esc(r.consent.url)}">${I.pen} Firmar consentimiento</a>` : ''}
         <div class="stack" style="margin-top:12px">
           <a class="btn btn-block ${consent ? 'btn-ghost' : ''}" href="${esc(cal)}" target="_blank" rel="noopener">${I.calPlus} Añadir a mi calendario</a>
@@ -721,7 +812,7 @@
     const p = M.parseKey(a.date);
     const st = a.status || 'pendiente';
     const past = !isUpcoming(a);
-    const label = past && st === 'confirmada' ? 'Realizada' : (M.STATUS[st] || st);
+    const label = past && st === 'confirmada' ? 'Realizada' : st === 'retenida' ? 'Falta el comprobante' : (M.STATUS[st] || st);
     const cls = st === 'confirmada' ? (past ? 'off' : 'ok') : st === 'cancelada' ? 'off' : st === 'completada' ? 'off' : 'warn';
     const consent = !past && a.consent && a.consent.needed && !a.consent.signed;
     return `<button type="button" class="appt${isNext ? ' next' : ''}${st === 'cancelada' ? ' is-off' : ''}" data-appt="${esc(a.id)}">
@@ -740,7 +831,10 @@
     const p = a.payment || {};
     const hrs = (C.policies && C.policies.changeHours) || 24;
     const left = (new Date(a.start).getTime() - Date.now()) / 3600000;
-    const canCancel = remote && st === 'confirmada' && left > 0;
+    const canCancel = remote && ['confirmada', 'por-confirmar'].includes(st) && left > 0;
+    const waiting = st === 'retenida' && M.Appointments.waitingProof(a);
+    const rc = past ? { ok: false } : M.Reschedule.check(a);
+    const viaTransfer = p.depositMethod === 'transferencia';
     const balanceDue = remote && p.depositPaid && p.balanceStatus !== 'pagado' && p.balanceRD > 0 && ['confirmada', 'completada'].includes(st) && M.PayPal.configured() && new Date(a.start).getTime() <= Date.now() + 15 * 60000;
     const consent = !past && a.consent && a.consent.needed;
     const cal = M.CalendarLinks.googleUrl({ title: `Cita en MAJOBELLA · ${names(a)}`, start: new Date(a.start), end: new Date(a.end), description: `Código: ${a.id}`, location: C.contact.address || 'MAJOBELLA Beauty Studio' });
@@ -749,12 +843,16 @@
     const askOn = cancelAsk === a.id;
     openSheet(`
       <div class="sheet-head" style="margin-bottom:10px"><div></div><button type="button" class="sheet-x" data-close aria-label="Cerrar">${I.x}</button></div>
-      <div class="detail-hero"><p class="kicker">${esc(past && st === 'confirmada' ? 'Realizada' : (M.STATUS[st] || st))}</p><h3 id="sheet-title">${esc(names(a))}</h3><p>${esc(whenText(a))}</p>${!past ? `<p style="margin-top:6px;font-size:14px;opacity:.75">${esc(countdown(a))}</p>` : ''}</div>
+      <div class="detail-hero"><p class="kicker">${esc(past && st === 'confirmada' ? 'Realizada' : st === 'retenida' ? 'Falta el comprobante' : (M.STATUS[st] || st))}</p><h3 id="sheet-title">${esc(names(a))}</h3><p>${esc(whenText(a))}</p>${!past ? `<p style="margin-top:6px;font-size:14px;opacity:.75">${esc(countdown(a))}</p>` : ''}</div>
       ${!past && st !== 'cancelada' ? `<div class="grid-acts">
         <a href="${esc(cal)}" target="_blank" rel="noopener">${I.calPlus}<span>Calendario</span></a>
         ${mapsUrl() ? `<a href="${esc(mapsUrl())}" target="_blank" rel="noopener">${I.pin}<span>Cómo llegar</span></a>` : ''}
         ${wa ? `<a href="${esc(wa)}" target="_blank" rel="noopener">${I.chat}<span>WhatsApp</span></a>` : ''}
       </div>` : '<div style="height:12px"></div>'}
+      ${waiting ? `<div class="warn-box">Tienes hasta las <b>${esc(M.Transfer.deadlineText(a))}</b> para transferir <b>${M.fmtPrice(p.depositRD)}</b> y subir el comprobante. Si no, el horario se libera.</div>
+        <button type="button" class="btn btn-block" style="margin:10px 0 4px" data-proof="${esc(a.id)}">${I.up} Subir comprobante</button>` : ''}
+      ${st === 'por-confirmar' ? '<div class="ok-box">Recibimos tu comprobante. Te confirmamos por correo en cuanto veamos el depósito.</div>' : ''}
+      ${p.refund === 'pendiente' ? `<div class="ok-box">Te devolveremos el depósito de ${M.fmtPrice(p.depositRD)} por transferencia.</div>` : ''}
       ${consent ? (a.consent.signed ? '<div class="ok-box">Consentimiento firmado ✓</div>' : (a.consent.url ? `<div class="warn-box">Falta firmar el consentimiento antes de tu cita.</div><a class="btn btn-block" style="margin-top:10px" href="${esc(a.consent.url)}">${I.pen} Firmar consentimiento</a>` : '')) : ''}
       <dl class="lines">
         <div><dt>Duración</dt><dd>${esc(M.fmtDuration(a.durationMinutes || 0))}</dd></div>
@@ -762,15 +860,17 @@
         ${p.discountRD > 0 ? `<div><dt>Descuento</dt><dd>−${M.fmtPrice(p.discountRD)}</dd></div>` : ''}
         ${p.giftRD > 0 ? `<div><dt>Tarjeta de regalo</dt><dd>−${M.fmtPrice(p.giftRD)}</dd></div>` : ''}
         ${a.bono ? `<div><dt>Paquete</dt><dd>${esc(a.bono.code)}</dd></div>` : ''}
-        ${p.depositRD > 0 ? `<div><dt>Depósito</dt><dd>${p.refund === 'reembolsado' ? 'Reembolsado' : p.depositPaid ? `${M.fmtPrice(p.depositRD)} ✓` : M.fmtPrice(p.depositRD)}</dd></div>` : ''}
+        ${p.depositRD > 0 ? `<div><dt>Depósito</dt><dd>${p.refund === 'reembolsado' ? 'Reembolsado' : p.depositPaid ? `${M.fmtPrice(p.depositRD)} ✓` : M.fmtPrice(p.depositRD)}${viaTransfer ? '<small>transferencia</small>' : ''}</dd></div>` : ''}
         ${st !== 'cancelada' && p.balanceRD != null ? `<div><dt>Saldo</dt><dd>${p.balanceStatus === 'pagado' ? 'Pagado ✓' : `${M.fmtPrice(p.balanceRD || 0)}<small>al terminar</small>`}</dd></div>` : ''}
         ${a.id && !String(a.id).startsWith('web-') ? `<div><dt>Código</dt><dd style="font-family:var(--mono);font-weight:400">${esc(a.id)}</dd></div>` : ''}
       </dl>
       <div class="stack" style="margin-top:18px">
         ${balanceDue ? `<button type="button" class="btn btn-block" data-balance="${esc(a.id)}">Pagar saldo con PayPal</button><div class="pp-box" id="bal-box" hidden></div><p class="msg" id="bal-msg"></p>` : ''}
+        ${rc.ok ? `<button type="button" class="btn btn-block btn-soft" data-move="${esc(a.id)}">${I.cal} Cambiar fecha</button>` : ''}
+        ${!rc.ok && ['used', 'late'].includes(rc.reason) && remote && st === 'confirmada' ? `<p class="note" style="margin:0;text-align:center">${esc(M.Reschedule.reasonText(rc))}</p>` : ''}
         ${ids.length ? `<button type="button" class="btn btn-block btn-soft" data-again="${esc(ids.join(','))}">Reservar de nuevo</button>` : ''}
         ${canCancel ? (askOn
-          ? `<div class="warn-box">${left >= hrs ? `Faltan más de ${hrs} horas: te devolvemos el depósito completo.` : `Faltan menos de ${hrs} horas: según la política, el depósito no se devuelve.`}</div>
+          ? `<div class="warn-box">${left >= hrs ? `Faltan más de ${hrs} horas: te devolvemos el depósito completo${viaTransfer ? ' por transferencia' : ''}.` : `Faltan menos de ${hrs} horas: según la política, el depósito no se devuelve.`}</div>
              <button type="button" class="btn btn-block" style="background:var(--danger);border-color:var(--danger)" data-cancel-yes="${esc(a.id)}">Sí, cancelar mi cita</button>
              <button type="button" class="btn btn-block btn-ghost" data-cancel-no>No, mantenerla</button>`
           : `<button type="button" class="btn btn-block btn-ghost" data-cancel-ask="${esc(a.id)}">Cancelar cita</button>`) : ''}
@@ -784,7 +884,7 @@
       const res = await API.cancel(id, M.Appointments.auth(a));
       M.Appointments.update(id, { status: 'cancelada', payment: res.appointment && res.appointment.payment });
       cancelAsk = null; closeSheet();
-      toast(res.refunded ? 'Cita cancelada. Te devolvimos el depósito.' : 'Cita cancelada.');
+      toast(res.refunded ? 'Cita cancelada. Te devolvimos el depósito.' : res.refundManual ? 'Cita cancelada. Te devolveremos el depósito por transferencia.' : 'Cita cancelada.');
       await loadAppts(true);
     } catch (err) { toast(err.message); btn.disabled = false; btn.textContent = 'Sí, cancelar mi cita'; }
   }
@@ -800,6 +900,97 @@
         onError: () => { msg.className = 'msg err'; msg.textContent = 'PayPal no pudo completar el pago.'; },
       });
     } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
+  }
+
+  /* ---- Comprobante de transferencia (en la reserva y en Mis citas) ---- */
+  function proofHtml(accounts, amount, prefix) {
+    return `<div class="tf-amount"><span>Transfiere</span><b>${M.fmtPrice(amount)}</b><button type="button" class="tf-copy" data-copy-tf="${amount}">Copiar monto</button></div>
+      ${M.Transfer.accountsHtml(accounts, { name: `${prefix}-acc` })}
+      <label class="tf-file press"><input type="file" id="${prefix}-file" accept="image/*,application/pdf">${I.up}<span id="${prefix}-file-l">Subir la foto del comprobante</span></label>
+      <img class="tf-preview" id="${prefix}-prev" alt="" hidden>
+      <div class="fld"><label for="${prefix}-ref">Número de referencia <span style="font-weight:400">(opcional)</span></label><input id="${prefix}-ref" maxlength="60" autocomplete="off"></div>
+      <button type="button" class="btn btn-block" id="${prefix}-send" disabled style="margin-top:14px">Enviar comprobante</button>
+      <p class="msg" id="${prefix}-msg"></p>`;
+  }
+  function mountProof(b, prefix, send) {
+    let file = null;
+    const q = (x) => b.querySelector(`#${prefix}-${x}`);
+    const msg = (t, k) => { const m = q('msg'); m.className = `msg${k ? ` ${k}` : ''}`; m.textContent = t || ''; };
+    b.addEventListener('click', (e) => { const c = e.target.closest('[data-copy],[data-copy-tf]'); if (c) { e.preventDefault(); e.stopPropagation(); copy(c.dataset.copy || c.dataset.copyTf, 'Copiado'); } });
+    q('file').addEventListener('change', async (e) => {
+      const f = e.target.files[0];
+      q('send').disabled = true;
+      if (!f) return;
+      try {
+        msg('Preparando…');
+        file = await M.Transfer.prepare(f);
+        q('file-l').textContent = f.name || 'Comprobante listo';
+        const pv = q('prev'); pv.hidden = !file.preview; if (file.preview) pv.src = file.preview;
+        q('send').disabled = false; msg('');
+      } catch (err) { file = null; msg(err.message, 'err'); }
+    });
+    q('send').addEventListener('click', async () => {
+      if (!file) return;
+      const btn = q('send'); btn.disabled = true; btn.textContent = 'Enviando…';
+      try { await send(file, M.Transfer.pickedAccount(b, `${prefix}-acc`), q('ref').value.trim()); vibrate([12, 40, 12]); }
+      catch (err) { btn.disabled = false; btn.textContent = 'Enviar comprobante'; msg(err.message, 'err'); }
+    });
+  }
+  function proofSheet(id) {
+    const a = app.appts.find((x) => x.id === id) || M.Appointments.get(id);
+    if (!a) return;
+    openSheet(sheetHead('Sube tu comprobante', `Antes de las ${esc(M.Transfer.deadlineText(a))}`) + proofHtml(M.Transfer.accounts(), a.payment.depositRD, 'pf'), {
+      onMount: (b) => mountProof(b, 'pf', async (file, account, ref) => {
+        const r = await API.transferProof(a.id, M.Appointments.auth(a), file, account, ref);
+        M.Appointments.update(a.id, { status: r.appointment.status, payment: r.appointment.payment });
+        closeSheet(); toast('Comprobante enviado. Te confirmamos pronto.');
+        await loadAppts(true);
+      }),
+    });
+  }
+
+  /* ---- Cambiar la fecha ---- */
+  function moveSheet(id) {
+    const a = app.appts.find((x) => x.id === id) || M.Appointments.get(id);
+    if (!a) return;
+    const st = { key: null, time: null, days: null, slots: null };
+    const left = M.Appointments.changesLeft(a);
+    const paint = (b) => {
+      const days = (st.days || []).filter((d) => d.free > 0);
+      b.querySelector('#mv-body').innerHTML = !st.days ? '<div class="skeleton" style="height:76px"></div>'
+        : !days.length ? '<p class="note">No hay horarios libres en las próximas semanas. Escríbenos por WhatsApp.</p>'
+          : `<div class="days" role="listbox" aria-label="Nuevo día">${days.map((d) => { const p = M.parseKey(d.key); return `<button type="button" class="day${d.key === st.key ? ' on' : ''}" data-mday="${d.key}" aria-selected="${d.key === st.key}"><small>${esc(M.weekdayName(d.key).slice(0, 3))}</small><b>${p.d}</b><small>${MSHORT[p.m]}</small></button>`; }).join('')}</div>
+            ${st.key ? (st.slots == null ? '<div class="skeleton" style="height:48px;margin-top:14px"></div>' : `<div class="slots" style="margin-top:14px">${st.slots.map((t) => `<button type="button" class="slot${t === st.time ? ' on' : ''}" data-mtime="${t}">${esc(M.fmtTime12(t))}</button>`).join('')}</div>`) : '<p class="note">Elige el nuevo día.</p>'}`;
+      const go = b.querySelector('#mv-save');
+      go.disabled = !(st.key && st.time);
+      go.textContent = st.key && st.time ? `Cambiar al ${M.weekdayName(st.key).toLowerCase()} ${M.parseKey(st.key).d}, ${M.fmtTime12(st.time)}` : 'Elige día y hora';
+    };
+    openSheet(sheetHead('Cambiar fecha', `Ahora: ${esc(whenText(a))}`) + `
+      <div id="mv-body"></div>
+      <p class="note">${left > 1 ? `Puedes cambiarla ${left} veces más.` : 'Puedes cambiar la fecha una vez.'} Tu depósito pasa a la nueva cita.</p>
+      <button type="button" class="btn btn-block" id="mv-save" disabled>Elige día y hora</button><p class="msg" id="mv-msg"></p>`, {
+      onMount: async (b) => {
+        paint(b);
+        b.addEventListener('click', async (e) => {
+          const d = e.target.closest('[data-mday]');
+          if (d) { st.key = d.dataset.mday; st.time = null; st.slots = null; vibrate(5); paint(b); st.slots = await M.Reschedule.slots(a, st.key); paint(b); return; }
+          const t = e.target.closest('[data-mtime]');
+          if (t) { st.time = t.dataset.mtime; vibrate(5); paint(b); return; }
+          if (e.target.closest('#mv-save')) {
+            const btn = b.querySelector('#mv-save'), m = b.querySelector('#mv-msg');
+            btn.disabled = true; btn.textContent = 'Cambiando…'; m.textContent = '';
+            try {
+              const ap = await M.Reschedule.save(a, st.key, st.time);
+              closeSheet(); vibrate([12, 40, 12]);
+              toast(`Listo: ${M.weekdayName(ap.date).toLowerCase()} ${M.parseKey(ap.date).d} a las ${M.fmtTime12(ap.time)}`);
+              await loadAppts(true);
+            } catch (err) { m.className = 'msg err'; m.textContent = err.message; paint(b); }
+          }
+        });
+        st.days = await M.Reschedule.days(a, 21);
+        if (sheet.open) paint(b);
+      },
+    });
   }
 
   /* ======================================================================
@@ -819,6 +1010,9 @@
       <div class="sec-title"><h2>Tarjetas y paquetes</h2></div>
       ${cards}
       <button type="button" class="add-code" data-add-code>${I.plus} Agregar un código</button>
+      ${API.enabled() ? (M.Auth.user
+        ? `<p class="note" style="text-align:center">Las tarjetas y paquetes con tu correo ${esc(M.Auth.user.email)} aparecen aquí solos.</p>`
+        : `<div class="surface sync-card"><b>¿Compraste o te regalaron una tarjeta?</b><p>Inicia sesión con Google en Perfil y aparecen aquí solas, o te enviamos tus códigos al correo.</p><button type="button" class="btn btn-soft btn-sm" data-wallet-mail>${I.mail} Enviarme mis códigos</button></div>`) : ''}
       ${shop.length ? `<div class="sec-title"><h2>Comprar</h2></div><div class="buy-grid">${shop.join('')}</div>` : ''}`;
   }
   function walletCard(w) {
@@ -855,6 +1049,27 @@
         <button type="button" class="link-btn" style="color:var(--muted)" data-remove-code="${esc(w.code)}">Quitar de mi billetera</button>
       </div>`);
   }
+  function walletMailSheet() {
+    const p = profile();
+    openSheet(sheetHead('Enviarme mis códigos', 'Te mandamos al correo las tarjetas y paquetes comprados o recibidos con él.') + `
+      <div class="fld" id="wm-f"><label for="wm-mail">Tu correo</label><input id="wm-mail" type="email" autocomplete="email" value="${esc(p.email || '')}"><span class="err">Revisa el correo.</span></div>
+      <button type="button" class="btn btn-block" id="wm-go" style="margin-top:16px">Enviar</button><p class="msg" id="wm-msg"></p>
+      <p class="note">Por seguridad no mostramos los códigos en pantalla: solo la dueña del correo los recibe.</p>`, {
+      onMount: (b) => {
+        b.querySelector('#wm-go').addEventListener('click', async (e) => {
+          const email = b.querySelector('#wm-mail').value.trim();
+          const ok = EMAIL.test(email);
+          b.querySelector('#wm-f').classList.toggle('bad', !ok);
+          if (!ok) return;
+          const btn = e.currentTarget, m = b.querySelector('#wm-msg');
+          btn.disabled = true; btn.textContent = 'Enviando…';
+          try { const r = await API.walletEmail(email); m.className = 'msg ok'; m.textContent = r.message; btn.textContent = 'Enviado'; }
+          catch (err) { m.className = 'msg err'; m.textContent = err.message; btn.disabled = false; btn.textContent = 'Enviar'; }
+        });
+      },
+    });
+  }
+
   function addCodeSheet() {
     openSheet(sheetHead('Agregar código', 'De una tarjeta de regalo o un paquete.') + `
       <div class="fld"><label for="ac-code">Código</label><input id="ac-code" placeholder="MJB-XXXX-XXXX o PAQ-XXXX-XXXX" autocomplete="off" autocapitalize="characters"></div>
@@ -1027,6 +1242,7 @@
       <div class="list">
         <a class="row" href="../cancelacion.html"><span class="ri">${I.doc}</span><span class="rt">Cancelación y reembolsos</span>${I.chev}</a>
         <a class="row" href="../privacidad.html"><span class="ri">${I.doc}</span><span class="rt">Privacidad</span>${I.chev}</a>
+        <a class="row" href="../terminos.html"><span class="ri">${I.doc}</span><span class="rt">Términos y condiciones</span>${I.chev}</a>
         <a class="row" href="../"><span class="ri">${I.globe}</span><span class="rt">Ver la web completa</span>${I.chev}</a>
       </div>
       <p class="foot-note">MAJOBELLA Beauty Studio · Más yo, más bella.</p>`;
@@ -1107,6 +1323,9 @@
     if ((el = t('[data-clear-code]'))) { M.Pricing.clear(el.dataset.clearCode); try { await M.Pricing.refresh(bk.items()); } catch (err) { /* local */ } bk.refreshLines(); bk.renderTags(); $('bk-code-msg').textContent = ''; return; }
     if ((el = t('#bk-pay'))) { bk.pay(el); return; }
     if ((el = t('[data-cview]'))) { citasView = el.dataset.cview; renderCitas(); return; }
+    if ((el = t('[data-proof]'))) { proofSheet(el.dataset.proof); return; }
+    if ((el = t('[data-move]'))) { moveSheet(el.dataset.move); return; }
+    if (t('[data-wallet-mail]')) { walletMailSheet(); return; }
     if ((el = t('[data-cancel-ask]'))) { cancelAsk = el.dataset.cancelAsk; apptSheet(cancelAsk); return; }
     if (t('[data-cancel-no]')) { const id = cancelAsk; cancelAsk = null; apptSheet(id); return; }
     if ((el = t('[data-cancel-yes]'))) { cancelAppt(el.dataset.cancelYes, el); return; }
@@ -1147,7 +1366,7 @@
     const q = new URLSearchParams(location.search);
     if (q.get('instalar')) { store.set(K.onboard, false); history.replaceState(null, '', location.pathname + location.hash); }
     M.Auth.init();
-    M.Auth.onChange(() => { loadAppts(true).then(loadLoyalty).then(() => render(app.tab)); });
+    M.Auth.onChange(() => { Promise.all([loadAppts(true), loadWallet()]).then(loadLoyalty).then(() => render(app.tab)); });
     M.Install.onChange(() => render(app.tab));
     route();
     if (API.enabled()) {

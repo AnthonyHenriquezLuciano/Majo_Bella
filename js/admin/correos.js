@@ -7,7 +7,7 @@
   const TYPES = {
     recordatorio: 'Recordatorio', resena: 'Pedir reseña', retoque: 'Retoque', cumpleanos: 'Cumpleaños', espera: 'Lista de espera',
     confirmacion: 'Confirmación', cambio: 'Cambio de horario', cancelacion: 'Cancelación', consentimiento: 'Consentimiento', paquete: 'Paquete',
-    tarjeta: 'Tarjeta de regalo', aviso: 'Aviso para ti', prueba: 'Prueba', otro: 'Otro',
+    tarjeta: 'Tarjeta de regalo', aviso: 'Aviso para ti', prueba: 'Prueba', otro: 'Otro', transferencia: 'Transferencia', billetera: 'Billetera',
   };
   const AUTOS = [
     { tipo: 'recordatorio', key: 'recordatorioActivo', title: 'Recordatorio de la cita', text: 'Con la dirección, el saldo y, si falta, el enlace para firmar el consentimiento.', inputs: [['recordatorioHoras', 'horas antes', 1, 72]] },
@@ -16,7 +16,7 @@
     { tipo: 'cumpleanos', key: 'cumpleActivo', title: 'Cumpleaños', text: 'El día de su cumpleaños, con un código de un solo uso.', inputs: [['cumpleDescuento', '% de descuento', 1, 100], ['cumpleDias', 'días de validez', 1, 365]] },
     { tipo: 'espera', key: 'esperaActiva', title: 'Lista de espera', text: 'Cuando se libera un horario en un día lleno, avisa a quien lo espera. También muestra la lista de espera en la web.', inputs: [] },
   ];
-  const OTHERS = [['confirmacion', 'Confirmación de la cita'], ['cancelacion', 'Cancelación'], ['consentimiento', 'Copia del consentimiento firmado'], ['paquete', 'Paquete comprado']];
+  const OTHERS = [['confirmacion', 'Confirmación de la cita'], ['transferencia', 'Comprobante de transferencia recibido'], ['transferenciaRechazada', 'Transferencia rechazada'], ['cambio', 'Cambio de fecha'], ['cancelacion', 'Cancelación'], ['consentimiento', 'Copia del consentimiento firmado'], ['paquete', 'Paquete comprado'], ['billetera', 'Mis códigos (billetera)']];
 
   const on = (v) => /^s[ií]$/i.test(String(v || '').trim());
   const ago = (iso) => {

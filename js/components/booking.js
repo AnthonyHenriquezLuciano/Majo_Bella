@@ -24,7 +24,7 @@
     const slotsBox = $('bk-slots'), slotsMsg = $('bk-slots-msg');
     const form = $('bk-form'), confirmBtn = $('bk-confirm'), missing = $('bk-missing');
     const modeNote = $('bk-mode'), result = $('bk-result'), policy = $('bk-policy');
-    const pay = { panel: $('bk-pay'), info: $('bk-pay-info'), timer: $('bk-pay-timer'), box: $('bk-paypal'), msg: $('bk-pay-msg'), back: $('bk-pay-back') };
+    const pay = { panel: $('bk-pay'), info: $('bk-pay-info'), timer: $('bk-pay-timer'), box: $('bk-paypal'), msg: $('bk-pay-msg'), back: $('bk-pay-back'), methods: $('bk-pay-methods'), pp: $('bk-pp'), tf: $('bk-tf') };
     const steps = [...document.querySelectorAll('.booking-flow .step')];
     const signinHint = $('bk-signin-hint'), remember = $('bk-remember'), savedNote = $('bk-saved-note');
     const sum = { svc: $('sum-service'), date: $('sum-date'), time: $('sum-time'), dur: $('sum-duration'), price: $('sum-price'), dep: $('sum-deposit'), bal: $('sum-balance') };
@@ -36,16 +36,19 @@
     let view = { y: t0.y, m: t0.m };
     let slotReq = 0, fastReq = 0, firstSlot = null;
     let hold = null, holdTimer = null, paying = false, takenNotice = false;
+    let payMethod = 'paypal';
 
     /* ---- Modo de reserva ---- */
+    const canPayPal = M.PayPal.configured();
+    const canTransfer = M.Transfer.enabled();
     const mode = API.enabled()
-      ? (M.PayPal.configured() ? 'pay' : 'paysoon')
+      ? (canPayPal || canTransfer ? 'pay' : 'paysoon')
       : (M.WhatsApp.isConfigured() ? 'request' : 'none');
     document.querySelectorAll('[data-pay-only]').forEach((n) => { n.hidden = mode !== 'pay'; });
     confirmBtn.textContent = mode === 'pay' ? 'Continuar al pago del depósito' : mode === 'request' ? 'Enviar solicitud' : 'Confirmar cita';
     const sandbox = PAY.paypalEnv === 'sandbox';
     modeNote.innerHTML = {
-      pay: `Pagas el depósito con PayPal (tarjeta o cuenta) y tu cita queda confirmada al instante. Te llega un correo con todos los detalles.${sandbox ? ' <strong>Modo de prueba: no se hacen cobros reales.</strong>' : ''}`,
+      pay: `${canPayPal ? 'Pagas el depósito con PayPal (tarjeta o cuenta) y tu cita queda confirmada al instante.' : ''}${canTransfer ? (canPayPal ? ' También puedes pagarlo por transferencia: subes el comprobante y te confirmamos.' : 'Pagas el depósito por transferencia, subes el comprobante y te confirmamos la cita.') : ''} Te llega un correo con todos los detalles.${sandbox && canPayPal ? ' <strong>Modo de prueba: no se hacen cobros reales.</strong>' : ''}`,
       paysoon: 'Los pagos en línea se están activando. Si tienes dudas, escríbenos por WhatsApp.',
       request: 'La reserva con depósito en línea se activa pronto. Por ahora tu cita se envía como solicitud y te confirmamos por WhatsApp.',
       none: 'Reserva en línea pendiente de activar.',
@@ -57,11 +60,11 @@
       const text = [
         mode === 'pay' && none ? 'Este servicio no requiere depósito: tu cita se confirma al instante y pagas al terminar.' : '',
         mode === 'pay' && !none ? `Apartas tu cita con ${label ? `el ${label}` : 'un depósito según cada servicio'} y pagas el resto al terminar, en efectivo, transferencia o PayPal.` : '',
-        mode === 'pay' && !none && P.changeHours ? `Si cancelas con ${P.changeHours} horas o más de aviso, te devolvemos el depósito.` : '',
+        mode === 'pay' && !none && P.changeHours ? `Con ${P.changeHours} horas o más de aviso puedes cambiar la fecha desde Mis citas o cancelar y te devolvemos el depósito.` : '',
         mode !== 'pay' && P.changeHours ? `Puedes cambiar o cancelar hasta ${P.changeHours} horas antes.` : '',
         P.arriveEarlyMinutes ? `Te recomendamos llegar ${P.arriveEarlyMinutes} minutos antes.` : '',
       ].filter(Boolean).join(' ');
-      policy.innerHTML = `${M.escapeHtml(text)} <a href="cancelacion.html" target="_blank">Política de cancelación</a> · <a href="privacidad.html" target="_blank">Privacidad</a>`;
+      policy.innerHTML = `${M.escapeHtml(text)} Al reservar aceptas los <a href="terminos.html" target="_blank">términos</a> y la <a href="cancelacion.html" target="_blank">política de cancelación</a>. <a href="privacidad.html" target="_blank">Privacidad</a>`;
     }
     renderPolicy();
 
@@ -183,7 +186,7 @@
       catch (err) { if (req === slotReq) { slotsBox.innerHTML = ''; slotsMsg.textContent = `No pudimos consultar la agenda. Intenta de nuevo en unos minutos. (Detalle: ${err.message})`; } return; }
       if (req !== slotReq) return;
       // Si la hora elegida acaba de ocuparse, se libera la selección
-      if (M.state.time && !res.slots.includes(M.state.time)) { takenNotice = true; M.set({ time: null }, 'booking-taken'); return; }
+      if (M.state.time && !res.slots.includes(M.state.time) && !hold) { takenNotice = true; M.set({ time: null }, 'booking-taken'); return; }
       if (!res.all.length) { slotsBox.innerHTML = ''; slotsMsg.textContent = 'Ese día ya no quedan horas para esta duración. Prueba con otro día o usa "Primer horario disponible".'; return; }
       slotsMsg.textContent = takenNotice ? 'La hora que habías elegido acaba de reservarse. Elige otra, por favor.'
         : res.slots.length ? '' : 'Ese día ya está completo para esta duración. Prueba con otro día o usa "Primer horario disponible".';
@@ -286,7 +289,7 @@
       $('sum-gift-label').textContent = pr.giftKind === 'bono' ? 'Paquete' : 'Tarjeta de regalo';
       $('sum-gift').innerHTML = pr.giftAppliedRD > 0 ? `−${M.fmtPrice(pr.giftAppliedRD)}` : '—';
       if (mode === 'pay') {
-        sum.dep.innerHTML = t.items.length ? (pr.depositRD > 0 ? `${M.fmtPrice(pr.depositRD)}<small>${M.fmtUSD(pr.depositUSD)} con PayPal</small>` : `${M.fmtPrice(0)}<small>${pr.giftAppliedRD > 0 ? (pr.giftKind === 'bono' ? 'cubierto con tu paquete' : 'cubierto con tu tarjeta de regalo') : 'no requiere depósito'}</small>`) : '—';
+        sum.dep.innerHTML = t.items.length ? (pr.depositRD > 0 ? `${M.fmtPrice(pr.depositRD)}<small>${canPayPal ? `${M.fmtUSD(pr.depositUSD)} con PayPal${canTransfer ? ' o RD$ por transferencia' : ''}` : 'por transferencia'}</small>` : `${M.fmtPrice(0)}<small>${pr.giftAppliedRD > 0 ? (pr.giftKind === 'bono' ? 'cubierto con tu paquete' : 'cubierto con tu tarjeta de regalo') : 'no requiere depósito'}</small>`) : '—';
         sum.bal.innerHTML = t.items.length ? `${from}${M.fmtPrice(pr.balanceRD)}<small>efectivo, transferencia o PayPal</small>` : '—';
         confirmBtn.textContent = t.items.length && pr.depositRD <= 0 ? (pr.giftAppliedRD > 0 ? (pr.giftKind === 'bono' ? 'Confirmar con mi paquete' : 'Confirmar con tarjeta de regalo') : 'Confirmar cita') : 'Continuar al pago del depósito';
         renderPolicy();
@@ -344,11 +347,13 @@
       const p = a.payment;
       result.hidden = false;
       result.innerHTML = `
-        <p class="result-title">${kind === 'paid' ? '¡Listo! Tu cita está confirmada.' : 'Tu solicitud está lista para enviar.'}</p>
-        <p class="result-text">${kind === 'paid'
+        <p class="result-title">${kind === 'paid' ? '¡Listo! Tu cita está confirmada.' : kind === 'transfer' ? '¡Recibimos tu comprobante!' : 'Tu solicitud está lista para enviar.'}</p>
+        <p class="result-text">${kind === 'transfer'
+          ? `Tu horario del ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)} queda apartado. Te confirmamos la cita por correo en cuanto veamos el depósito (normalmente el mismo día). Puedes ver su estado en Mis citas.`
+          : kind === 'paid'
           ? `Te esperamos el ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)}. ${p.depositRD > 0 ? `Recibimos tu depósito de ${M.fmtPrice(p.depositRD)} (${M.fmtUSD(p.depositUSD)}).` : (p.giftRD > 0 ? 'Tu tarjeta de regalo cubrió el depósito.' : '')} ${p.balanceRD > 0 ? `Al terminar pagas ${M.fmtPrice(p.balanceRD)} en efectivo, transferencia o PayPal.` : 'Tu cita ya está pagada.'} Te enviamos la confirmación a ${M.escapeHtml(a.client.email)}.`
           : 'Envía el mensaje que se abrió en WhatsApp y MAJOBELLA te responderá para confirmar tu cita.'}</p>
-        ${kind === 'paid' ? `<p class="result-code">Código de reserva <strong>${M.escapeHtml(a.id)}</strong></p>` : ''}
+        ${kind !== 'request' ? `<p class="result-code">Código de reserva <strong>${M.escapeHtml(a.id)}</strong></p>` : ''}
         ${prep.length ? `<div class="result-prep"><p class="rp-title">Para tu cita</p><ul>${prep.map(({ p: x }) => `<li>${M.escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
         <div class="result-actions">
           <a class="btn btn-line" href="${g}" target="_blank" rel="noopener">Google Calendar</a>
@@ -376,17 +381,22 @@
     }
 
     function stopTimer() { clearInterval(holdTimer); holdTimer = null; pay.timer.hidden = true; }
-    function startTimer() {
+    function startTimer(el) {
       stopTimer();
-      pay.timer.hidden = false;
+      const out = el || pay.timer;
+      out.hidden = false;
       const tick = () => {
         if (!hold) return stopTimer();
         const left = Math.max(0, new Date(hold.expiresAt).getTime() - Date.now());
         const mm = Math.floor(left / 60000), ss = Math.floor((left % 60000) / 1000);
-        pay.timer.textContent = `Te apartamos este horario por ${mm}:${String(ss).padStart(2, '0')} mientras pagas.`;
+        out.textContent = hold.transfer
+          ? `Tu horario está apartado por ${mm}:${String(ss).padStart(2, '0')}. Transfiere y sube el comprobante antes de que termine.`
+          : `Te apartamos este horario por ${mm}:${String(ss).padStart(2, '0')} mientras pagas.`;
         if (!left) {
+          const wasTransfer = hold.transfer;
           hold = null; stopTimer();
-          payMessage('Se acabó el tiempo para pagar y el horario se liberó. Puedes intentarlo de nuevo.', 'warn');
+          if (wasTransfer) { pay.methods.hidden = !(canPayPal && canTransfer); pay.tf.innerHTML = ''; renderTransfer(); }
+          payMessage(wasTransfer ? 'Se acabó el tiempo y el horario se liberó. Si ya transferiste, sube el comprobante desde Mis citas o escríbenos por WhatsApp.' : 'Se acabó el tiempo para pagar y el horario se liberó. Puedes intentarlo de nuevo.', 'warn');
           API.refreshBusy(true).catch(() => {});
         }
       };
@@ -395,31 +405,40 @@
     }
 
     function releaseHold() {
-      if (!hold) return;
-      API.release(hold.id, hold.manageToken);
+      if (!hold) return Promise.resolve();
+      const done = API.release(hold.id, hold.manageToken);
       hold = null; stopTimer();
+      return done;
     }
 
-    function closePay() {
+    function closePay(force) {
       if (pay.panel.hidden || paying) return;
+      if (hold && hold.transfer && !force) return; // el horario sigue apartado mientras transfiere
       releaseHold();
       pay.panel.hidden = true;
       pay.box.innerHTML = '';
+      pay.tf.innerHTML = '';
       payMessage('');
       confirmBtn.hidden = false;
     }
 
     async function openPay() {
+      pay.methods.hidden = !(canPayPal && canTransfer);
+      confirmBtn.hidden = true;
+      pay.panel.hidden = false;
+      payMessage('');
+      setMethod(canPayPal ? (payMethod === 'transferencia' && canTransfer ? 'transferencia' : 'paypal') : 'transferencia');
+      renderSummary();
+      if (!M.reduceMotion()) gsap.from(pay.panel, { opacity: 0, y: 10, duration: 0.5, ease: 'power2.out' });
+    }
+
+    async function mountPayPal() {
       const t = M.totals();
       const dep = M.Pricing.current(t.items);
       const base = dep.totalRD - (dep.giftAppliedRD || 0);
       const pctLabel = M.depositPctLabel(t.items);
       pay.info.innerHTML = `Hoy pagas <strong>${M.fmtUSD(dep.depositUSD)}</strong> (${M.fmtPrice(dep.depositRD)}${pctLabel ? `, el ${pctLabel} de ${M.fmtPrice(base)}` : ` de ${M.fmtPrice(base)}`}). Al terminar pagas ${M.fmtPrice(dep.balanceRD)} en efectivo, transferencia o PayPal. <span class="pay-rate">Tasa: RD$ ${PAY.usdRate} por US$ 1.</span>`;
-      payMessage('');
-      confirmBtn.hidden = true;
-      pay.panel.hidden = false;
-      renderSummary();
-      if (!M.reduceMotion()) gsap.from(pay.panel, { opacity: 0, y: 10, duration: 0.5, ease: 'power2.out' });
+      pay.box.innerHTML = '';
       const opened = sig();
       try {
         await M.PayPal.render(pay.box, {
@@ -468,9 +487,8 @@
             }
           },
           onCancel: () => {
-            releaseHold();
             payMessage('Cerraste PayPal sin pagar. Tu horario quedó libre; puedes intentarlo otra vez.', 'warn');
-            API.refreshBusy(true).catch(() => {});
+            releaseHold().then(() => API.refreshBusy(true)).catch(() => {});
           },
           onError: () => {
             releaseHold();
@@ -481,7 +499,108 @@
         payMessage(err.message, 'error');
       }
     }
-    pay.back.addEventListener('click', () => { closePay(); renderSummary(); });
+    pay.back.addEventListener('click', () => {
+      if (hold && hold.transfer && !confirm('Se liberará el horario que te apartamos. Si ya transferiste, mejor sube el comprobante. ¿Cambiar la cita?')) return;
+      closePay(true); renderSummary();
+    });
+
+    /* ---- Forma de pago: PayPal o transferencia ---- */
+    function setMethod(m) {
+      if (hold && !hold.transfer && m === 'transferencia') releaseHold();
+      payMethod = m;
+      pay.methods.querySelectorAll('[data-method]').forEach((b) => { const on = b.dataset.method === m; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', String(on)); });
+      pay.pp.hidden = m !== 'paypal';
+      pay.tf.hidden = m !== 'transferencia';
+      payMessage('');
+      if (m === 'transferencia') renderTransfer();
+      else mountPayPal();
+    }
+    pay.methods.addEventListener('click', (e) => { const b = e.target.closest('[data-method]'); if (b && !(hold && hold.transfer)) setMethod(b.dataset.method); });
+    M.Transfer.bindCopy(pay.tf);
+
+    function renderTransfer() {
+      const dep = M.Pricing.current(M.totals().items);
+      const amount = hold && hold.transfer ? hold.depositRD : dep.depositRD;
+      if (!(hold && hold.transfer)) {
+        pay.tf.innerHTML = `
+          <p class="pay-info">Hoy transfieres <strong>${M.fmtPrice(amount)}</strong> en pesos, sin conversión. Al terminar pagas ${M.fmtPrice(dep.balanceRD)}.</p>
+          <ol class="tf-steps"><li>Te apartamos el horario por ${M.Transfer.minutes()} minutos.</li><li>Transfieres desde tu banco a la cuenta del estudio.</li><li>Subes la foto del comprobante y te confirmamos la cita.</li></ol>
+          <button type="button" class="btn btn-primary" id="bk-tf-hold">Apartar mi horario y ver las cuentas</button>`;
+        $('bk-tf-hold').addEventListener('click', holdTransfer);
+        return;
+      }
+      pay.tf.innerHTML = `
+        <p class="pay-timer" id="bk-tf-timer" aria-live="polite"></p>
+        <p class="tf-amount">Transfiere <b>${M.fmtPrice(amount)}</b><button type="button" class="tf-copy" data-copy="${amount}">Copiar monto</button></p>
+        ${M.Transfer.accountsHtml(hold.accounts || M.Transfer.accounts(), { name: 'bk-tf-acc' })}
+        <div class="tf-upload">
+          <label class="tf-file"><input type="file" id="bk-tf-file" accept="image/*,application/pdf"><span id="bk-tf-file-l">Subir la foto del comprobante</span></label>
+          <img class="tf-preview" id="bk-tf-prev" alt="" hidden>
+          <label class="field tf-ref"><span>Número de referencia <em>(opcional)</em></span><input id="bk-tf-ref" maxlength="60" inputmode="text" autocomplete="off"></label>
+          <button type="button" class="btn btn-primary" id="bk-tf-send" disabled>Enviar comprobante</button>
+          <p class="tf-later">¿Aún no transfieres? Puedes subirlo después desde <a href="#citas">Mis citas</a> antes de que termine el tiempo.</p>
+        </div>`;
+      let file = null;
+      $('bk-tf-file').addEventListener('change', async (e) => {
+        const f = e.target.files[0];
+        $('bk-tf-send').disabled = true;
+        if (!f) return;
+        try {
+          payMessage('Preparando el comprobante…');
+          file = await M.Transfer.prepare(f);
+          $('bk-tf-file-l').textContent = f.name;
+          const prev = $('bk-tf-prev'); prev.hidden = !file.preview; if (file.preview) prev.src = file.preview;
+          $('bk-tf-send').disabled = false;
+          payMessage('');
+        } catch (err) { file = null; payMessage(err.message, 'error'); }
+      });
+      $('bk-tf-send').addEventListener('click', async () => {
+        if (!file || !hold) return;
+        const btn = $('bk-tf-send');
+        btn.disabled = true; btn.textContent = 'Enviando…'; paying = true;
+        try {
+          const h = hold;
+          const res = await API.transferProof(h.id, { token: h.manageToken }, file, M.Transfer.pickedAccount(pay.tf, 'bk-tf-acc'), $('bk-tf-ref').value.trim());
+          const ap = res.appointment;
+          M.Appointments.update(h.id, { status: ap.status, payment: ap.payment });
+          stopTimer(); hold = null; paying = false;
+          pay.panel.hidden = true; pay.tf.innerHTML = ''; confirmBtn.hidden = false;
+          M.Pricing.clear('gift'); M.Pricing.clear('code'); M.Pricing.loyal = false; $('bk-loyal').hidden = true; renderCodeTags(); codeMsg.textContent = '';
+          M.set({ time: null }, 'booked');
+          showResult(M.Appointments.get(h.id) || { ...h.appt, ...ap }, 'transfer');
+          API.refreshBusy(true).catch(() => {});
+        } catch (err) {
+          paying = false;
+          btn.disabled = false; btn.textContent = 'Enviar comprobante';
+          payMessage(err.message, 'error');
+        }
+      });
+      startTimer($('bk-tf-timer'));
+    }
+
+    async function holdTransfer() {
+      const btn = $('bk-tf-hold');
+      btn.disabled = true; btn.textContent = 'Apartando tu horario…';
+      payMessage('');
+      try {
+        const a = appointment();
+        const res = await API.hold(a, M.Auth.token, { method: 'transferencia' });
+        if (res.confirmed) { confirmedWithoutPayment(a, res); return; }
+        hold = { ...res, appt: a };
+        // Queda en "Mis citas" para subir el comprobante después
+        const record = { ...a, id: res.id, status: 'retenida', token: res.manageToken, remote: true, createdAt: new Date().toISOString(),
+          payment: { depositRD: res.depositRD, balanceRD: res.balanceRD, depositPaid: false, depositMethod: 'transferencia', transfer: { deadline: res.expiresAt, proof: false } } };
+        M.Appointments.add(record);
+        rememberClient(record);
+        pay.methods.hidden = true;
+        renderTransfer();
+        API.refreshBusy(true).catch(() => {});
+      } catch (err) {
+        btn.disabled = false; btn.textContent = 'Apartar mi horario y ver las cuentas';
+        payMessage(err.message, 'error');
+        API.refreshBusy(true).catch(() => {});
+      }
+    }
 
     /* La tarjeta de regalo cubre todo el depósito: se confirma sin PayPal */
     async function confirmWithGift(a) {
@@ -491,14 +610,7 @@
       try {
         const res = await API.hold(a, M.Auth.token);
         if (!res.confirmed) throw new Error('No se pudo confirmar la cita. Intenta de nuevo.');
-        const ap = res.appointment;
-        const record = { ...a, ...ap, client: { ...a.client, ...ap.client }, token: res.manageToken, remote: true, createdAt: new Date().toISOString() };
-        M.Appointments.add(record);
-        rememberClient(record);
-        M.Pricing.clear('gift'); M.Pricing.clear('code'); M.Pricing.loyal = false; $('bk-loyal').hidden = true; renderCodeTags(); codeMsg.textContent = '';
-        M.set({ time: null }, 'booked');
-        showResult(record, 'paid');
-        API.refreshBusy(true).catch(() => {});
+        confirmedWithoutPayment(a, res);
       } catch (err) {
         result.hidden = false;
         result.innerHTML = `<p class="result-title">No pudimos confirmar la cita.</p><p class="result-text">${M.escapeHtml(err.message)}</p>`;
@@ -506,6 +618,18 @@
         confirmBtn.textContent = label;
         renderSummary();
       }
+    }
+
+    function confirmedWithoutPayment(a, res) {
+      const ap = res.appointment;
+      const record = { ...a, ...ap, client: { ...a.client, ...ap.client }, token: res.manageToken, remote: true, createdAt: new Date().toISOString() };
+      M.Appointments.add(record);
+      rememberClient(record);
+      pay.panel.hidden = true; confirmBtn.hidden = false;
+      M.Pricing.clear('gift'); M.Pricing.clear('code'); M.Pricing.loyal = false; $('bk-loyal').hidden = true; renderCodeTags(); codeMsg.textContent = '';
+      M.set({ time: null }, 'booked');
+      showResult(record, 'paid');
+      API.refreshBusy(true).catch(() => {});
     }
 
     /* ---- Código de descuento o tarjeta de regalo ---- */

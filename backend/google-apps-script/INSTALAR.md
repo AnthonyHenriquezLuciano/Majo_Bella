@@ -180,3 +180,50 @@ Cómo la instala la clienta:
 - **iPhone (Safari)**: abre la app y toca **Compartir** → **Agregar a inicio** → **Agregar**. La app muestra estos pasos.
 
 Para compartirla, manda el enlace `https://anthonyhenriquezluciano.github.io/Majo_Bella/app/?instalar=1` (abre directamente la bienvenida con el botón de instalar).
+
+## Depósito por transferencia
+
+1. Dashboard → **Ajustes → Pago por transferencia → + Añadir cuenta**. Puedes añadir varias cuentas (banco, tipo, número, titular, cédula o RNC y una nota opcional). Con «Mostrar en la web» desmarcado, la cuenta queda guardada pero oculta.
+2. En el mismo panel eliges si aceptas transferencias y **cuántos minutos** tiene la clienta para subir el comprobante (60 por defecto). Pulsa **Guardar ajustes**.
+3. Cuando una clienta sube su comprobante:
+   - te llega un correo con la foto adjunta;
+   - en **Agenda → Pendientes** aparece con el botón **Revisar**.
+4. Revisa en la app de tu banco que el dinero llegó y pulsa **Llegó el dinero: confirmar cita**. Si no llegó o el monto no coincide, pulsa **Rechazar**: eliges el motivo, el horario se libera y la clienta recibe un correo.
+5. Si una clienta cancela con tiempo una cita pagada por transferencia, aparece en **Pendientes → Depósitos por devolver**. Cuando le transfieras, pulsa **Ya lo devolví**.
+
+Si una transferencia lleva más de 2 horas sin revisar, te llega un recordatorio por correo (como mucho uno cada 4 horas).
+
+## Cambiar la fecha (la clienta)
+
+La clienta puede cambiar su cita ella misma desde «Mis citas» en la web o en la app, con al menos las horas de aviso de **Ajustes → Reembolso si cancela con al menos** (24 por defecto). El número de cambios permitidos se ajusta en **Ajustes → Veces que la clienta puede cambiar la fecha**: 1 por defecto; 0 = solo por WhatsApp. Te llega un correo con el horario anterior y el nuevo.
+
+## Protección contra robots (Cloudflare Turnstile, gratis y opcional)
+
+1. Crea una cuenta en <https://dash.cloudflare.com> → **Turnstile → Add widget**.
+2. Configura el widget:
+   - nombre: MAJOBELLA;
+   - dominio: `anthonyhenriquezluciano.github.io` (y tu dominio propio, si lo tienes);
+   - modo: **Managed**.
+3. Cloudflare te da dos claves:
+   - la **clave del sitio** (pública) va en el dashboard → **Ajustes → Seguridad → Clave del sitio (Turnstile)**; luego pulsa **Guardar ajustes**;
+   - la **clave secreta** va en Apps Script → **Configuración del proyecto → Propiedades del script** como `TURNSTILE_SECRET`. **Nunca la pongas en la web, en GitHub ni la mandes por mensaje.**
+
+La protección solo se activa cuando están las dos claves. Se aplica al reservar, al comprar tarjetas o paquetes, al anotarse en la lista de espera y al pedir los códigos por correo.
+
+## Avisos del sistema y seguridad
+
+- **Ajustes → Avisos del sistema** muestra lo que falló y te llega también por correo:
+  - cobros que necesitan revisión;
+  - correos que no salieron (por ejemplo, por el límite diario de Gmail);
+  - tareas automáticas que no se ejecutaron.
+
+  La pestaña Ajustes muestra un número rojo mientras haya avisos sin revisar.
+- **Ajustes → Seguridad** revisa:
+  - quién puede entrar al dashboard;
+  - si la hoja o la carpeta de fichas están compartidas con alguien;
+  - el modo de PayPal;
+  - la protección contra robots;
+  - los últimos accesos.
+
+  El dashboard se cierra solo tras los minutos sin uso que elijas (30 por defecto).
+- Los datos del negocio para los términos y la privacidad están en **Ajustes → Datos del negocio**: nombre, RNC o cédula y correo de contacto.

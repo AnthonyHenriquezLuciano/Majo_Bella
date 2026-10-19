@@ -36,7 +36,7 @@
     const toMin = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
     const step = M.config.schedule.slotStepMinutes || 30;
     const now = Date.now();
-    const busy = A.data.items.filter((a) => a.id !== exceptId && (['confirmada', 'completada', 'no-asistio', 'bloqueo'].includes(a.status) || (a.status === 'retenida' && new Date(a.holdUntil).getTime() > now)))
+    const busy = A.data.items.filter((a) => a.id !== exceptId && (['confirmada', 'completada', 'no-asistio', 'bloqueo', 'por-confirmar'].includes(a.status) || (a.status === 'retenida' && new Date(a.holdUntil).getTime() > now)))
       .map((a) => [new Date(a.start).getTime(), new Date(a.end).getTime()])
       .concat(A.blockIntervals(date, date).map((b) => [new Date(b.start).getTime(), new Date(b.end).getTime()]));
     const out = [];
@@ -146,7 +146,11 @@
     if (a.loyalty) chips.push('<span class="pchip is-ok">Premio de fidelidad</span>');
     if (a.consent && a.consent.needed && !['cancelada', 'expirada'].includes(a.status)) chips.push(a.consent.signed ? '<span class="pchip is-ok">Consentimiento ✓</span>' : '<span class="pchip is-due">Falta consentimiento</span>');
     if (a.status === 'confirmada' && a.reminderAt) chips.push(`<span class="pchip">Recordatorio enviado ${A.shortDate(String(a.reminderAt).slice(0, 10))}</span>`);
-    if (p.depositRD > 0 && p.depositPaid) chips.push(p.refund === 'reembolsado' ? `<span class="pchip">Depósito ${A.money(p.depositRD)} reembolsado</span>` : `<span class="pchip is-ok">Depósito ${A.money(p.depositRD)} ✓ ${esc(A.methodLower(p.depositMethod))}</span>`);
+    const tf = p.depositMethod === 'transferencia';
+    if (a.status === 'por-confirmar') chips.push(`<span class="pchip is-due">Transferencia de ${A.money(p.depositRD)} por revisar</span>`);
+    else if (a.status === 'retenida' && tf) chips.push(`<span class="pchip">Esperando el comprobante hasta las ${M.fmtTime12(A.hhmm(a.holdUntil))}</span>`);
+    else if (a.refundPending) chips.push(`<span class="pchip is-due">Devolver ${A.money(p.depositRD)} ${tf ? 'por transferencia' : 'a mano'}</span>`);
+    else if (p.depositRD > 0 && p.depositPaid) chips.push(p.refund === 'reembolsado' ? `<span class="pchip">Depósito ${A.money(p.depositRD)} reembolsado</span>` : `<span class="pchip is-ok">Depósito ${A.money(p.depositRD)} ✓ ${esc(A.methodLower(p.depositMethod))}</span>`);
     else if (a.status === 'retenida') chips.push('<span class="pchip">Pagando el depósito…</span>');
     else if (a.status !== 'cancelada' && !(p.depositRD > 0)) chips.push('<span class="pchip">Sin depósito</span>');
     if (a.status !== 'cancelada' && a.status !== 'retenida' && p.balanceRD > 0) {
@@ -166,9 +170,14 @@
     }
     if (a.status === 'confirmada') { acts.push(act('completar', 'Marcar realizada')); acts.push(act('move', 'Reprogramar')); acts.push(act('noAsistio', 'No asistió')); acts.push(act('cancelar-ask', 'Cancelar…')); }
     if (a.status === 'completada' || a.status === 'no-asistio') acts.push(act('reabrir', 'Reabrir'));
+    if (a.status === 'por-confirmar' || (a.status === 'retenida' && tf)) {
+      acts.unshift(`<button type="button" class="act act-dark" data-tf="${esc(a.id)}">${a.status === 'por-confirmar' ? 'Revisar comprobante' : 'Confirmar transferencia'}</button>`);
+      acts.push(act('move', 'Reprogramar')); acts.push(act('cancelar-ask', 'Cancelar…'));
+    }
+    if (a.refundPending) acts.push(act('reembolsoHecho', 'Ya lo devolví'));
     const ask = st.openCancel === a.id ? `
       <div class="cancel-ask"><p>¿Cancelar la cita de ${esc(a.client.name)}?${a.client.email ? ' Le avisamos por correo.' : ''}</p>
-        ${p.depositRD > 0 && p.depositPaid && p.refund !== 'reembolsado' ? `<button type="button" class="act act-dark" data-op="cancelar" data-refund="1" data-id="${esc(a.id)}">Cancelar y ${p.depositMethod === 'paypal' ? 'reembolsar' : 'devolver'} ${A.money(p.depositRD)}</button>` : ''}
+        ${p.depositRD > 0 && (p.depositPaid || a.status === 'por-confirmar') && p.refund !== 'reembolsado' ? `<button type="button" class="act act-dark" data-op="cancelar" data-refund="1" data-id="${esc(a.id)}">Cancelar y ${p.depositMethod === 'paypal' ? 'reembolsar' : 'devolver'} ${A.money(p.depositRD)}</button>` : ''}
         <button type="button" class="act" data-op="cancelar" data-refund="0" data-id="${esc(a.id)}">Cancelar sin reembolso</button>
         <button type="button" class="act act-ghost" data-op="cancelar-close" data-id="${esc(a.id)}">Volver</button></div>` : '';
     const wa = A.waLink(a.client.phone, `Hola ${(a.client.name || '').split(' ')[0]}, te escribimos de MAJOBELLA sobre tu cita del ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)}.`);
@@ -178,7 +187,7 @@
         <div class="appt-body">
           <div class="appt-top">
             <button type="button" class="appt-name" data-client="${esc(a.clientKey || A.clientKey(a.client.email, a.client.phone, a.client.name))}">${esc(a.client.name)}</button>
-            <span class="pill st-${esc(a.status)}">${A.STATUS[a.status] || esc(a.status)}</span>
+            <span class="pill st-${esc(a.status)}">${a.status === 'retenida' && tf ? 'Esperando comprobante' : A.STATUS[a.status] || esc(a.status)}</span>
           </div>
           <p class="appt-svc">${esc(a.servicesText || (a.services || []).map((s) => s.name).join(' + '))} · ${A.money(a.totalPrice)}${a.createdBy === 'estudio' ? ' · <span class="tag">Creada a mano</span>' : ''}${a.rescheduledFrom ? ' · <span class="tag">Reprogramada</span>' : ''}</p>
           <p class="appt-contact">${a.client.phone ? `<a href="tel:${esc(String(a.client.phone).replace(/[^\d+]/g, ''))}">${esc(a.client.phone)}</a>` : ''}${wa ? ` · <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${a.client.email ? ` · <a href="mailto:${esc(a.client.email)}">${esc(a.client.email)}</a>` : ''}</p>
@@ -285,8 +294,8 @@
         const res = await A.call('adminUpdate', { id, op, ...extra });
         A.upsert('items', res.item);
         st.openCancel = null;
-        render();
-        A.toast({ saldoEfectivo: 'Saldo cobrado en efectivo.', saldoTransferencia: 'Saldo cobrado por transferencia.', completar: 'Cita marcada como realizada.', noAsistio: 'Marcada como no asistió.', cancelar: 'Cita cancelada.', nota: 'Nota guardada.', reabrir: 'Cita reabierta.', saldoPendiente: 'Cobro deshecho.' }[op] || 'Guardado.');
+        A.sections.agenda.render();
+        A.toast({ saldoEfectivo: 'Saldo cobrado en efectivo.', saldoTransferencia: 'Saldo cobrado por transferencia.', completar: 'Cita marcada como realizada.', noAsistio: 'Marcada como no asistió.', cancelar: 'Cita cancelada.', nota: 'Nota guardada.', reabrir: 'Cita reabierta.', saldoPendiente: 'Cobro deshecho.', reembolsoHecho: 'Reembolso marcado como hecho.' }[op] || 'Guardado.');
       } catch (err) { A.toast(err.message); }
     });
   }
@@ -455,6 +464,7 @@
     try { JSON.parse(w.serviciosJson || '[]').forEach((sv) => { const i = $('nc-form').querySelector(`[name=svc][value="${CSS.escape(sv.id)}"]`); if (i) i.checked = true; }); updateNew(true); } catch (err) { /* sin servicios */ }
   });
 
+  A.agendaGo = (date) => { st.anchor = date; st.view = 'day'; render(); };
   A.sections.agenda = {
     render() { render(); updateWaitBtn(); },
     init() {

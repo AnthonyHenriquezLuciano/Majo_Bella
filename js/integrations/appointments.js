@@ -12,6 +12,7 @@
   M.STATUS = {
     pendiente: 'Solicitud enviada',
     retenida: 'Pago sin completar',
+    'por-confirmar': 'Por confirmar',
     expirada: 'Pago sin completar',
     confirmada: 'Confirmada',
     completada: 'Realizada',
@@ -39,6 +40,17 @@
 
     get(id) { return readLocal().find((a) => a.id === id) || null; },
 
+    /* Reservada por transferencia y aún a tiempo de subir el comprobante */
+    waitingProof(a) {
+      const t = a && a.payment && a.payment.transfer;
+      return !!(a && a.status === 'retenida' && t && !t.proof && t.deadline && new Date(t.deadline).getTime() > Date.now());
+    },
+    /* Cuántas veces más puede cambiar la fecha ella misma */
+    changesLeft(a) {
+      const c = a.changes || { used: 0, max: (M.rescheduleInfo && M.rescheduleInfo.max) ?? 1 };
+      return Math.max(0, (c.max ?? 1) - (c.used || 0));
+    },
+
     /* Credenciales para gestionar una cita: clave guardada o sesión de Google */
     auth(a) {
       const local = this.get(a.id);
@@ -49,7 +61,7 @@
     /* Devuelve { items, source: 'device' | 'agenda', error } */
     async list() {
       const user = M.Auth.user;
-      let items = readLocal().filter((a) => a.status !== 'retenida' && a.status !== 'expirada');
+      let items = readLocal().filter((a) => a.status !== 'expirada' && (a.status !== 'retenida' || M.Appointments.waitingProof(a)));
       if (user) items = items.filter((a) => !a.client || !a.client.email || a.client.email.toLowerCase() === user.email.toLowerCase());
       if (!M.BookingAPI.enabled()) return { items, source: 'device' };
 
@@ -61,7 +73,7 @@
         const fresh = await M.BookingAPI.lookup(withToken);
         fresh.forEach((r) => byId.set(r.id, { ...(byId.get(r.id) || {}), ...r, client: { ...((byId.get(r.id) || {}).client || {}), ...r.client } }));
         if (fresh.length) {
-          const store = readLocal().map((a) => { const r = fresh.find((x) => x.id === a.id); return r ? { ...a, status: r.status, payment: r.payment } : a; });
+          const store = readLocal().map((a) => { const r = fresh.find((x) => x.id === a.id); return r ? { ...a, status: r.status, payment: r.payment, date: r.date, time: r.time, start: r.start, end: r.end, changes: r.changes, consent: r.consent } : a; });
           writeLocal(store);
         }
         synced = withToken.length > 0;
@@ -74,7 +86,8 @@
           synced = true;
         } catch (err) { error = err.message; }
       }
-      return { items: [...byId.values()], source: synced && !error ? 'agenda' : 'device', error };
+      const keep = (a) => a.status !== 'expirada' && (a.status !== 'retenida' || M.Appointments.waitingProof(a));
+      return { items: [...byId.values()].filter(keep), source: synced && !error ? 'agenda' : 'device', error };
     },
   };
 })(window.MJB);

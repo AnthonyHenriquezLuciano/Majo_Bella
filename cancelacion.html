@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261019h">
+<link rel="stylesheet" href="css/styles.css?v=20261019j">
 </head>
 <body class="legal-page">
 <header class="legal-header">
@@ -47,21 +47,22 @@
 <h2 id="deposito">1. Depósito para apartar tu cita</h2>
 <ul>
   <li>Cada servicio tiene su propio depósito, que ves en el resumen antes de pagar. Algunos servicios no requieren depósito y se confirman al instante.</li>
-  <li>El depósito se paga con PayPal (tarjeta o cuenta PayPal). Como PayPal no cobra en pesos dominicanos, se cobra en dólares con una tasa fija (hoy RD$ <span data-v="usdRate">63</span> por US$ 1), que ves antes de pagar.</li>
-  <li>Mientras pagas, apartamos el horario durante <span data-v="holdMinutes">15</span> minutos. Si el pago no se completa, el horario se libera y no se te cobra nada.</li>
+  <li><strong>Con PayPal</strong> (tarjeta o cuenta PayPal): como PayPal no cobra en pesos dominicanos, se cobra en dólares con una tasa fija (hoy RD$ <span data-v="usdRate">63</span> por US$ 1), que ves antes de pagar. Mientras pagas, apartamos el horario durante <span data-v="holdMinutes">15</span> minutos y tu cita queda confirmada al instante.</li>
+  <li data-transfer-only><strong>Por transferencia</strong> (en pesos): te apartamos el horario durante <span data-v="transferMinutes">60</span> minutos para que transfieras y subas la foto del comprobante. Mientras revisamos el depósito, tu cita queda «por confirmar» y el horario sigue siendo tuyo. Si no subes el comprobante a tiempo, el horario se libera. Si el depósito no llega o el monto no coincide, te avisamos por correo y la cita no se confirma.</li>
+  <li>Si el pago no se completa, el horario se libera y no se te cobra nada.</li>
   <li>El depósito se descuenta del total del servicio.</li>
 </ul>
 
 <h2 id="cancelar">2. Cancelar tu cita</h2>
 <ul>
   <li>Puedes cancelar desde la sección <a href="./#citas">«Citas»</a> de la web o con el enlace del correo de confirmación.</li>
-  <li><strong>Con <span data-v="cancelHours">24</span> horas o más de aviso:</strong> el reembolso del depósito se hace automáticamente al mismo medio de pago. PayPal suele reflejarlo en pocos días hábiles, según tu banco.</li>
+  <li><strong>Con <span data-v="cancelHours">24</span> horas o más de aviso:</strong> te devolvemos el depósito. Si pagaste con PayPal, el reembolso es automático y suele reflejarse en pocos días hábiles. Si pagaste por transferencia, te lo devolvemos por transferencia en los días siguientes; te pediremos la cuenta donde quieres recibirlo.</li>
   <li><strong>Con menos de <span data-v="cancelHours">24</span> horas de aviso o si no te presentas:</strong> el depósito no se devuelve, porque ese horario ya no puede ofrecerse a otra clienta.</li>
   <li>Si pagaste parte con una tarjeta de regalo, ese monto vuelve a la tarjeta en los mismos casos en que se devuelve el depósito.</li>
 </ul>
 
 <h2 id="cambiar">3. Cambiar de día u hora</h2>
-<p>Si necesitas mover tu cita, escríbenos por <a href="https://wa.me/18299784986" target="_blank" rel="noopener">WhatsApp</a> con al menos <span data-v="cancelHours">24</span> horas de aviso y la cambiamos sin perder el depósito, según la disponibilidad.</p>
+<p>Con al menos <span data-v="cancelHours">24</span> horas de aviso puedes cambiar tu cita tú misma desde <a href="./#citas">«Mis citas»</a> en la web o en la app (<span data-v="changesMax">una vez</span> por cita), eligiendo entre los horarios libres. Tu depósito pasa a la nueva cita. Para otro cambio, o si faltan menos de <span data-v="cancelHours">24</span> horas, escríbenos por <a href="https://wa.me/18299784986" target="_blank" rel="noopener">WhatsApp</a> y te ayudamos según la disponibilidad.</p>
 
 <h2 id="estudio">4. Si el estudio cancela</h2>
 <p>Si por un imprevisto tenemos que cancelar o mover tu cita, te avisamos lo antes posible y eliges entre otro horario o la devolución completa del depósito.</p>
@@ -96,26 +97,11 @@
 </main>
 <footer class="legal-footer">
   <div class="container">
-    <p><a href="./">Inicio</a> · <a href="privacidad.html">Privacidad</a> · <a href="cancelacion.html">Cancelación y reembolsos</a> · <a data-wa-plain href="https://wa.me/18299784986" target="_blank" rel="noopener">WhatsApp 829-978-4986</a></p>
+    <p><a href="./">Inicio</a> · <a href="privacidad.html">Privacidad</a> · <a href="cancelacion.html">Cancelación y reembolsos</a> · <a href="terminos.html">Términos</a> · <a data-wa-plain href="https://wa.me/18299784986" target="_blank" rel="noopener">WhatsApp 829-978-4986</a></p>
     <p>© <span data-year>2026</span> MAJOBELLA Beauty Studio · Santo Domingo, República Dominicana</p>
   </div>
 </footer>
-<script src="js/config.js?v=20261019h"></script>
-<script>
-/* Completa los valores con los ajustes actuales del estudio (si el sistema de reservas responde) */
-(function () {
-  document.querySelectorAll('[data-year]').forEach(function (n) { n.textContent = new Date().getFullYear(); });
-  var C = window.MAJOBELLA_CONFIG || {};
-  var url = C.booking && C.booking.apiUrl;
-  if (!url || !window.fetch) return;
-  fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 'action=catalog').then(function (r) { return r.json(); }).then(function (d) {
-    if (!d || !d.ok) return;
-    var p = d.payments || {}, g = d.giftShop || {};
-    var set = function (k, v) { if (v) document.querySelectorAll('[data-v="' + k + '"]').forEach(function (n) { n.textContent = v; }); };
-    set('cancelHours', p.cancelHours); set('holdMinutes', p.holdMinutes); set('usdRate', p.usdRate);
-    if (g.validDays) set('giftValid', g.validDays % 365 === 0 ? (g.validDays / 365 === 1 ? '12 meses' : (g.validDays / 365) + ' años') : g.validDays + ' días');
-  }).catch(function () {});
-})();
-</script>
+<script src="js/config.js?v=20261019j"></script>
+<script src="js/legal.js?v=20261019j"></script>
 </body>
 </html>

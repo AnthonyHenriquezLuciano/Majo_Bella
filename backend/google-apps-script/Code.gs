@@ -15,6 +15,8 @@
  *   - Paquetes     paquetes de sesiones que vende el estudio; Bonos: los vendidos a cada clienta
  *   - Espera       lista de espera por día
  *   - Correos      historial de correos enviados
+ *   - Cuentas      cuentas bancarias para el depósito por transferencia
+ *   - Errores      fallos del sistema (también se avisan por correo)
  *
  * Tareas automáticas (cada hora, función tareasProgramadas): recordatorios, pedir reseña, retoques,
  * cumpleaños y aviso a la lista de espera. setup() crea el disparador.
@@ -35,6 +37,7 @@
  *   ADMIN_EMAILS       correos de Google que pueden abrir el dashboard, separados por coma
  *   SHEET_ID           lo crea setup() automáticamente
  *   FILES_FOLDER_ID    carpeta de Drive para las fichas; la crea setup()
+ *   TURNSTILE_SECRET   (opcional) clave secreta de Cloudflare Turnstile contra robots; nunca va en la web
  */
 
 const GOOGLE_CLIENT_ID = '333956941163-rlgrb3759jf2uc05olhhpm9e2ggrhm1s.apps.googleusercontent.com';
@@ -53,6 +56,7 @@ const HEADERS = [
   'metodoDeposito', 'origen', 'canal', 'creadaPor', 'reprogramadaDe',
   'recordatorio', 'resenaPedida', 'retoqueAviso', 'firmaToken', 'consentimiento', 'consentimientoArchivo', 'permisoFotos',
   'bonoCodigo', 'bonoRD', 'fidelidad', 'cumpleanos',
+  'comprobanteId', 'comprobanteEn', 'cuentaId', 'transferenciaRef', 'revisadaEn', 'cambios',
 ];
 const TABLES = {
   Reservas: HEADERS,
@@ -70,11 +74,13 @@ const TABLES = {
   Bonos: ['id', 'codigo', 'paqueteId', 'nombre', 'servicio', 'sesiones', 'usadas', 'clienta', 'telefono', 'correo', 'montoRD', 'metodoPago', 'vendida', 'vence', 'estado', 'paypalOrden', 'paypalCaptura', 'creada'],
   Espera: ['id', 'fecha', 'franja', 'serviciosJson', 'servicios', 'duracionMin', 'clienta', 'telefono', 'correo', 'estado', 'creada', 'avisada'],
   Correos: ['fecha', 'tipo', 'para', 'asunto', 'ref', 'estado'],
+  Cuentas: ['id', 'banco', 'tipo', 'numero', 'titular', 'documento', 'nota', 'activa', 'orden', 'creada'],
+  Errores: ['fecha', 'tipo', 'mensaje', 'ref', 'detalle', 'avisado', 'resuelto'],
 };
 const AUTO_TRIGGER = 'tareasProgramadas';
 
 // Estados que ocupan la agenda
-const BUSY_STATES = ['confirmada', 'completada', 'no-asistio', 'bloqueo'];
+const BUSY_STATES = ['confirmada', 'completada', 'no-asistio', 'bloqueo', 'por-confirmar'];
 
 const DEFAULT_SETTINGS = [
   ['tasaUSD', '63', 'Pesos dominicanos por 1 US$. PayPal no cobra en RD$: el depósito se convierte con esta tasa.'],
@@ -131,6 +137,14 @@ const DEFAULT_SETTINGS = [
   ['fidelidadTipo', 'porcentaje', 'porcentaje o monto.'],
   ['fidelidadValor', '20', 'Valor del premio (% o RD$).'],
   ['consentimientoTexto', '', 'Texto del consentimiento que firma la clienta (vacío = texto general).'],
+  ['transferenciaActiva', 'si', 'si/no: la clienta puede pagar el depósito por transferencia (necesita al menos una cuenta en Cuentas).'],
+  ['transferenciaMinutos', '60', 'Minutos que tiene la clienta para subir el comprobante; si no lo sube, el horario se libera.'],
+  ['cambiosMax', '1', 'Cuántas veces puede la clienta cambiar la fecha de una cita ella misma (0 = solo por WhatsApp).'],
+  ['negocioNombre', 'MAJOBELLA Beauty Studio', 'Nombre legal o comercial (términos y privacidad).'],
+  ['negocioRnc', '', 'RNC o cédula del negocio (opcional, términos y privacidad).'],
+  ['negocioCorreo', '', 'Correo de contacto para temas legales y de datos personales.'],
+  ['turnstileSiteKey', '', 'Clave del sitio de Cloudflare Turnstile (protección contra robots). La secreta va en Propiedades del script.'],
+  ['adminInactividadMin', '30', 'Minutos sin usar el dashboard para cerrar la sesión sola.'],
 ];
 const LONG_SETTINGS = ['majoTexto', 'majoCerts', 'consentimientoTexto'];
 const SETTING_KEYS = DEFAULT_SETTINGS.map(function (x) { return x[0]; });
@@ -145,7 +159,7 @@ const DEFAULT_SERVICES = [
   ['depilacion', 'Depilación facial y corporal', 30, 500, 'si', 'si', 30, 50, 0, 'no'],
 ];
 const DAY_KEYS = ['horario_domingo', 'horario_lunes', 'horario_martes', 'horario_miercoles', 'horario_jueves', 'horario_viernes', 'horario_sabado'];
-const FILE_TYPES = ['antes', 'despues', 'consentimiento', 'otro'];
+const FILE_TYPES = ['antes', 'despues', 'consentimiento', 'comprobante', 'otro'];
 const FILE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const MAX_FILE_BYTES = 12 * 1024 * 1024;
 
@@ -240,11 +254,12 @@ function doGet(e) {
   SVC_CACHE_ = null; SETTINGS_CACHE_ = null;
   try {
     const p = (e && e.parameter) || {};
-    if (p.action === 'catalog') return json_(catalog_());
+    if (p.action === 'catalog') { heartbeat_(); return json_(catalog_()); }
     if (p.action === 'busy') return json_(busy_(p.from, p.to));
     if (p.action === 'availability') return json_(busy_(p.date, p.date)); // compatibilidad
     return json_({ ok: false, error: 'Acción no válida.' });
   } catch (err) {
+    logError_('sistema', msg_(err), '', 'doGet');
     return json_({ ok: false, error: msg_(err) });
   }
 }
@@ -276,6 +291,10 @@ function doPost(e) {
     waitlistJoin: L(waitlistJoin_),
     consentInfo: N(consentInfo_),
     consentSign: L(consentSign_),
+    transferProof: L(transferProof_),
+    reschedule: L(reschedule_),
+    myWallet: N(myWallet_),
+    walletEmail: L(walletEmail_),
     // Dashboard
     adminData: N(adminData_),
     adminList: N(adminData_), // compatibilidad
@@ -309,11 +328,19 @@ function doPost(e) {
     adminEmailPreview: N(adminEmailPreview_),
     adminEmailTest: N(adminEmailTest_),
     adminRunAutomations: L(adminRunAutomations_),
+    adminSaveAccount: L(adminSaveAccount_),
+    adminDeleteAccount: L(adminDeleteAccount_),
+    adminTransferReview: L(adminTransferReview_),
+    adminResolveErrors: L(adminResolveErrors_),
   };
   const fn = actions[data.action];
   if (!fn) return json_({ ok: false, error: 'Acción no válida.' });
   try { return json_(fn()); }
-  catch (err) { return json_({ ok: false, error: msg_(err) }); }
+  catch (err) {
+    const m = msg_(err);
+    if (!/sesión expiró|no tiene acceso/i.test(m)) logError_('sistema', m, data.id || '', 'acción: ' + data.action);
+    return json_({ ok: false, error: m });
+  }
 }
 
 /* =========================================================================
@@ -348,6 +375,9 @@ function catalog_() {
     packages: readOpt_('Paquetes').filter(function (k) { return !/^no$/i.test(k.activo) && /^s[ií]$/i.test(k.enWeb); }).map(packageOut_),
     loyalty: { enabled: on_(s.fidelidadActiva), every: num_(s.fidelidadVisitas, 5), kind: s.fidelidadTipo === 'monto' ? 'monto' : 'porcentaje', value: num_(s.fidelidadValor, 20) },
     waitlist: { enabled: on_(s.esperaActiva) },
+    transfer: transferInfo_(s),
+    reschedule: { max: changesMax_(s) },
+    security: { turnstileSiteKey: turnstileOn_(s) ? String(s.turnstileSiteKey).trim() : '' },
     giftShop: {
       enabled: /^s[ií]$/i.test(s.tarjetasEnLinea || 'si') && !!PropertiesService.getScriptProperties().getProperty('PAYPAL_CLIENT_ID'),
       min: num_(s.tarjetaMin, 500), max: num_(s.tarjetaMax, 30000), validDays: num_(s.tarjetaVenceDias, 365),
@@ -507,7 +537,9 @@ function checkCode_(d) {
   const ids = (d.services || []).map(function (x) { return typeof x === 'string' ? x : x && x.id; }).filter(Boolean);
   const items = catalogItems_(ids);
   if (!items.length || items.some(function (x) { return !x; })) return { ok: false, error: 'Elige primero tus servicios.' };
+  if (limited_(d)) return { ok: false, error: TOO_MANY };
   const p = pricing_(items, d.code, d.giftCode, d.client);
+  if ((normCode_(d.code) && p.codeStatus === 'invalid') || (normCode_(d.giftCode) && p.giftStatus === 'invalid')) noteFail_(d);
   return { ok: true, pricing: pricingOut_(p) };
 }
 
@@ -536,6 +568,11 @@ function hold_(d) {
     return { ok: false, error: 'Revisa tu nombre, teléfono y correo.' };
   }
   if (d.idToken) { const u = verifyIdToken_(d.idToken); if (u) email = u.email; }
+  if (!human_(d, s)) return { ok: false, error: NOT_HUMAN };
+  if (limited_(d)) return { ok: false, error: TOO_MANY };
+  const method = d.method === 'transferencia' ? 'transferencia' : 'paypal';
+  const tf = method === 'transferencia' ? transferInfo_(s) : null;
+  if (tf && !tf.enabled) return { ok: false, error: 'El pago por transferencia no está disponible ahora. Elige PayPal o escríbenos.' };
 
   // Servicios y precios desde la hoja (nunca desde el navegador)
   const ids = (d.services || []).map(function (x) { return typeof x === 'string' ? x : x && x.id; }).filter(Boolean);
@@ -553,6 +590,7 @@ function hold_(d) {
 
   // Montos con promociones y tarjeta de regalo
   const p = pricing_(items, d.code, d.giftCode, { email: email, phone: phone });
+  if ((normCode_(d.code) && p.codeStatus === 'invalid') || (normCode_(d.giftCode) && p.giftStatus === 'invalid')) noteFail_(d);
   if (normCode_(d.code) && p.codeStatus === 'invalid') return { ok: false, error: 'Ese código de descuento no es válido o ya venció.' };
   if (normCode_(d.giftCode) && p.giftStatus === 'invalid') return { ok: false, error: 'Esa tarjeta o paquete no es válido o no tiene saldo.' };
   if (normCode_(d.giftCode) && p.giftStatus === 'notApplicable') return { ok: false, error: 'Ese paquete es para otro servicio.' };
@@ -590,6 +628,18 @@ function hold_(d) {
     appendRow_('Reservas', row);
     notifyConfirmed_(row, s);
     return { ok: true, id: id, manageToken: token, confirmed: true, appointment: publicRow_(row), pricing: pricingOut_(p) };
+  }
+
+  // Transferencia: se aparta el horario mientras la clienta sube el comprobante
+  if (tf) {
+    const until = Math.min(Date.now() + tf.minutes * 60000, start.getTime() - 30 * 60000);
+    row.metodoDeposito = 'transferencia';
+    row.retenidaHasta = new Date(Math.max(until, Date.now() + 10 * 60000)).toISOString();
+    appendRow_('Reservas', row);
+    return {
+      ok: true, id: id, manageToken: token, transfer: true, accounts: tf.accounts,
+      totalRD: p.total, depositRD: p.depositRD, balanceRD: p.balanceRD, expiresAt: row.retenidaHasta, pricing: pricingOut_(p),
+    };
   }
 
   // Orden de PayPal por el depósito
@@ -640,6 +690,18 @@ function capture_(d) {
   }
 
   patch.estado = 'confirmada';
+  try {
+    updateRow_(found.index, { paypalCaptura: cap.id, depositoPagado: patch.depositoPagado }); // primero queda anotado el cobro
+    confirmPaid_(found.index, r, patch);
+  } catch (err) {
+    return paidButFailed_('el depósito de la reserva ' + r.id, cap.id, r.id, err);
+  }
+  notifyConfirmed_(r, settings_());
+  return { ok: true, appointment: publicRow_(r) };
+}
+
+/* Deja confirmada una cita ya pagada: descuenta tarjeta/paquete, promoción, cumpleaños, lista de espera y calendario */
+function confirmPaid_(index, r, patch) {
   Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
   const s = settings_();
   applyGift_(r, -1);
@@ -652,9 +714,13 @@ function capture_(d) {
   patch.giftRD = r.giftRD;
   patch.eventoId = calendarCreate_(r, s);
   r.eventoId = patch.eventoId;
-  updateRow_(found.index, patch);
-  notifyConfirmed_(r, s);
-  return { ok: true, appointment: publicRow_(r) };
+  updateRow_(index, patch);
+}
+
+/* El cobro se hizo pero algo falló después: se avisa de inmediato para revisarlo a mano */
+function paidButFailed_(what, captureId, ref, err) {
+  logError_('pago', 'Se cobró ' + what + ' (PayPal ' + captureId + '), pero hubo un error al guardarlo: ' + msg_(err) + '. Revisa la venta en PayPal y regístrala a mano.', ref, '', true);
+  return { ok: false, error: 'Recibimos tu pago, pero hubo un problema al registrarlo. Ya nos llegó el aviso y te contactaremos. Guarda este código: ' + ref };
 }
 
 /* Descuenta (sign = -1) o devuelve (sign = +1) el saldo de la tarjeta de regalo de una cita */
@@ -723,7 +789,7 @@ function balanceCapture_(d) {
   const cap = firstCapture_(paypal_('post', '/v2/checkout/orders/' + encodeURIComponent(d.orderId) + '/capture', {}, r.id + '-saldo-' + d.orderId));
   if (!cap || cap.status !== 'COMPLETED') return { ok: false, error: 'PayPal no completó el pago.' };
   const patch = { saldoEstado: 'pagado', saldoMetodo: 'paypal', saldoPagado: new Date().toISOString(), saldoCaptura: cap.id };
-  updateRow_(found.index, patch);
+  try { updateRow_(found.index, patch); } catch (err) { return paidButFailed_('el saldo de la cita ' + r.id, cap.id, r.id, err); }
   Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
   return { ok: true, appointment: publicRow_(r) };
 }
@@ -735,8 +801,11 @@ function balanceCapture_(d) {
 function myAppointments_(d) {
   const u = verifyIdToken_(d.idToken);
   if (!u) return { ok: false, error: 'Tu sesión expiró. Vuelve a iniciar sesión.' };
-  const items = rows_().filter(function (r) { return r.correo === u.email && r.estado !== 'retenida' && r.estado !== 'expirada' && r.estado !== 'bloqueo'; })
-    .map(publicRow_);
+  const now = Date.now();
+  const items = rows_().filter(function (r) {
+    if (r.correo !== u.email || r.estado === 'expirada' || r.estado === 'bloqueo') return false;
+    return r.estado !== 'retenida' || (r.metodoDeposito === 'transferencia' && new Date(r.retenidaHasta).getTime() > now);
+  }).map(publicRow_);
   return { ok: true, items: items, loyalty: loyaltyFor_({ email: u.email }, settings_()) };
 }
 
@@ -756,21 +825,26 @@ function cancel_(d) {
   const found = findRow_(d.id);
   if (!found || !authorized_(found.row, d)) return { ok: false, error: 'No encontramos esa cita.' };
   const r = found.row;
-  if (r.estado !== 'confirmada') return { ok: false, error: 'Esta cita ya no se puede cancelar.' };
+  if (r.estado !== 'confirmada' && r.estado !== 'por-confirmar') return { ok: false, error: 'Esta cita ya no se puede cancelar.' };
   const s = settings_();
   const hoursLeft = (new Date(r.inicio).getTime() - Date.now()) / 3600000;
   if (hoursLeft <= 0) return { ok: false, error: 'Esa cita ya pasó.' };
   const refundable = hoursLeft >= num_(s.horasCancelacion, 24);
+  const wasConfirmed = r.estado === 'confirmada';
+  const paidOutside = !r.paypalCaptura && Number(r.depositoRD) > 0 && (r.estado === 'por-confirmar' || !!r.depositoPagado) && /transferencia|efectivo/.test(r.metodoDeposito || '');
   const patch = { estado: 'cancelada', canceladaEn: new Date().toISOString(), canceladaPor: 'clienta' };
-  patch.reembolso = refundable && r.paypalCaptura ? tryRefund_(r.paypalCaptura, r.id + '-refund') : (refundable ? 'sin pago por PayPal' : 'no aplica (menos de ' + num_(s.horasCancelacion, 24) + ' h)');
+  patch.reembolso = !refundable ? 'no aplica (menos de ' + num_(s.horasCancelacion, 24) + ' h)'
+    : r.paypalCaptura ? tryRefund_(r.paypalCaptura, r.id + '-refund')
+      : paidOutside ? 'pendiente: devolver por ' + (r.metodoDeposito === 'efectivo' ? 'efectivo' : 'transferencia') : 'sin depósito pagado';
   if (r.saldoCaptura) patch.reembolso += ' · saldo: ' + tryRefund_(r.saldoCaptura, r.id + '-refund-saldo');
-  if (refundable) { applyGift_(r, +1); applyBono_(r, +1); }
+  if (refundable && wasConfirmed) { applyGift_(r, +1); applyBono_(r, +1); }
   updateRow_(found.index, patch);
   Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
   calendarCancel_(r, s);
-  notifyCancelled_(r, s, refundable && /^reembolsado/.test(patch.reembolso));
+  const refunded = /^reembolsado/.test(patch.reembolso) ? true : (/^pendiente/.test(patch.reembolso) ? 'manual' : false);
+  notifyCancelled_(r, s, refunded);
   notifyWaitlist_(r.fecha);
-  return { ok: true, refunded: refundable && /^reembolsado/.test(patch.reembolso), appointment: publicRow_(r) };
+  return { ok: true, refunded: refunded === true, refundManual: refunded === 'manual', appointment: publicRow_(r) };
 }
 
 /* =========================================================================
@@ -781,6 +855,7 @@ function needAdmin_(d) {
   const u = verifyIdToken_(d.idToken);
   if (!u) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.');
   if (!admin_(d.idToken)) throw new Error('Esta cuenta no tiene acceso al dashboard.');
+  noteAccess_(u, d);
   return u;
 }
 
@@ -788,8 +863,12 @@ function needAdmin_(d) {
 function adminData_(d) {
   const u = needAdmin_(d);
   const s = settings_();
+  heartbeat_();
   return {
     ok: true, user: u.email,
+    accounts: readOpt_('Cuentas').map(strip_),
+    errors: readOpt_('Errores').slice(-150).reverse().map(function (x) { const o = strip_(x); o.row = x._row; return o; }),
+    security: securityStatus_(s),
     items: rows_().map(adminRow_),
     blocks: blocks_(),
     clients: readTable_('Clientas').map(strip_),
@@ -829,21 +908,30 @@ function adminUpdate_(d) {
     case 'saldoTransferencia': patch = { saldoEstado: 'pagado', saldoMetodo: 'transferencia', saldoPagado: now }; break;
     case 'saldoPendiente': patch = { saldoEstado: 'pendiente', saldoMetodo: '', saldoPagado: '' }; break;
     case 'nota': patch = { notaInterna: clean_(d.note, 500) }; break;
-    case 'cancelar':
+    case 'reembolsoHecho':
+      if (!refundPending_(r)) return { ok: false, error: 'Esta cita no tiene un reembolso pendiente.' };
+      patch = { reembolso: 'reembolsado a mano · ' + todayKey_() + (d.note ? ' · ' + clean_(d.note, 120) : '') };
+      break;
+    case 'cancelar': {
       if (r.estado === 'cancelada') return { ok: false, error: 'La cita ya estaba cancelada.' };
+      const was = r.estado;
       patch = { estado: 'cancelada', canceladaEn: now, canceladaPor: 'estudio' };
       if (r.estado === 'bloqueo') { patch.canceladaPor = 'bloqueo eliminado'; break; }
-      patch.reembolso = d.refund && r.paypalCaptura ? tryRefund_(r.paypalCaptura, r.id + '-refund') : (d.refund ? 'devolver a mano (pago fuera de PayPal)' : 'sin reembolso');
+      const paidOut = !r.paypalCaptura && Number(r.depositoRD) > 0 && (was === 'por-confirmar' || !!r.depositoPagado);
+      patch.reembolso = !d.refund ? 'sin reembolso'
+        : r.paypalCaptura ? tryRefund_(r.paypalCaptura, r.id + '-refund')
+          : paidOut ? 'pendiente: devolver por ' + (r.metodoDeposito === 'transferencia' ? 'transferencia' : 'efectivo o transferencia') : 'sin depósito pagado';
       if (r.saldoCaptura) patch.reembolso += ' · saldo: ' + tryRefund_(r.saldoCaptura, r.id + '-refund-saldo');
-      if (d.refund) { applyGift_(r, +1); applyBono_(r, +1); }
+      if (d.refund && (was === 'confirmada' || was === 'completada' || was === 'no-asistio')) { applyGift_(r, +1); applyBono_(r, +1); }
       break;
+    }
     default: return { ok: false, error: 'Acción no válida.' };
   }
   updateRow_(found.index, patch);
   Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
   if (d.op === 'cancelar' && r.canceladaPor === 'estudio') {
     calendarCancel_(r, s);
-    if (d.notify !== false) notifyCancelled_(r, s, /^reembolsado/.test(patch.reembolso || ''), true);
+    if (d.notify !== false) notifyCancelled_(r, s, /^reembolsado/.test(patch.reembolso || '') ? true : (/^pendiente/.test(patch.reembolso || '') ? 'manual' : false), true);
   }
   if (d.op === 'cancelar') notifyWaitlist_(r.fecha);
   return { ok: true, item: adminRow_(r) };
@@ -896,7 +984,7 @@ function adminReschedule_(d) {
   const found = findRow_(d.id);
   if (!found) return { ok: false, error: 'No encontramos esa cita.' };
   const r = found.row;
-  if (['confirmada', 'retenida'].indexOf(r.estado) < 0) return { ok: false, error: 'Solo se pueden mover citas confirmadas.' };
+  if (['confirmada', 'retenida', 'por-confirmar'].indexOf(r.estado) < 0) return { ok: false, error: 'Solo se pueden mover citas confirmadas.' };
   if (!isDateKey_(d.date) || !/^\d{2}:\d{2}$/.test(d.time || '')) return { ok: false, error: 'Elige la nueva fecha y hora.' };
   const minutes = Number(r.duracionMin) || 30;
   const start = new Date(d.date + 'T' + d.time + ':00' + UTC_OFFSET);
@@ -1153,6 +1241,7 @@ function siteContent_(s) {
       certs: String(s.majoCerts || '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean),
       photo: s.majoFotoUrl || '',
     },
+    business: { name: s.negocioNombre || 'MAJOBELLA Beauty Studio', rnc: s.negocioRnc || '', email: s.negocioCorreo || '', address: s.direccion || '', whatsapp: s.whatsapp || '' },
   };
 }
 
@@ -1264,6 +1353,7 @@ function adminUploadPublic_(d) {
 function giftOrder_(d) {
   const s = settings_();
   if (/^no$/i.test(s.tarjetasEnLinea || 'si')) return { ok: false, error: 'La venta de tarjetas en la web está pausada.' };
+  if (!human_(d, s)) return { ok: false, error: NOT_HUMAN };
   const monto = Math.round(Number(d.montoRD) || 0);
   const min = num_(s.tarjetaMin, 500), max = num_(s.tarjetaMax, 30000);
   if (monto < min || monto > max) return { ok: false, error: 'El valor debe estar entre RD$ ' + money_(min) + ' y RD$ ' + money_(max) + '.' };
@@ -1297,6 +1387,10 @@ function giftCapture_(d) {
   if (g.estado !== 'pendiente' && g.paypalCaptura) return { ok: true, gift: giftOut_(g) };
   const cap = firstCapture_(paypal_('post', '/v2/checkout/orders/' + encodeURIComponent(d.orderId) + '/capture', {}, g.id + '-capture'));
   if (!cap || cap.status !== 'COMPLETED') return { ok: false, error: 'PayPal no completó el pago. No se te cobró.' };
+  try { return giftActivate_(g, cap); } catch (err) { return paidButFailed_('una tarjeta de regalo de RD$ ' + money_(g.montoRD) + ' (' + g.id + ')', cap.id, g.id, err); }
+}
+
+function giftActivate_(g, cap) {
   const s = settings_();
   let codigo = '';
   for (let i = 0; i < 6 && (!codigo || findGift_(codigo)); i++) codigo = 'MJB-' + randCode_(4) + '-' + randCode_(4);
@@ -1363,12 +1457,13 @@ function runAutomations_() {
   const daytime = hour >= 8 && hour < 21;
   const out = { recordatorios: 0, resenas: 0, retoques: 0, cumpleanos: 0, espera: 0 };
   const rows = rows_();
-  const step = function (key, fn) { try { out[key] = fn(); } catch (e) { out[key] = 'error: ' + msg_(e); } };
+  const step = function (key, fn) { try { out[key] = fn(); } catch (e) { out[key] = 'error: ' + msg_(e); logError_('automatizacion', key + ': ' + msg_(e), '', ''); } };
   if (on_(s.recordatorioActivo) && hour >= 7 && hour < 22) step('recordatorios', function () { return sendReminders_(rows, s, now); });
   if (daytime && on_(s.resenaActiva) && s.googleResenaUrl) step('resenas', function () { return askReviews_(rows, s, now); });
   if (daytime && on_(s.retoqueActivo)) step('retoques', function () { return retouchNotices_(rows, s); });
   if (daytime && on_(s.cumpleActivo)) step('cumpleanos', function () { return birthdays_(rows, s); });
   if (on_(s.esperaActiva)) step('espera', function () { return checkWaitlist_(s, null); });
+  if (hour >= 8 && hour < 22) step('transferencias', function () { return nagTransfers_(rows, s, now); });
   PropertiesService.getScriptProperties().setProperty('LAST_AUTO', JSON.stringify({ at: now.toISOString(), out: out }));
   return out;
 }
@@ -1506,6 +1601,7 @@ function monthDay_(v) {
 function waitlistJoin_(d) {
   const s = settings_();
   if (!on_(s.esperaActiva)) return { ok: false, error: 'La lista de espera no está disponible.' };
+  if (!human_(d, s)) return { ok: false, error: NOT_HUMAN };
   const c = d.client || {};
   const name = clean_(c.name, 80), phone = clean_(c.phone, 30), email = clean_(c.email, 120).toLowerCase();
   if (name.length < 2 || phone.replace(/\D/g, '').length < 10 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { ok: false, error: 'Revisa tu nombre, teléfono y correo.' };
@@ -1727,6 +1823,7 @@ function adminSaveBono_(d) {
 /* Compra de un paquete en la web (PayPal) */
 function bonoOrder_(d) {
   const s = settings_();
+  if (!human_(d, s)) return { ok: false, error: NOT_HUMAN };
   const k = readOpt_('Paquetes').filter(function (x) { return x.id === d.paqueteId && !/^no$/i.test(x.activo) && /^s[ií]$/i.test(x.enWeb); })[0];
   if (!k) return { ok: false, error: 'Ese paquete ya no está disponible.' };
   const c = d.client || {};
@@ -1749,6 +1846,10 @@ function bonoCapture_(d) {
   if (b.estado !== 'pendiente' && b.paypalCaptura) return { ok: true, bono: bonoOut_(b) };
   const cap = firstCapture_(paypal_('post', '/v2/checkout/orders/' + encodeURIComponent(d.orderId) + '/capture', {}, b.id + '-capture'));
   if (!cap || cap.status !== 'COMPLETED') return { ok: false, error: 'PayPal no completó el pago. No se te cobró.' };
+  try { return bonoActivate_(b, cap); } catch (err) { return paidButFailed_('el paquete ' + b.nombre + ' (' + b.id + ')', cap.id, b.id, err); }
+}
+
+function bonoActivate_(b, cap) {
   const k = readTable_('Paquetes').filter(function (x) { return x.id === b.paqueteId; })[0] || {};
   const today = todayKey_();
   const patch = { codigo: newBonoCode_(), estado: 'activo', vendida: today, vence: Number(k.venceDias) > 0 ? addDaysKey_(today, Number(k.venceDias)) : '', paypalCaptura: cap.id };
@@ -1771,8 +1872,15 @@ function bonoOut_(b) {
 
 /* La app consulta el saldo de las tarjetas de regalo y paquetes que la clienta guardó (quien tiene el código puede verlo) */
 function walletLookup_(d) {
-  const today = todayKey_();
+  if (limited_(d)) return { ok: false, error: TOO_MANY };
   const codes = (d.codes || []).slice(0, 20).map(normCode_).filter(Boolean);
+  const items = walletItems_(codes);
+  if (items.some(function (x) { return x.type === 'unknown'; })) noteFail_(d);
+  return { ok: true, items: items };
+}
+
+function walletItems_(codes) {
+  const today = todayKey_();
   const svcs = servicesMap_();
   const items = codes.map(function (c) {
     const g = findGift_(c);
@@ -1788,7 +1896,7 @@ function walletLookup_(d) {
     }
     return { code: c, type: 'unknown', status: 'no encontrado' };
   });
-  return { ok: true, items: items };
+  return items;
 }
 
 /* =========================================================================
@@ -1946,6 +2054,10 @@ function emailSample_(tipo, s, email) {
     case 'paquete': return mailBono_({ codigo: 'PAQ-EJEM-PLO1', nombre: '4 sesiones de cejas', servicio: 'cejas', sesiones: 4, clienta: 'Ana Pérez', vence: addDaysKey_(todayKey_(), 180) }, s);
     case 'cancelacion': return mailCancelled_(r, s, true, false);
     case 'consentimiento': return mailConsentCopy_(r, s);
+    case 'transferencia': return mailTransferReceived_(Object.assign({}, r, { metodoDeposito: 'transferencia', paypalCaptura: '', estado: 'por-confirmar' }), s);
+    case 'transferenciaRechazada': return mailTransferRejected_(r, s, 'El monto recibido no coincide con el depósito.');
+    case 'cambio': return mailRescheduled_(r, s, whenText_(Object.assign({}, r, { fecha: addDaysKey_(r.fecha, -2) })));
+    case 'billetera': return mailWallet_(email, [{ type: 'gift', code: 'MJB-EJEM-PLO1', amountRD: 2500, balanceRD: 1600, expires: addDaysKey_(todayKey_(), 300), status: 'activa' }, { type: 'package', code: 'PAQ-EJEM-PLO1', name: '4 sesiones de cejas', sessions: 4, used: 1, expires: addDaysKey_(todayKey_(), 150), status: 'activo' }], s);
     default: return null;
   }
 }
@@ -2226,7 +2338,7 @@ function calendarCreate_(r, s) {
     if (r.correo && /^s[ií]$/i.test(s.invitarClienta)) { opts.guests = r.correo; opts.sendInvites = true; }
     const ev = cal.createEvent('MAJOBELLA · ' + r.servicios + ' · ' + r.clienta, new Date(r.inicio), new Date(r.fin), opts);
     return ev.getId();
-  } catch (err) { return ''; }
+  } catch (err) { logError_('sistema', 'No se pudo agendar la cita ' + r.id + ' en Google Calendar: ' + msg_(err), r.id, ''); return ''; }
 }
 
 function calendarMove_(r, s) {
@@ -2408,7 +2520,8 @@ function mailCancelled_(r, s, refunded, byStudio) {
     html: layout_(s, {
       kicker: 'Cita cancelada', title: byStudio ? 'Cancelamos tu cita' : 'Cancelaste tu cita',
       intro: esc_(r.servicios) + ' · ' + esc_(whenText_(r)),
-      body: dep ? '<p style="margin:0">' + (refunded ? 'Te devolvimos el depósito en PayPal. Puede tardar unos días en reflejarse.' : (byStudio ? 'Te contactaremos para coordinar la devolución o una nueva cita.' : 'El depósito no es reembolsable para esta cancelación.')) + '</p>' : '',
+      body: dep ? '<p style="margin:0">' + (refunded === 'manual' ? 'Te devolveremos el depósito de RD$ ' + money_(dep) + ' por transferencia en los próximos días. Si necesitamos tus datos bancarios te escribiremos.'
+        : refunded ? 'Te devolvimos el depósito en PayPal. Puede tardar unos días en reflejarse.' : (byStudio ? 'Te contactaremos para coordinar la devolución o una nueva cita.' : 'El depósito no es reembolsable para esta cancelación.')) + '</p>' : '',
       cta: { text: 'Reservar otra cita', url: mailUrl_(s, '#reservar') },
       note: 'Código de reserva: ' + esc_(r.id),
     }),
@@ -2558,7 +2671,7 @@ function safeMail_(to, subject, html, meta) {
     const opts = { to: to, subject: subject, htmlBody: html, name: 'MAJOBELLA', body: plainText_(html) };
     if (meta.attachments) opts.attachments = meta.attachments;
     MailApp.sendEmail(opts);
-  } catch (err) { ok = false; }
+  } catch (err) { ok = false; logError_('correo', 'No se pudo enviar «' + subject + '» a ' + to + ': ' + msg_(err), meta.ref || '', ''); }
   try { appendRow_('Correos', { fecha: new Date().toISOString(), tipo: meta.tipo || 'otro', para: to, asunto: subject, ref: meta.ref || '', estado: ok ? 'enviado' : 'error' }); } catch (e) { /* sin pestaña Correos todavía */ }
   return ok;
 }
@@ -2608,8 +2721,10 @@ function publicRow_(r) {
       depositRD: Number(r.depositoRD) || 0, depositUSD: r.depositoUSD, depositPaid: !!(r.paypalCaptura || r.depositoPagado),
       depositMethod: r.metodoDeposito || (r.paypalCaptura ? 'paypal' : ''),
       balanceRD: Number(r.saldoRD) || 0, balanceStatus: r.saldoEstado || 'pendiente', balanceMethod: r.saldoMetodo || '',
-      refund: /^reembolsado/.test(r.reembolso || '') ? 'reembolsado' : (r.reembolso ? 'no' : ''),
+      refund: /^reembolsado/.test(r.reembolso || '') ? 'reembolsado' : (refundPending_(r) ? 'pendiente' : (r.reembolso ? 'no' : '')),
+      transfer: r.metodoDeposito === 'transferencia' ? { deadline: r.estado === 'retenida' ? r.retenidaHasta : '', proof: !!r.comprobanteId, sentAt: r.comprobanteEn || '', account: r.cuentaId || '' } : null,
     },
+    changes: { used: Number(r.cambios) || 0, max: changesMax_(settingsCached_()) },
     client: { name: r.clienta, email: r.correo },
     consent: consentState_(r),
     bono: r.bonoCodigo ? { code: r.bonoCodigo, amountRD: Number(r.bonoRD) || 0 } : null,
@@ -2645,6 +2760,12 @@ function adminRow_(r) {
   p.loyalty = r.fidelidad === 'si';
   p.birthday = r.cumpleanos || '';
   p.photoPermission = r.permisoFotos || '';
+  p.proofId = r.comprobanteId || '';
+  p.transferRef = r.transferenciaRef || '';
+  p.accountId = r.cuentaId || '';
+  p.reviewedAt = r.revisadaEn || '';
+  p.refundPending = refundPending_(r);
+  if (r.estado === 'retenida' && r.metodoDeposito === 'transferencia') p.holdUntil = r.retenidaHasta;
   return p;
 }
 
@@ -2733,3 +2854,431 @@ function todayKey_() { return Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd')
 function normCode_(c) { return String(c || '').toUpperCase().replace(/[^A-Z0-9-]/g, ''); }
 function randCode_(n) { const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < n; i++) s += a.charAt(Math.floor(Math.random() * a.length)); return s; }
 function slug_(t) { return String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || ('servicio-' + Date.now()); }
+
+/* =========================================================================
+   Depósito por transferencia
+   La clienta elige transferencia → se aparta el horario (transferenciaMinutos) → sube el comprobante
+   → la cita queda "por-confirmar" (ocupa la agenda y no vence) → el estudio la confirma o la rechaza.
+   ========================================================================= */
+
+const TOO_MANY = 'Demasiados intentos con códigos que no existen. Espera unos minutos e inténtalo de nuevo.';
+const NOT_HUMAN = 'No pudimos comprobar que no eres un robot. Recarga la página e inténtalo de nuevo.';
+
+function accountOut_(a) {
+  return { id: a.id, bank: a.banco || '', type: a.tipo || '', number: a.numero || '', holder: a.titular || '', doc: a.documento || '', note: a.nota || '' };
+}
+function transferInfo_(s) {
+  const accounts = readOpt_('Cuentas').filter(function (a) { return !/^no$/i.test(a.activa) && a.numero; })
+    .sort(function (a, b) { return (Number(a.orden) || 0) - (Number(b.orden) || 0); }).map(accountOut_);
+  return { enabled: on_(s.transferenciaActiva) && accounts.length > 0, minutes: num_(s.transferenciaMinutos, 60), accounts: accounts };
+}
+function changesMax_(s) {
+  const t = String(s.cambiosMax == null ? '' : s.cambiosMax).trim();
+  const n = Number(t);
+  return t !== '' && isFinite(n) ? Math.max(0, Math.floor(n)) : 1;
+}
+function refundPending_(r) { return /^(pendiente|devolver a mano)/.test(String(r.reembolso || '')); }
+
+/* La clienta sube el comprobante (imagen o PDF) */
+function transferProof_(d) {
+  const found = findRow_(d.id);
+  if (!found || !authorized_(found.row, d)) return { ok: false, error: 'No encontramos esa reserva.' };
+  const r = found.row;
+  if (r.metodoDeposito !== 'transferencia') return { ok: false, error: 'Esta reserva no se paga por transferencia.' };
+  if (['retenida', 'expirada', 'por-confirmar'].indexOf(r.estado) < 0) return { ok: false, error: 'Esta reserva ya no está esperando un comprobante.' };
+  const start = new Date(r.inicio), end = new Date(r.fin);
+  const late = r.estado === 'expirada' || (r.estado === 'retenida' && new Date(r.retenidaHasta).getTime() < Date.now());
+  if (late && conflicts_(start, end, r.id).length) return { ok: false, error: 'Se acabó el tiempo para subir el comprobante y el horario ya se ocupó. Escríbenos por WhatsApp y te ayudamos.' };
+  if (start.getTime() < Date.now()) return { ok: false, error: 'La hora de esta cita ya pasó.' };
+  const mime = String(d.mime || '');
+  if (['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].indexOf(mime) < 0) return { ok: false, error: 'Sube una foto (JPG o PNG) o un PDF del comprobante.' };
+  const bytes = Utilities.base64Decode(String(d.data || ''));
+  if (!bytes.length) return { ok: false, error: 'El archivo está vacío.' };
+  if (bytes.length > 8 * 1024 * 1024) return { ok: false, error: 'El archivo pesa más de 8 MB. Toma una captura de pantalla del comprobante.' };
+  const accounts = transferInfo_(settings_()).accounts;
+  const cuenta = accounts.filter(function (a) { return a.id === d.accountId; })[0] || (accounts.length === 1 ? accounts[0] : null);
+  const key = clientKey_(r.correo, r.telefono, r.clienta);
+  const ext = mime === 'application/pdf' ? '.pdf' : (mime === 'image/png' ? '.png' : '.jpg');
+  const blob = Utilities.newBlob(bytes, mime, key.replace(/[^\w@.+-]/g, '_') + ' · comprobante · ' + r.id + ext);
+  const file = filesFolder_().createFile(blob);
+  const arc = {
+    id: 'ARC-' + Utilities.getUuid().slice(0, 8).toUpperCase(), clave: key, tipo: 'comprobante', nombre: 'Comprobante ' + r.id + ext, mime: mime,
+    driveId: file.getId(), citaId: r.id, fecha: todayKey_(), nota: 'Transferencia del depósito' + (cuenta ? ' · ' + cuenta.bank : '') + (d.ref ? ' · ref. ' + clean_(d.ref, 60) : ''), creada: new Date().toISOString(),
+  };
+  appendRow_('Archivos', arc);
+  const replaced = r.estado === 'por-confirmar';
+  const patch = { estado: 'por-confirmar', comprobanteId: arc.id, comprobanteEn: new Date().toISOString(), cuentaId: cuenta ? cuenta.id : '', transferenciaRef: clean_(d.ref, 60), retenidaHasta: '' };
+  updateRow_(found.index, patch);
+  Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
+  const s = settings_();
+  if (!replaced) { const m = mailTransferReceived_(r, s); safeMail_(r.correo, m.subject, m.html, { tipo: 'transferencia', ref: r.id }); }
+  const a = mailAdminTransfer_(r, s, cuenta, replaced);
+  safeMail_(adminTo_(s), a.subject, a.html, { tipo: 'aviso', ref: r.id, attachments: bytes.length < 5 * 1024 * 1024 ? [blob] : null });
+  return { ok: true, appointment: publicRow_(r) };
+}
+
+/* El estudio confirma (llegó el dinero) o rechaza la transferencia */
+function adminTransferReview_(d) {
+  needAdmin_(d);
+  const found = findRow_(d.id);
+  if (!found) return { ok: false, error: 'No encontramos esa cita.' };
+  const r = found.row;
+  if (r.metodoDeposito !== 'transferencia' || ['por-confirmar', 'retenida', 'expirada'].indexOf(r.estado) < 0) return { ok: false, error: 'Esta cita no está esperando revisión de transferencia.' };
+  const s = settings_();
+  const now = new Date().toISOString();
+  if (d.decision === 'confirmar') {
+    if (!d.force) {
+      const clash = conflicts_(new Date(r.inicio), new Date(r.fin), r.id);
+      if (clash.length) return { ok: false, conflict: true, error: 'Ese horario ahora choca con ' + describeClash_(clash[0]) + '. Puedes confirmarla igual si lo confirmas.' };
+    }
+    const patch = { estado: 'confirmada', depositoPagado: now, revisadaEn: now, retenidaHasta: '' };
+    confirmPaid_(found.index, r, patch);
+    const m = mailConfirmed_(r, s, false);
+    safeMail_(r.correo, m.subject, m.html, { tipo: 'confirmacion', ref: r.id });
+    return { ok: true, item: adminRow_(r) };
+  }
+  if (d.decision === 'rechazar') {
+    const motivo = clean_(d.reason, 200) || 'No recibimos la transferencia.';
+    const patch = { estado: 'cancelada', canceladaEn: now, canceladaPor: 'estudio: transferencia rechazada', revisadaEn: now, retenidaHasta: '',
+      notaInterna: clean_((r.notaInterna ? r.notaInterna + ' · ' : '') + 'Transferencia rechazada: ' + motivo, 500), reembolso: 'sin reembolso (transferencia no recibida)' };
+    updateRow_(found.index, patch);
+    Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
+    if (d.notify !== false) { const m = mailTransferRejected_(r, s, motivo); safeMail_(r.correo, m.subject, m.html, { tipo: 'transferencia', ref: r.id }); }
+    notifyWaitlist_(r.fecha);
+    return { ok: true, item: adminRow_(r) };
+  }
+  return { ok: false, error: 'Elige confirmar o rechazar.' };
+}
+
+/* Recuerda al estudio las transferencias sin revisar (como mucho cada 4 horas) */
+function nagTransfers_(rows, s, now) {
+  const pending = rows.filter(function (r) { return r.estado === 'por-confirmar' && now.getTime() - new Date(r.comprobanteEn || r.creada).getTime() > 2 * 3600000; });
+  if (!pending.length) return 0;
+  const props = PropertiesService.getScriptProperties();
+  const last = Number(props.getProperty('TRANSFER_NAG') || 0);
+  if (now.getTime() - last < 4 * 3600000) return 0;
+  props.setProperty('TRANSFER_NAG', String(now.getTime()));
+  const html = layout_(s, {
+    kicker: 'Transferencias por revisar', title: pending.length === 1 ? 'Tienes 1 transferencia sin revisar' : 'Tienes ' + pending.length + ' transferencias sin revisar',
+    intro: 'Estas clientas subieron su comprobante y esperan tu confirmación. Su horario sigue apartado.',
+    details: pending.slice(0, 10).map(function (r) { return [r.clienta, esc_(whenText_(r)) + '<br>Depósito RD$ ' + money_(r.depositoRD)]; }),
+    cta: { text: 'Revisar en el dashboard', url: mailUrl_(s, 'admin.html#agenda') },
+  });
+  safeMail_(adminTo_(s), 'Transferencias por revisar (' + pending.length + ') · MAJOBELLA', html, { tipo: 'aviso', ref: 'transferencias' });
+  return pending.length;
+}
+
+/* Cuentas bancarias (dashboard → Ajustes) */
+function adminSaveAccount_(d) {
+  needAdmin_(d);
+  const a = d.account || {};
+  const banco = clean_(a.banco, 60), numero = clean_(a.numero, 40), titular = clean_(a.titular, 80);
+  if (!banco || !numero || !titular) return { ok: false, error: 'Escribe el banco, el número de cuenta y el titular.' };
+  const rows = readOpt_('Cuentas');
+  const patch = {
+    banco: banco, tipo: clean_(a.tipo, 40) || 'Ahorros', numero: numero, titular: titular, documento: clean_(a.documento, 30), nota: clean_(a.nota, 160),
+    activa: /^(no|false)$/i.test(String(a.activa)) ? 'no' : 'si', orden: Math.round(Number(a.orden) || 0),
+  };
+  const r = a.id ? rows.filter(function (x) { return x.id === a.id; })[0] : null;
+  if (r) { updateTable_('Cuentas', r._row, patch); patch.id = r.id; patch.creada = r.creada; }
+  else {
+    patch.id = 'CTA-' + Utilities.getUuid().slice(0, 6).toUpperCase(); patch.creada = new Date().toISOString();
+    if (!a.orden) patch.orden = rows.length + 1;
+    appendRow_('Cuentas', patch);
+  }
+  return { ok: true, account: patch, accounts: readOpt_('Cuentas').map(strip_) };
+}
+function adminDeleteAccount_(d) {
+  needAdmin_(d);
+  const r = readOpt_('Cuentas').filter(function (x) { return x.id === d.id; })[0];
+  if (!r) return { ok: false, error: 'No encontramos esa cuenta.' };
+  deleteRow_('Cuentas', r._row);
+  return { ok: true, accounts: readOpt_('Cuentas').map(strip_) };
+}
+
+/* =========================================================================
+   Cambiar la fecha (la clienta, desde la web o la app)
+   ========================================================================= */
+
+function reschedule_(d) {
+  const found = findRow_(d.id);
+  if (!found || !authorized_(found.row, d)) return { ok: false, error: 'No encontramos esa cita.' };
+  const r = found.row;
+  const s = settings_();
+  if (r.estado !== 'confirmada' && r.estado !== 'por-confirmar') return { ok: false, error: 'Esta cita ya no se puede cambiar.' };
+  const max = changesMax_(s), used = Number(r.cambios) || 0;
+  if (!max) return { ok: false, error: 'Para cambiar tu cita escríbenos por WhatsApp.' };
+  if (used >= max) return { ok: false, error: max === 1 ? 'Ya cambiaste la fecha de esta cita una vez. Para otro cambio, escríbenos por WhatsApp.' : 'Ya usaste los ' + max + ' cambios de esta cita. Escríbenos por WhatsApp.' };
+  const H = num_(s.horasCancelacion, 24);
+  if ((new Date(r.inicio).getTime() - Date.now()) / 3600000 < H) return { ok: false, error: 'Faltan menos de ' + H + ' horas para tu cita: para cambiarla escríbenos por WhatsApp.' };
+  if (!isDateKey_(d.date) || !/^\d{2}:\d{2}$/.test(d.time || '')) return { ok: false, error: 'Elige el nuevo día y la hora.' };
+  if (d.date === r.fecha && d.time === r.hora) return { ok: false, error: 'Elige un horario distinto al actual.' };
+  const minutes = Number(r.duracionMin) || 30;
+  const problem = slotProblem_(schedule_(s), d.date, d.time, minutes);
+  if (problem) return { ok: false, error: problem };
+  const start = new Date(d.date + 'T' + d.time + ':00' + UTC_OFFSET);
+  const end = new Date(start.getTime() + minutes * 60000);
+  if (conflicts_(start, end, r.id).length) return { ok: false, error: 'Ese horario acaba de ocuparse. Elige otro, por favor.' };
+  const before = whenText_(r);
+  const oldDate = r.fecha;
+  const patch = { fecha: d.date, hora: d.time, inicio: start.toISOString(), fin: end.toISOString(), reprogramadaDe: r.fecha + ' ' + r.hora, recordatorio: '', cambios: used + 1 };
+  updateRow_(found.index, patch);
+  Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
+  calendarMove_(r, s);
+  notifyRescheduled_(r, s, before);
+  const a = mailAdminRescheduled_(r, s, before);
+  safeMail_(adminTo_(s), a.subject, a.html, { tipo: 'aviso', ref: r.id });
+  notifyWaitlist_(oldDate);
+  return { ok: true, appointment: publicRow_(r) };
+}
+
+/* =========================================================================
+   Billetera unida a la cuenta: tarjetas y paquetes comprados o recibidos con su correo
+   ========================================================================= */
+
+function walletCodesFor_(email) {
+  const e = String(email || '').trim().toLowerCase();
+  if (!e) return [];
+  const codes = [];
+  readOpt_('Tarjetas').forEach(function (g) {
+    if (g.estado === 'pendiente' || !g.codigo) return;
+    if ([g.correoComprador, g.correoPara].map(function (x) { return String(x || '').toLowerCase(); }).indexOf(e) >= 0) codes.push(normCode_(g.codigo));
+  });
+  readOpt_('Bonos').forEach(function (b) {
+    if (b.estado !== 'pendiente' && b.codigo && String(b.correo || '').toLowerCase() === e) codes.push(normCode_(b.codigo));
+  });
+  return codes.filter(function (c, i) { return codes.indexOf(c) === i; });
+}
+
+function myWallet_(d) {
+  const u = verifyIdToken_(d.idToken);
+  if (!u) return { ok: false, error: 'Tu sesión expiró. Vuelve a iniciar sesión.' };
+  return { ok: true, items: walletItems_(walletCodesFor_(u.email)) };
+}
+
+/* Envía sus códigos al correo (así solo la dueña del correo los ve). Siempre responde igual. */
+function walletEmail_(d) {
+  const s = settings_();
+  const email = clean_(d.email, 120).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { ok: false, error: 'Escribe un correo válido.' };
+  if (!human_(d, s)) return { ok: false, error: NOT_HUMAN };
+  const cache = CacheService.getScriptCache();
+  const key = 'we_' + hash_(email).slice(0, 32);
+  const gkey = 'we_g_' + Math.floor(Date.now() / 3600000);
+  const sent = { ok: true, message: 'Si tienes tarjetas o paquetes con ese correo, te los enviamos en un momento. Revisa también la carpeta de spam.' };
+  if (cache.get(key)) return sent;
+  const total = Number(cache.get(gkey) || 0);
+  if (total >= 60) return sent;
+  cache.put(key, '1', 600);
+  cache.put(gkey, String(total + 1), 3700);
+  const items = walletItems_(walletCodesFor_(email)).filter(function (x) { return x.type !== 'unknown'; });
+  if (items.length) { const m = mailWallet_(email, items, s); safeMail_(email, m.subject, m.html, { tipo: 'billetera', ref: email }); }
+  return sent;
+}
+
+function mailWallet_(email, items, s) {
+  const rows = items.map(function (x) {
+    if (x.type === 'gift') return ['Tarjeta de regalo', '<b style="font-family:\'Courier New\',monospace;letter-spacing:2px">' + esc_(x.code) + '</b><br>Saldo RD$ ' + money_(x.balanceRD) + ' de RD$ ' + money_(x.amountRD) + (x.expires ? ' · vence el ' + esc_(longDate_(x.expires)) : '') + (x.status !== 'activa' ? ' · ' + esc_(x.status) : '')];
+    return ['Paquete', '<b style="font-family:\'Courier New\',monospace;letter-spacing:2px">' + esc_(x.code) + '</b><br>' + esc_(x.name) + ' · ' + Math.max(0, x.sessions - x.used) + ' de ' + x.sessions + ' sesiones disponibles' + (x.expires ? ' · vence el ' + esc_(longDate_(x.expires)) : '')];
+  });
+  return {
+    subject: 'Tus tarjetas y paquetes de MAJOBELLA',
+    html: layout_(s, {
+      kicker: 'Tu billetera', title: 'Tus códigos',
+      intro: 'Estos son las tarjetas de regalo y paquetes asociados a ' + esc_(email) + '. Escribe el código al reservar o guárdalo en la app.',
+      details: rows,
+      cta: { text: 'Abrir la app', url: mailUrl_(s, 'app/#billetera') },
+      secondary: { text: 'Reservar', url: mailUrl_(s, '#reservar') },
+      note: 'Si no pediste este correo, puedes ignorarlo: nadie más puede ver tus códigos.',
+    }),
+  };
+}
+
+/* ---- Correos de transferencias y cambios ---- */
+function mailTransferReceived_(r, s) {
+  return {
+    subject: 'Recibimos tu comprobante · MAJOBELLA',
+    html: layout_(s, {
+      preheader: 'Tu horario está apartado mientras confirmamos la transferencia.',
+      kicker: 'Comprobante recibido', title: 'Gracias, ' + firstName_(r.clienta),
+      intro: 'Recibimos el comprobante de tu transferencia. <b>Tu horario queda apartado</b> y te confirmamos la cita en cuanto veamos el depósito en la cuenta (normalmente el mismo día).',
+      details: apptDetails_(r),
+      cta: { text: 'Ver mis citas', url: mailUrl_(s, '#citas') },
+      secondary: waUrl_(s) ? { text: 'Escribir por WhatsApp', url: waUrl_(s, 'Hola, envié el comprobante de mi cita ' + r.id + '.') } : null,
+    }),
+  };
+}
+function mailAdminTransfer_(r, s, cuenta, replaced) {
+  return {
+    subject: (replaced ? 'Nuevo comprobante' : 'Transferencia por revisar') + ' · ' + r.clienta + ' · RD$ ' + money_(r.depositoRD),
+    html: layout_(s, {
+      kicker: replaced ? 'Comprobante reemplazado' : 'Transferencia por revisar', title: r.clienta,
+      intro: 'Revisa que el depósito haya llegado a tu cuenta y confirma o rechaza la cita desde el dashboard. El comprobante va adjunto.',
+      details: apptDetails_(r, [
+        ['Depósito esperado', 'RD$ ' + money_(r.depositoRD)],
+        cuenta ? ['Cuenta', esc_(cuenta.bank + ' · ' + cuenta.number)] : null,
+        r.transferenciaRef ? ['Referencia', esc_(r.transferenciaRef)] : null,
+        ['Teléfono', esc_(r.telefono || '—')], ['Correo', esc_(r.correo || '—')],
+      ]),
+      cta: { text: 'Revisar en el dashboard', url: mailUrl_(s, 'admin.html#agenda') },
+    }),
+  };
+}
+function mailTransferRejected_(r, s, motivo) {
+  return {
+    subject: 'No pudimos confirmar tu transferencia · MAJOBELLA',
+    html: layout_(s, {
+      kicker: 'Transferencia', title: 'No pudimos confirmar tu cita',
+      intro: 'Hola, ' + firstName_(r.clienta) + '. Revisamos tu comprobante para el ' + esc_(whenText_(r)) + ' y no pudimos confirmar el depósito.',
+      body: '<p style="margin:0"><b>Motivo:</b> ' + esc_(motivo) + '</p><p style="margin:12px 0 0">Si ya hiciste la transferencia, escríbenos por WhatsApp con el comprobante y lo resolvemos enseguida.</p>',
+      cta: waUrl_(s) ? { text: 'Escribir por WhatsApp', url: waUrl_(s, 'Hola, es sobre mi transferencia de la cita ' + r.id + '.') } : { text: 'Reservar de nuevo', url: mailUrl_(s, '#reservar') },
+      secondary: { text: 'Reservar de nuevo', url: mailUrl_(s, '#reservar') },
+      note: 'Código de reserva: ' + esc_(r.id),
+    }),
+  };
+}
+function mailAdminRescheduled_(r, s, before) {
+  return {
+    subject: 'La clienta cambió su cita · ' + r.clienta + ' · ' + whenText_(r),
+    html: layout_(s, {
+      kicker: 'Cambio de fecha', title: r.clienta,
+      intro: 'Antes: ' + esc_(before) + '<br><b>Ahora: ' + esc_(whenText_(r)) + '</b>',
+      details: apptDetails_(r, [['Teléfono', esc_(r.telefono || '—')]]),
+      cta: { text: 'Abrir dashboard', url: mailUrl_(s, 'admin.html#agenda') },
+    }),
+  };
+}
+
+/* =========================================================================
+   Seguridad: robots (Cloudflare Turnstile), intentos con códigos y accesos al dashboard
+   ========================================================================= */
+
+function turnstileOn_(s) {
+  return !!(String(s.turnstileSiteKey || '').trim() && PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET'));
+}
+function human_(d, s) {
+  if (!turnstileOn_(s)) return true;
+  if (!d.captcha) return false;
+  try {
+    const res = UrlFetchApp.fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'post', muteHttpExceptions: true,
+      payload: { secret: PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET'), response: String(d.captcha) },
+    });
+    return JSON.parse(res.getContentText()).success === true;
+  } catch (e) { logError_('sistema', 'No se pudo verificar Turnstile: ' + msg_(e), '', ''); return true; }
+}
+// Límite de códigos equivocados: por dispositivo (8 cada 15 min) y en total (150 cada 10 min)
+function rlKeys_(d) {
+  return { dev: d.device ? 'rl_d_' + hash_(String(d.device)).slice(0, 24) : '', glob: 'rl_g_' + Math.floor(Date.now() / 600000) };
+}
+function limited_(d) {
+  const c = CacheService.getScriptCache(), k = rlKeys_(d);
+  if (k.dev && Number(c.get(k.dev) || 0) >= 8) return true;
+  return Number(c.get(k.glob) || 0) >= 150;
+}
+function noteFail_(d) {
+  const c = CacheService.getScriptCache(), k = rlKeys_(d);
+  if (k.dev) c.put(k.dev, String(Number(c.get(k.dev) || 0) + 1), 900);
+  c.put(k.glob, String(Number(c.get(k.glob) || 0) + 1), 700);
+}
+
+function noteAccess_(u, d) {
+  try {
+    const cache = CacheService.getScriptCache();
+    const key = 'acc_' + hash_(String(d.idToken)).slice(0, 30);
+    if (cache.get(key)) return;
+    cache.put(key, '1', 21600);
+    const props = PropertiesService.getScriptProperties();
+    const list = safeJson_(props.getProperty('ADMIN_ACCESS'), []) || [];
+    list.unshift({ email: u.email, at: new Date().toISOString(), device: clean_(d.device_label, 80) });
+    props.setProperty('ADMIN_ACCESS', JSON.stringify(list.slice(0, 15)));
+  } catch (e) { /* nada */ }
+}
+
+function sharingInfo_(get) {
+  try {
+    const f = get();
+    return {
+      access: String(f.getSharingAccess()),
+      editors: f.getEditors().map(function (x) { return x.getEmail(); }),
+      viewers: f.getViewers().map(function (x) { return x.getEmail(); }),
+    };
+  } catch (e) { return null; }
+}
+
+function securityStatus_(s) {
+  const props = PropertiesService.getScriptProperties();
+  return {
+    admins: String(props.getProperty('ADMIN_EMAILS') || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean),
+    turnstile: { siteKey: !!String(s.turnstileSiteKey || '').trim(), secret: !!props.getProperty('TURNSTILE_SECRET') },
+    paypalEnv: paypalEnv_(),
+    sheet: sharingInfo_(function () { return DriveApp.getFileById(props.getProperty('SHEET_ID')); }),
+    folder: sharingInfo_(function () { return DriveApp.getFolderById(props.getProperty('FILES_FOLDER_ID')); }),
+    accesses: safeJson_(props.getProperty('ADMIN_ACCESS'), []) || [],
+    inactivityMinutes: num_(s.adminInactividadMin, 30),
+  };
+}
+
+/* =========================================================================
+   Errores: se guardan en la pestaña Errores y se avisan por correo (como mucho uno cada 3 h por tipo)
+   ========================================================================= */
+
+const ERROR_TITLES = {
+  pago: 'Un cobro necesita revisión',
+  correo: 'Un correo no se pudo enviar',
+  automatizacion: 'Las tareas automáticas tienen un problema',
+  sistema: 'Hubo un error en el sistema',
+};
+
+function logError_(tipo, mensaje, ref, detalle, urgent) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const now = Date.now();
+    const key = 'ERR_' + tipo;
+    let avisado = '';
+    if (urgent || now - Number(props.getProperty(key) || 0) > 3 * 3600000) {
+      const s = settingsCached_();
+      const to = adminTo_(s);
+      if (to) {
+        try {
+          const html = layout_(s, {
+            kicker: 'Aviso del sistema', title: ERROR_TITLES[tipo] || 'Aviso del sistema',
+            intro: esc_(mensaje),
+            details: [['Cuándo', esc_(Utilities.formatDate(new Date(now), TZ, 'yyyy-MM-dd HH:mm'))], ref ? ['Referencia', esc_(ref)] : null, detalle ? ['Detalle', esc_(detalle)] : null].filter(Boolean),
+            cta: { text: 'Ver en el dashboard', url: mailUrl_(s, 'admin.html#ajustes') },
+            note: urgent ? 'Este aviso es importante: revísalo hoy.' : 'Si el problema se repite en las próximas 3 horas, quedará anotado en el dashboard sin enviar más correos.',
+          });
+          MailApp.sendEmail({ to: to, subject: '⚠ MAJOBELLA · ' + (ERROR_TITLES[tipo] || 'Aviso del sistema'), htmlBody: html, body: plainText_(html), name: 'MAJOBELLA' });
+          avisado = new Date(now).toISOString();
+          props.setProperty(key, String(now));
+        } catch (e) { /* sin cuota de correo */ }
+      }
+    }
+    appendRow_('Errores', { fecha: new Date(now).toISOString(), tipo: tipo, mensaje: clean_(mensaje, 600), ref: clean_(ref, 80), detalle: clean_(detalle, 600), avisado: avisado, resuelto: '' });
+  } catch (e) { /* nunca romper la petición por anotar un error */ }
+}
+
+/* Si las tareas automáticas llevan más de 3 horas sin ejecutarse, se anota y se avisa */
+function heartbeat_() {
+  try {
+    const last = safeJson_(PropertiesService.getScriptProperties().getProperty('LAST_AUTO'), null);
+    if (!last || !last.at) return;
+    const hours = (Date.now() - new Date(last.at).getTime()) / 3600000;
+    const props = PropertiesService.getScriptProperties();
+    if (hours > 3 && Date.now() - Number(props.getProperty('HB_LOGGED') || 0) > 3 * 3600000) {
+      props.setProperty('HB_LOGGED', String(Date.now()));
+      logError_('automatizacion', 'Las tareas automáticas (recordatorios, reseñas, cumpleaños) no se ejecutan desde hace ' + Math.floor(hours) + ' horas. Abre Apps Script y ejecuta setup() para reinstalar el disparador.', '', '');
+    }
+  } catch (e) { /* nada */ }
+}
+
+function adminResolveErrors_(d) {
+  needAdmin_(d);
+  const rows = readOpt_('Errores');
+  const now = new Date().toISOString();
+  rows.forEach(function (r) {
+    if (r.resuelto) return;
+    if (d.all || String(r._row) === String(d.row)) updateTable_('Errores', r._row, { resuelto: now });
+  });
+  return { ok: true, errors: readOpt_('Errores').slice(-150).reverse().map(function (x) { const o = strip_(x); o.row = x._row; return o; }) };
+}

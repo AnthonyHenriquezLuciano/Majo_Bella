@@ -13,6 +13,7 @@
       ['minAntelacionHoras', 'Antelación mínima para reservar', 'horas', 'number'],
       ['maxDiasAdelante', 'Se puede reservar hasta', 'días', 'number'],
       ['intervaloMinutos', 'Las citas empiezan cada', 'min', 'select:15,20,30,45,60'],
+      ['cambiosMax', 'Veces que la clienta puede cambiar la fecha ella misma (0 = solo por WhatsApp)', 'veces', 'number'],
     ]],
     ['Avisos y calendario', [
       ['correoAvisos', 'Correo que recibe las nuevas reservas', '', 'email'],
@@ -24,6 +25,11 @@
       ['mapsUrl', 'Enlace de Google Maps', '', 'url'],
       ['whatsapp', 'WhatsApp para los correos (con 1, solo números)', '', 'text'],
       ['webUrl', 'Dirección de la web', '', 'url'],
+    ]],
+    ['Datos del negocio (términos y privacidad)', [
+      ['negocioNombre', 'Nombre legal o comercial', '', 'text'],
+      ['negocioRnc', 'RNC o cédula (opcional)', '', 'text'],
+      ['negocioCorreo', 'Correo para temas legales y datos personales', '', 'email'],
     ]],
     ['Comisiones (para la ganancia real)', [
       ['comisionPaypalPct', 'Comisión de PayPal por cobro', '%', 'number'],
@@ -88,6 +94,7 @@
   async function save(btn) {
     const settings = {};
     $('aj-general').querySelectorAll('[name]').forEach((i) => { settings[i.name] = i.value.trim(); });
+    document.querySelectorAll('#aj-extra [data-set]').forEach((i) => { settings[i.name] = i.value.trim(); });
     $('aj-hours').querySelectorAll('.hrow').forEach((row) => {
       const dow = Number(row.dataset.dow);
       settings[DAY_KEYS[dow]] = row.querySelector('[data-open]').checked ? `${row.querySelector('[data-from]').value}-${row.querySelector('[data-to]').value}` : 'cerrado';
