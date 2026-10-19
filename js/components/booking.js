@@ -53,7 +53,7 @@
     function renderPolicy() {
       const pct = PAY.depositPercent;
       policy.textContent = [
-        mode === 'pay' ? `Apartas tu cita con el ${pct}% y pagas el resto al terminar, en efectivo o con PayPal.` : '',
+        mode === 'pay' ? `Apartas tu cita con el ${pct}% y pagas el resto al terminar, en efectivo, transferencia o PayPal.` : '',
         mode === 'pay' && P.changeHours ? `Si cancelas con ${P.changeHours} horas o más de aviso, te devolvemos el depósito.` : '',
         mode !== 'pay' && P.changeHours ? `Puedes cambiar o cancelar hasta ${P.changeHours} horas antes.` : '',
         P.arriveEarlyMinutes ? `Te recomendamos llegar ${P.arriveEarlyMinutes} minutos antes.` : '',
@@ -271,11 +271,19 @@
       sum.date.textContent = st.dateKey ? `${M.weekdayName(st.dateKey)}, ${M.dayMonth(st.dateKey)}` : '—';
       sum.time.textContent = st.time ? `${M.fmtTime12(st.time)} – ${M.fmtTime12(endTime(st.time, t.minutes))}` : '—';
       sum.dur.textContent = t.minutes ? M.fmtDuration(t.minutes) : '—';
-      sum.price.textContent = t.items.length ? (t.hasFrom ? 'Desde ' : '') + M.fmtPrice(t.price) : '—';
+      const pr = M.Pricing.current(t.items);
+      const from = t.hasFrom ? 'Desde ' : '';
+      sum.price.innerHTML = t.items.length
+        ? (pr.discountRD > 0 ? `<s>${M.fmtPrice(pr.subtotalRD)}</s> ${from}${M.fmtPrice(pr.totalRD)}` : from + M.fmtPrice(pr.totalRD))
+        : '—';
+      $('sum-disc-row').hidden = !(t.items.length && pr.discountRD > 0);
+      $('sum-discount').innerHTML = pr.discountRD > 0 ? `−${M.fmtPrice(pr.discountRD)}${pr.promoName ? `<small>${M.escapeHtml(pr.promoName)}</small>` : ''}` : '—';
+      $('sum-gift-row').hidden = !(t.items.length && pr.giftAppliedRD > 0);
+      $('sum-gift').innerHTML = pr.giftAppliedRD > 0 ? `−${M.fmtPrice(pr.giftAppliedRD)}` : '—';
       if (mode === 'pay') {
-        const dep = M.deposit(t.price);
-        sum.dep.innerHTML = t.items.length ? `${M.fmtPrice(dep.depositRD)}<small>${M.fmtUSD(dep.depositUSD)} con PayPal</small>` : '—';
-        sum.bal.innerHTML = t.items.length ? `${t.hasFrom ? 'Desde ' : ''}${M.fmtPrice(dep.balanceRD)}<small>efectivo o PayPal</small>` : '—';
+        sum.dep.innerHTML = t.items.length ? (pr.depositRD > 0 ? `${M.fmtPrice(pr.depositRD)}<small>${M.fmtUSD(pr.depositUSD)} con PayPal</small>` : `${M.fmtPrice(0)}<small>cubierto con tu tarjeta de regalo</small>`) : '—';
+        sum.bal.innerHTML = t.items.length ? `${from}${M.fmtPrice(pr.balanceRD)}<small>efectivo, transferencia o PayPal</small>` : '—';
+        confirmBtn.textContent = t.items.length && pr.depositRD <= 0 ? 'Confirmar con tarjeta de regalo' : 'Continuar al pago del depósito';
       }
       const miss = missingList();
       missing.textContent = miss.length ? `Falta ${miss.length > 1 ? miss.slice(0, -1).join(', ') + ' y ' + miss.slice(-1) : miss[0]}.` : (pay.panel.hidden ? 'Todo listo.' : '');
@@ -294,6 +302,7 @@
         start: start.toISOString(), end: end.toISOString(),
         durationMinutes: t.minutes, totalPrice: t.price, currency: M.config.currency.symbol,
         client: { name: fields.name.value.trim(), phone: fields.phone.value.trim(), email: fields.email.value.trim(), notes: fields.notes.value.trim() },
+        origen: $('bk-origen').value,
       };
     }
 
@@ -331,7 +340,7 @@
       result.innerHTML = `
         <p class="result-title">${kind === 'paid' ? '¡Listo! Tu cita está confirmada.' : 'Tu solicitud está lista para enviar.'}</p>
         <p class="result-text">${kind === 'paid'
-          ? `Te esperamos el ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)}. Recibimos tu depósito de ${M.fmtPrice(p.depositRD)} (${M.fmtUSD(p.depositUSD)}); al terminar pagas ${M.fmtPrice(p.balanceRD)} en efectivo o con PayPal. Te enviamos la confirmación a ${M.escapeHtml(a.client.email)}.`
+          ? `Te esperamos el ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)}. ${p.depositRD > 0 ? `Recibimos tu depósito de ${M.fmtPrice(p.depositRD)} (${M.fmtUSD(p.depositUSD)}).` : 'Tu tarjeta de regalo cubrió el depósito.'} ${p.balanceRD > 0 ? `Al terminar pagas ${M.fmtPrice(p.balanceRD)} en efectivo, transferencia o PayPal.` : 'Tu cita ya está pagada.'} Te enviamos la confirmación a ${M.escapeHtml(a.client.email)}.`
           : 'Envía el mensaje que se abrió en WhatsApp y MAJOBELLA te responderá para confirmar tu cita.'}</p>
         ${kind === 'paid' ? `<p class="result-code">Código de reserva <strong>${M.escapeHtml(a.id)}</strong></p>` : ''}
         ${prep.length ? `<div class="result-prep"><p class="rp-title">Para tu cita</p><ul>${prep.map(({ p: x }) => `<li>${M.escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
@@ -396,8 +405,9 @@
 
     async function openPay() {
       const t = M.totals();
-      const dep = M.deposit(t.price);
-      pay.info.innerHTML = `Hoy pagas <strong>${M.fmtUSD(dep.depositUSD)}</strong> (${M.fmtPrice(dep.depositRD)}, el ${PAY.depositPercent}% de ${M.fmtPrice(t.price)}). Al terminar pagas ${M.fmtPrice(dep.balanceRD)} en efectivo o con PayPal. <span class="pay-rate">Tasa: RD$ ${PAY.usdRate} por US$ 1.</span>`;
+      const dep = M.Pricing.current(t.items);
+      const base = dep.totalRD - (dep.giftAppliedRD || 0);
+      pay.info.innerHTML = `Hoy pagas <strong>${M.fmtUSD(dep.depositUSD)}</strong> (${M.fmtPrice(dep.depositRD)}, el ${PAY.depositPercent}% de ${M.fmtPrice(base)}). Al terminar pagas ${M.fmtPrice(dep.balanceRD)} en efectivo, transferencia o PayPal. <span class="pay-rate">Tasa: RD$ ${PAY.usdRate} por US$ 1.</span>`;
       payMessage('');
       confirmBtn.hidden = true;
       pay.panel.hidden = false;
@@ -415,7 +425,7 @@
               const res = await API.hold(a, M.Auth.token);
               hold = { ...res, sig: opened, appt: a };
               startTimer();
-              if (Number(res.depositUSD) !== dep.depositUSD) {
+              if (Number(res.depositUSD) !== Number(dep.depositUSD)) {
                 pay.info.innerHTML = `Hoy pagas <strong>${M.fmtUSD(res.depositUSD)}</strong> (${M.fmtPrice(res.depositRD)}). Al terminar pagas ${M.fmtPrice(res.balanceRD)} en efectivo o con PayPal.`;
               }
               return res.orderId;
@@ -439,6 +449,8 @@
               rememberClient(record);
               paying = false;
               pay.panel.hidden = true; pay.box.innerHTML = ''; confirmBtn.hidden = false;
+              M.Pricing.clear('gift'); M.Pricing.clear('code'); renderCodeTags(); codeMsg.textContent = '';
+              M.set({ time: null }, 'booked'); // ese horario ya es suyo; se libera la selección
               showResult(record, 'paid');
               API.refreshBusy(true).catch(() => {});
             } catch (err) {
@@ -464,11 +476,101 @@
     }
     pay.back.addEventListener('click', () => { closePay(); renderSummary(); });
 
+    /* La tarjeta de regalo cubre todo el depósito: se confirma sin PayPal */
+    async function confirmWithGift(a) {
+      confirmBtn.disabled = true;
+      const label = confirmBtn.textContent;
+      confirmBtn.textContent = 'Confirmando…';
+      try {
+        const res = await API.hold(a, M.Auth.token);
+        if (!res.confirmed) throw new Error('No se pudo confirmar con la tarjeta de regalo.');
+        const ap = res.appointment;
+        const record = { ...a, ...ap, client: { ...a.client, ...ap.client }, token: res.manageToken, remote: true, createdAt: new Date().toISOString() };
+        M.Appointments.add(record);
+        rememberClient(record);
+        M.Pricing.clear('gift'); M.Pricing.clear('code'); renderCodeTags(); codeMsg.textContent = '';
+        M.set({ time: null }, 'booked');
+        showResult(record, 'paid');
+        API.refreshBusy(true).catch(() => {});
+      } catch (err) {
+        result.hidden = false;
+        result.innerHTML = `<p class="result-title">No pudimos confirmar la cita.</p><p class="result-text">${M.escapeHtml(err.message)}</p>`;
+      } finally {
+        confirmBtn.textContent = label;
+        renderSummary();
+      }
+    }
+
+    /* ---- Código de descuento o tarjeta de regalo ---- */
+    const codeInput = $('bk-code'), codeMsg = $('bk-code-msg'), codeTags = $('bk-code-tags');
+    function renderCodeTags() {
+      const tags = [];
+      if (M.Pricing.code) tags.push(`<span class="ctag">Código ${M.escapeHtml(M.Pricing.code)}<button type="button" data-clear="code" aria-label="Quitar código">×</button></span>`);
+      if (M.Pricing.gift) tags.push(`<span class="ctag">Tarjeta ${M.escapeHtml(M.Pricing.gift)}<button type="button" data-clear="gift" aria-label="Quitar tarjeta">×</button></span>`);
+      codeTags.innerHTML = tags.join('');
+    }
+    async function applyCode() {
+      const v = codeInput.value.trim().toUpperCase().replace(/\s+/g, '');
+      const items = M.totals().items;
+      if (!v) return;
+      if (!items.length) { codeMsg.textContent = 'Elige primero tus servicios.'; return; }
+      codeMsg.textContent = 'Revisando…';
+      try {
+        const res = await API.checkCode(items.map((s) => s.id), v, v);
+        const pr = res.pricing;
+        if (pr.giftStatus === 'ok') {
+          M.Pricing.gift = v;
+          codeMsg.textContent = `Tarjeta de regalo aplicada: ${M.fmtPrice(Math.min(pr.giftBalanceRD, pr.totalRD))} de ${M.fmtPrice(pr.giftBalanceRD)} disponibles.`;
+        } else if (pr.codeStatus === 'ok') {
+          M.Pricing.code = v;
+          codeMsg.textContent = `Código aplicado${pr.promoName ? `: ${pr.promoName}` : ''}.`;
+        } else if (pr.codeStatus === 'notBetter') {
+          M.Pricing.code = v; // se usará si al cambiar los servicios pasa a ser el mejor descuento
+          codeMsg.textContent = 'Tu cita ya tiene un descuento mayor; siempre se aplica el mejor.';
+        } else if (pr.codeStatus === 'notApplicable') {
+          M.Pricing.code = v;
+          codeMsg.textContent = 'Ese código no aplica a los servicios que elegiste por ahora.';
+        } else {
+          codeMsg.textContent = 'No encontramos ese código o ya venció.';
+        }
+        if (M.Pricing.code === v || M.Pricing.gift === v) codeInput.value = '';
+        await M.Pricing.refresh(items);
+      } catch (err) { codeMsg.textContent = err.message; }
+      renderCodeTags();
+      closePay();
+      renderSummary();
+    }
+    $('bk-code-apply').addEventListener('click', applyCode);
+    codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyCode(); } });
+    codeTags.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-clear]');
+      if (!b) return;
+      M.Pricing.clear(b.dataset.clear);
+      codeMsg.textContent = '';
+      renderCodeTags();
+      try { await M.Pricing.refresh(M.totals().items); } catch (err) { /* sin conexión: se usa el precio local */ }
+      closePay(); renderSummary();
+    });
+    let priceT = null;
+    function repriceSoon() {
+      if (!(M.Pricing.code || M.Pricing.gift)) return;
+      clearTimeout(priceT);
+      priceT = setTimeout(async () => {
+        try { await M.Pricing.refresh(M.totals().items); } catch (err) { /* se reintenta al pagar */ }
+        renderSummary();
+      }, 250);
+    }
+
+    // "¿Cómo nos conociste?" sugerido por el enlace con el que llegó
+    if (M.Origin.guess() && !$('bk-origen').value) $('bk-origen').value = M.Origin.guess();
+
     confirmBtn.addEventListener('click', () => {
       if (missingList().length) return;
       const a = appointment();
       result.hidden = true;
-      if (mode === 'pay') {
+      if (mode === 'pay' && M.Pricing.current(M.totals().items).depositRD <= 0) {
+        confirmWithGift(a);
+      } else if (mode === 'pay') {
         openPay();
       } else if (mode === 'request') {
         const msg = M.WhatsApp.buildMessage({ services: M.totals().items, dateKey: a.date, time: a.time, name: a.client.name }, 'Hola, quiero solicitar una cita en MAJOBELLA.')
@@ -510,9 +612,10 @@
       } else {
         renderSlots();
       }
-      if (!['booking-slot', 'booking-date', 'booking-fast', 'booking-taken'].includes(source)) findFastest();
+      if (!['booking-slot', 'booking-date', 'booking-fast', 'booking-taken', 'booked'].includes(source)) findFastest();
       if (source === 'booking-date') guide('#step-hora');
       result.hidden = true;
+      if (!['booking-date', 'booking-slot', 'booking-fast', 'booking-taken', 'booked'].includes(source)) repriceSoon();
       renderSummary();
     });
 

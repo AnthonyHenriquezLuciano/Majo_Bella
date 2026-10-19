@@ -93,17 +93,27 @@ Para "Continuar con Google" en el dashboard, el dominio de la web debe estar en 
 
 El dinero llega en dólares a tu PayPal. Desde PayPal puedes retirarlo a tu banco en RD$; PayPal cobra una comisión por cada retiro. Revisa también las comisiones de PayPal por pagos recibidos y por reembolsos en tu cuenta.
 
+## Actualizar el código (cada vez que haya una versión nueva de Code.gs)
+
+1. En Apps Script, borra el contenido de `Code.gs`, pega el nuevo y guarda.
+2. Elige la función **setup** y pulsa **Ejecutar**.
+   - Crea las pestañas y columnas nuevas sin tocar tus datos.
+   - La primera vez crea también la carpeta privada **MAJOBELLA · Fichas de clientas** en tu Drive.
+   - Google pedirá un permiso nuevo (Drive): acéptalo igual que antes.
+3. **Implementar → Gestionar implementaciones → lápiz (editar) → Versión: Nueva versión → Implementar.**
+
+   Así se mantiene la misma URL `/exec` y no hay que cambiar nada en la web.
+
 ## Uso diario
 
-- **Dashboard** (`admin.html`):
-  - ver citas por día, semana o mes;
-  - marcar el saldo cobrado en efectivo;
-  - marcar una cita como realizada o "no asistió";
-  - cancelar con o sin reembolso;
-  - bloquear horarios (vacaciones, citas tomadas por teléfono).
-- **Tasa del dólar**: cámbiala en **Ajustes → tasaUSD** cuando quieras. Se aplica a las reservas nuevas.
-- **Precios**: en la pestaña **Servicios**. La web los toma de ahí. Las descripciones siguen en `js/data/services.js`.
-- **Horario y días cerrados**: en **Ajustes**.
+- **Dashboard** (`admin.html`), por secciones:
+  - **Agenda:** día, semana o mes; crear citas a mano (teléfono, WhatsApp, en persona); reprogramar; cobrar el saldo en efectivo o transferencia; marcar realizada o "no asistió"; cancelar con o sin reembolso; **Bloqueos** de una vez, de varios días o que se repiten cada semana.
+  - **Clientas:** lista con visitas, gasto, última visita y próxima cita; ficha con notas, fotos de antes y después y consentimiento (se guardan en tu Drive); **Por volver**; **De dónde vienen**; **Pagos sin completar**.
+  - **Dinero:** cierre de caja del día, ganancia real del mes (ingresos − reembolsos − comisiones de PayPal − gastos), registro de gastos y **reporte PDF** mensual.
+  - **Promociones:** descuentos automáticos por servicio (se anuncian en la web), códigos de descuento y tarjetas de regalo con imagen para enviar.
+  - **Ajustes:** depósito, tasa, horario, días cerrados, correos, comisiones y servicios (precio, duración y cada cuántos días vuelve la clienta).
+- **Tasa del dólar, precios, horario y días cerrados**: desde **Ajustes** en el dashboard (o en las pestañas de la hoja). Se aplican a las reservas nuevas. Las descripciones de los servicios siguen en `js/data/services.js`.
+- **Saber de dónde llegan**: comparte la web con `?utm_source=instagram` (o `tiktok`, `google`…) al final del enlace, por ejemplo en la bio de Instagram. Además, la clienta puede elegir "¿Cómo nos conociste?" al reservar.
 - **Reembolsos**:
   - si la clienta cancela con 24 h o más de aviso (`horasCancelacion`), se le devuelve el depósito automáticamente;
   - con menos aviso, no se le devuelve;

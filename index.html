@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261019d">
+<link rel="stylesheet" href="css/styles.css?v=20261019e">
 </head>
 <body>
 <!--MJB:BODY-START-->
@@ -235,6 +235,18 @@
                 <label for="bk-notes">Nota para el estudio <span class="opt">(opcional)</span></label>
                 <input id="bk-notes" name="nota" autocomplete="off" placeholder="Alergias, dudas o algo que debamos saber">
               </div>
+              <div class="field field-wide">
+                <label for="bk-origen">¿Cómo nos conociste? <span class="opt">(opcional)</span></label>
+                <select id="bk-origen" name="origen">
+                  <option value="">Elige una opción</option>
+                  <option>Instagram</option>
+                  <option>TikTok</option>
+                  <option>Google</option>
+                  <option>Recomendación de una amiga</option>
+                  <option>Pasé por el estudio</option>
+                  <option>Otro</option>
+                </select>
+              </div>
               <label class="check field-wide"><input type="checkbox" id="bk-remember" checked><span>Recordar mis datos en este dispositivo para la próxima vez</span></label>
             </div>
           </fieldset>
@@ -248,9 +260,20 @@
             <div><dt>Horario</dt><dd id="sum-time">—</dd></div>
             <div><dt>Duración</dt><dd id="sum-duration">—</dd></div>
             <div><dt>Precio</dt><dd id="sum-price">—</dd></div>
+            <div class="sum-opt" id="sum-disc-row" hidden><dt>Descuento</dt><dd id="sum-discount">—</dd></div>
+            <div class="sum-opt" id="sum-gift-row" hidden><dt>Tarjeta de regalo</dt><dd id="sum-gift">—</dd></div>
             <div class="sum-pay" data-pay-only hidden><dt>Depósito hoy</dt><dd id="sum-deposit">—</dd></div>
             <div class="sum-pay" data-pay-only hidden><dt>Al terminar</dt><dd id="sum-balance">—</dd></div>
           </dl>
+          <details class="promo-box" id="bk-promo" data-pay-only hidden>
+            <summary>¿Tienes un código de descuento o una tarjeta de regalo?</summary>
+            <div class="promo-row">
+              <input id="bk-code" autocomplete="off" autocapitalize="characters" placeholder="Escribe el código" aria-label="Código de descuento o tarjeta de regalo">
+              <button type="button" class="btn btn-line btn-sm" id="bk-code-apply">Aplicar</button>
+            </div>
+            <p class="promo-msg" id="bk-code-msg" aria-live="polite"></p>
+            <div class="promo-tags" id="bk-code-tags"></div>
+          </details>
           <button type="button" class="btn btn-primary btn-block" id="bk-confirm" disabled>Confirmar cita</button>
           <div class="pay-panel" id="bk-pay" hidden>
             <p class="pay-title">Aparta tu cita con el depósito</p>
@@ -385,28 +408,28 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/config.js?v=20261019d"></script>
-<script src="js/data/services.js?v=20261019d"></script>
-<script src="js/data/faq.js?v=20261019d"></script>
-<script src="js/data/brows.js?v=20261019d"></script>
-<script src="js/core/utils.js?v=20261019d"></script>
-<script src="js/integrations/whatsapp.js?v=20261019d"></script>
-<script src="js/integrations/calendar.js?v=20261019d"></script>
-<script src="js/integrations/booking-api.js?v=20261019d"></script>
-<script src="js/integrations/paypal.js?v=20261019d"></script>
-<script src="js/integrations/google-auth.js?v=20261019d"></script>
-<script src="js/integrations/appointments.js?v=20261019d"></script>
-<script src="js/components/nav.js?v=20261019d"></script>
-<script src="js/components/auth-modal.js?v=20261019d"></script>
-<script src="js/components/face.js?v=20261019d"></script>
-<script src="js/components/brows.js?v=20261019d"></script>
-<script src="js/components/hero.js?v=20261019d"></script>
-<script src="js/components/services.js?v=20261019d"></script>
-<script src="js/components/selection-bar.js?v=20261019d"></script>
-<script src="js/components/booking.js?v=20261019d"></script>
-<script src="js/components/citas.js?v=20261019d"></script>
-<script src="js/components/contact.js?v=20261019d"></script>
-<script src="js/components/reveal.js?v=20261019d"></script>
-<script src="js/main.js?v=20261019d"></script>
+<script src="js/config.js?v=20261019e"></script>
+<script src="js/data/services.js?v=20261019e"></script>
+<script src="js/data/faq.js?v=20261019e"></script>
+<script src="js/data/brows.js?v=20261019e"></script>
+<script src="js/core/utils.js?v=20261019e"></script>
+<script src="js/integrations/whatsapp.js?v=20261019e"></script>
+<script src="js/integrations/calendar.js?v=20261019e"></script>
+<script src="js/integrations/booking-api.js?v=20261019e"></script>
+<script src="js/integrations/paypal.js?v=20261019e"></script>
+<script src="js/integrations/google-auth.js?v=20261019e"></script>
+<script src="js/integrations/appointments.js?v=20261019e"></script>
+<script src="js/components/nav.js?v=20261019e"></script>
+<script src="js/components/auth-modal.js?v=20261019e"></script>
+<script src="js/components/face.js?v=20261019e"></script>
+<script src="js/components/brows.js?v=20261019e"></script>
+<script src="js/components/hero.js?v=20261019e"></script>
+<script src="js/components/services.js?v=20261019e"></script>
+<script src="js/components/selection-bar.js?v=20261019e"></script>
+<script src="js/components/booking.js?v=20261019e"></script>
+<script src="js/components/citas.js?v=20261019e"></script>
+<script src="js/components/contact.js?v=20261019e"></script>
+<script src="js/components/reveal.js?v=20261019e"></script>
+<script src="js/main.js?v=20261019e"></script>
 </body>
 </html>

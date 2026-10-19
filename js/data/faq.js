@@ -14,7 +14,7 @@ window.MAJOBELLA_FAQ = [
   },
   {
     q: '¿Cómo se aparta la cita?',
-    a: 'Pagas el 50% del total con PayPal (con tarjeta o con tu cuenta) y la cita queda confirmada al instante; te llega un correo. El otro 50% lo pagas al terminar, en efectivo o con PayPal desde la sección Citas.',
+    a: 'Pagas el 50% del total con PayPal (con tarjeta o con tu cuenta) y la cita queda confirmada al instante; te llega un correo. El otro 50% lo pagas al terminar, en efectivo, por transferencia o con PayPal desde la sección Citas. Si tienes un código de descuento o una tarjeta de regalo, escríbelo en el resumen de tu cita antes de pagar.',
   },
   {
     q: '¿Por qué el depósito aparece en dólares?',

@@ -101,6 +101,13 @@
         ['minNoticeHours', 'maxDaysAhead', 'slotStepMinutes'].forEach((k) => { if (sc[k]) SCH[k] = sc[k]; });
       }
       if (data.payments && data.payments.cancelHours) M.config.policies.changeHours = data.payments.cancelHours;
+      // Servicios nuevos creados en el dashboard que aún no están en services.js
+      (data.services || []).forEach((r) => {
+        if (M.serviceById[r.id]) return;
+        const s = { id: r.id, category: r.name, name: r.name, description: '', durationMinutes: r.durationMinutes, price: r.price, priceFrom: !!r.priceFrom };
+        M.services.push(s); M.serviceById[s.id] = s;
+      });
+      M.promos = data.promos || [];
       return true;
     },
 
@@ -158,7 +165,12 @@
         services: appointment.services.map((s) => s.id),
         date: appointment.date, time: appointment.time,
         client: appointment.client, idToken: idToken || null,
+        code: M.Pricing.code || '', giftCode: M.Pricing.gift || '',
+        origen: appointment.origen || '', canal: M.Origin.channel(),
       }, 'No se pudo apartar el horario.');
+    },
+    checkCode(serviceIds, code, giftCode) {
+      return this.post({ action: 'checkCode', services: serviceIds, code: code || '', giftCode: giftCode || '' }, 'No se pudo revisar el código.');
     },
     capture(id, orderId) { return this.post({ action: 'capture', id, orderId }, 'No se pudo confirmar el pago.'); },
     release(id, token) { return this.post({ action: 'release', id, token }, '').catch(() => null); },
@@ -177,6 +189,81 @@
     balanceOrder(id, auth) { return this.post({ action: 'balanceOrder', id, ...auth }, 'No se pudo preparar el pago.'); },
     balanceCapture(id, orderId, auth) { return this.post({ action: 'balanceCapture', id, orderId, ...auth }, 'No se pudo confirmar el pago.'); },
   };
+
+  /* ---- Promociones automáticas publicadas por el estudio ---- */
+  M.promos = [];
+  M.promoFor = (id) => {
+    let best = null, bestValue = 0;
+    const s = M.serviceById[id];
+    if (!s) return null;
+    M.promos.forEach((p) => {
+      if (!(p.services || []).includes('todos') && !(p.services || []).includes(id)) return;
+      const v = p.kind === 'monto' ? Math.min(s.price, Math.round(p.value)) : Math.round(s.price * Math.min(100, p.value) / 100);
+      if (v > bestValue) { bestValue = v; best = { ...p, discount: v }; }
+    });
+    return best;
+  };
+  M.promoLabel = (p) => (p.kind === 'monto' ? `−${M.fmtPrice(p.value)}` : `−${Number(p.value)}%`);
+
+  /* ---- Precio de la cita: promociones automáticas, código y tarjeta de regalo ----
+     Sin código ni tarjeta se calcula aquí con las promociones publicadas; con código o tarjeta lo calcula el backend. */
+  const sigOf = (ids) => `${ids.join(',')}|${M.Pricing.code}|${M.Pricing.gift}`;
+  M.Pricing = {
+    code: '', gift: '', server: null, label: '', giftBalance: 0,
+    local(items) {
+      const subtotal = items.reduce((t, s) => t + s.price, 0);
+      const discount = Math.min(subtotal, items.reduce((t, s) => { const p = M.promoFor(s.id); return t + (p ? p.discount : 0); }, 0));
+      const total = subtotal - discount;
+      const dep = M.deposit(total);
+      const promo = items.map((s) => M.promoFor(s.id)).find(Boolean);
+      return { subtotalRD: subtotal, discountRD: discount, totalRD: total, promoName: promo ? promo.name : '', giftAppliedRD: 0, depositRD: dep.depositRD, depositUSD: dep.depositUSD, balanceRD: dep.balanceRD };
+    },
+    current(items) {
+      const ids = items.map((s) => s.id);
+      if ((this.code || this.gift) && this.server && this.server.sig === sigOf(ids)) return this.server.pricing;
+      return this.local(items);
+    },
+    /* Pide al backend el precio con el código o la tarjeta; devuelve el estado de cada uno */
+    async refresh(items) {
+      if (!(this.code || this.gift) || !items.length || !M.BookingAPI.enabled()) { this.server = null; return null; }
+      const ids = items.map((s) => s.id);
+      const sig = sigOf(ids);
+      const res = await M.BookingAPI.checkCode(ids, this.code, this.gift);
+      const pr = res.pricing;
+      pr.depositUSD = Number(pr.depositUSD);
+      this.server = { sig, pricing: pr };
+      return pr;
+    },
+    clear(kind) { if (kind === 'gift') this.gift = ''; else this.code = ''; this.server = null; },
+  };
+
+  /* ---- De dónde llega la clienta (primer enlace con el que entró) ---- */
+  M.Origin = {
+    KEY: 'mjb.src.v1',
+    capture() {
+      try {
+        const q = new URLSearchParams(location.search);
+        const utm = q.get('utm_source') || q.get('ref') || q.get('src');
+        let channel = '';
+        if (utm) channel = utm.toLowerCase();
+        else if (document.referrer) {
+          const host = new URL(document.referrer).hostname.replace(/^www\./, '').replace(/^l\./, '').replace(/^lm\./, '').replace(/^m\./, '');
+          if (host && host !== location.hostname) channel = host;
+        }
+        if (channel && !localStorage.getItem(this.KEY)) localStorage.setItem(this.KEY, JSON.stringify({ channel, at: new Date().toISOString() }));
+      } catch (e) { /* sin almacenamiento */ }
+    },
+    channel() { try { return (JSON.parse(localStorage.getItem(this.KEY)) || {}).channel || ''; } catch (e) { return ''; } },
+    /* Sugerencia para "¿Cómo nos conociste?" a partir del enlace */
+    guess() {
+      const c = this.channel();
+      if (/instagram/.test(c)) return 'Instagram';
+      if (/tiktok/.test(c)) return 'TikTok';
+      if (/google/.test(c)) return 'Google';
+      return '';
+    },
+  };
+  M.Origin.capture();
 
   /* Montos del depósito (se muestran antes de pagar; el backend calcula los definitivos) */
   M.deposit = function (totalRD) {

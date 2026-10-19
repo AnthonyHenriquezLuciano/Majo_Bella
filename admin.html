@@ -10,15 +10,30 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/admin.css?v=20261019d">
+<link rel="stylesheet" href="css/admin.css?v=20261019e">
 </head>
 <body>
 <!--MJB:BODY-START-->
 <header class="ad-header">
   <a class="ad-brand" href="index.html" aria-label="Ir a la web de MAJOBELLA"><img src="assets/logo-majobella.png" alt="MAJOBELLA" width="900" height="351"></a>
-  <p class="ad-kicker">Agenda</p>
+  <p class="ad-kicker">Administración</p>
   <div class="ad-user" id="ad-user"></div>
 </header>
+
+<nav class="ad-tabs" id="ad-tabs" aria-label="Secciones" hidden>
+  <div class="ad-tabs-in">
+    <button type="button" data-sec="agenda">Agenda</button>
+    <button type="button" data-sec="clientas">Clientas</button>
+    <button type="button" data-sec="dinero">Dinero</button>
+    <button type="button" data-sec="promos">Promociones</button>
+    <button type="button" data-sec="ajustes">Ajustes</button>
+  </div>
+  <div class="ad-tabs-tools">
+    <span class="ad-loading" id="ad-loading" hidden>Actualizando…</span>
+    <button type="button" class="chip-btn" id="ad-refresh-all">Actualizar</button>
+    <a class="chip-btn" id="ad-sheet" target="_blank" rel="noopener" hidden>Abrir hoja</a>
+  </div>
+</nav>
 
 <div class="ad-banner" id="ad-banner" hidden></div>
 
@@ -33,80 +48,384 @@
   </div>
 </main>
 
-<!-- Dashboard -->
 <main class="ad-main" id="ad-main" hidden>
-  <div class="ad-toolbar">
-    <div class="seg" role="tablist" aria-label="Vista">
-      <button type="button" role="tab" data-view="day">Día</button>
-      <button type="button" role="tab" data-view="week">Semana</button>
-      <button type="button" role="tab" data-view="month">Mes</button>
-    </div>
-    <div class="ad-nav">
-      <button type="button" class="icon-btn" id="ad-prev" aria-label="Anterior">‹</button>
-      <h1 class="ad-title" id="ad-title" aria-live="polite"></h1>
-      <button type="button" class="icon-btn" id="ad-next" aria-label="Siguiente">›</button>
-      <button type="button" class="chip-btn" id="ad-today">Hoy</button>
-    </div>
-    <div class="ad-tools">
-      <button type="button" class="chip-btn" id="ad-refresh">Actualizar</button>
-      <button type="button" class="chip-btn" id="ad-block-open">Bloquear horario</button>
-      <a class="chip-btn" id="ad-sheet" target="_blank" rel="noopener" hidden>Abrir hoja</a>
-    </div>
-  </div>
 
-  <section class="kpis" id="ad-kpis" aria-label="Resumen del periodo"></section>
+  <!-- AGENDA -->
+  <section data-section="agenda" id="sec-agenda" hidden>
+    <div class="ad-toolbar">
+      <div class="seg" id="ag-seg" role="tablist" aria-label="Vista">
+        <button type="button" role="tab" data-view="day">Día</button>
+        <button type="button" role="tab" data-view="week">Semana</button>
+        <button type="button" role="tab" data-view="month">Mes</button>
+      </div>
+      <div class="ad-nav">
+        <button type="button" class="icon-btn" id="ag-prev" aria-label="Anterior">‹</button>
+        <h1 class="ad-title" id="ag-title" aria-live="polite"></h1>
+        <button type="button" class="icon-btn" id="ag-next" aria-label="Siguiente">›</button>
+        <button type="button" class="chip-btn" id="ag-today">Hoy</button>
+      </div>
+      <div class="ad-tools">
+        <button type="button" class="chip-btn" id="ag-blocks">Bloqueos</button>
+        <button type="button" class="btn-dark" id="ag-new">+ Nueva cita</button>
+      </div>
+    </div>
+    <section class="kpis" id="ag-kpis" aria-label="Resumen del periodo"></section>
+    <div class="ad-grid">
+      <section class="ad-panel" aria-labelledby="agenda-h">
+        <div class="panel-head">
+          <h2 id="agenda-h">Reservas</h2>
+          <label class="filter"><span>Mostrar</span>
+            <select id="ag-filter">
+              <option value="activas">Activas</option>
+              <option value="todas">Todas</option>
+              <option value="saldo">Con saldo pendiente</option>
+              <option value="canceladas">Canceladas</option>
+            </select>
+          </label>
+        </div>
+        <div class="month-grid" id="ag-month" hidden></div>
+        <div class="agenda" id="ag-list" aria-live="polite"></div>
+      </section>
+      <aside class="ad-side">
+        <section class="ad-panel"><div class="panel-head"><h2>Citas por día</h2></div><div class="chart" id="ag-chart-days"></div></section>
+        <section class="ad-panel"><div class="panel-head"><h2>Horas más reservadas</h2></div><div class="chart" id="ag-chart-hours"></div></section>
+        <section class="ad-panel"><div class="panel-head"><h2>Servicios del periodo</h2></div><div class="svc-bars" id="ag-services"></div></section>
+        <p class="ad-settings" id="ag-settings"></p>
+      </aside>
+    </div>
+  </section>
 
-  <div class="ad-grid">
-    <section class="ad-panel ad-agenda" aria-labelledby="agenda-h">
-      <div class="panel-head">
-        <h2 id="agenda-h">Reservas</h2>
-        <label class="filter"><span>Mostrar</span>
-          <select id="ad-filter">
-            <option value="activas">Activas</option>
-            <option value="todas">Todas</option>
-            <option value="saldo">Con saldo pendiente</option>
-            <option value="canceladas">Canceladas</option>
+  <!-- CLIENTAS -->
+  <section data-section="clientas" id="sec-clientas" hidden>
+    <div class="subtabs" id="cl-tabs" role="tablist">
+      <button type="button" role="tab" data-tab="todas">Clientas <span class="n" id="cl-n-todas">0</span></button>
+      <button type="button" role="tab" data-tab="volver">Por volver <span class="n" id="cl-n-volver">0</span></button>
+      <button type="button" role="tab" data-tab="origen">De dónde vienen</button>
+      <button type="button" role="tab" data-tab="pagos">Pagos sin completar <span class="n" id="cl-n-pagos">0</span></button>
+    </div>
+
+    <div data-cl-pane="todas">
+      <div class="ad-toolbar">
+        <input class="search" id="cl-q" type="search" placeholder="Buscar por nombre, teléfono o correo" aria-label="Buscar clienta">
+        <label class="filter"><span>Ordenar</span>
+          <select id="cl-sort">
+            <option value="recientes">Visita más reciente</option>
+            <option value="gasto">Más gasto</option>
+            <option value="visitas">Más visitas</option>
+            <option value="nombre">Nombre</option>
           </select>
         </label>
       </div>
-      <div class="month-grid" id="ad-month" hidden></div>
-      <div class="agenda" id="ad-list" aria-live="polite"></div>
+      <section class="ad-panel">
+        <p class="panel-note" id="cl-summary"></p>
+        <div class="tbl-wrap" id="cl-list"></div>
+      </section>
+    </div>
+
+    <div data-cl-pane="volver" hidden>
+      <section class="ad-panel">
+        <div class="panel-head"><h2>Clientas por volver</h2></div>
+        <p class="panel-note">Clientas sin cita próxima a las que ya les toca (o les toca esta semana) volver, según los días de cada servicio. Escríbeles con un toque.</p>
+        <ul class="due-list" id="cl-due"></ul>
+      </section>
+    </div>
+
+    <div data-cl-pane="origen" hidden>
+      <div class="ad-toolbar">
+        <label class="filter"><span>Periodo</span>
+          <select id="cl-period">
+            <option value="mes">Este mes</option>
+            <option value="3m">Últimos 3 meses</option>
+            <option value="ano">Este año</option>
+            <option value="todo">Todo</option>
+          </select>
+        </label>
+      </div>
+      <section class="kpis kpis-2" id="cl-origin-kpi"></section>
+      <div class="ad-cols">
+        <section class="ad-panel"><div class="panel-head"><h2>Clientas nuevas por origen</h2></div><div class="svc-bars" id="cl-origin-new"></div></section>
+        <section class="ad-panel"><div class="panel-head"><h2>Todas las reservas por origen</h2></div><div class="svc-bars" id="cl-origin-all"></div></section>
+      </div>
+      <section class="ad-panel"><div class="panel-head"><h2>Enlaces y páginas</h2></div><div id="cl-origin-channel"></div></section>
+    </div>
+
+    <div data-cl-pane="pagos" hidden>
+      <section class="kpis kpis-2" id="cl-pay-kpi"></section>
+      <section class="ad-panel">
+        <div class="panel-head"><h2>Reservas que no completaron el pago</h2></div>
+        <p class="panel-note">Clientas que llegaron hasta PayPal y no pagaron, y que no reservaron después. Un mensaje a tiempo suele recuperar la cita.</p>
+        <ul class="due-list" id="cl-pay-list"></ul>
+      </section>
+    </div>
+  </section>
+
+  <!-- DINERO -->
+  <section data-section="dinero" id="sec-dinero" hidden>
+    <section class="ad-block">
+      <div class="ad-toolbar">
+        <h2 class="block-h">Cierre de caja</h2>
+        <div class="ad-nav">
+          <button type="button" class="icon-btn" id="mn-day-prev" aria-label="Día anterior">‹</button>
+          <p class="ad-title" id="mn-day-title"></p>
+          <button type="button" class="icon-btn" id="mn-day-next" aria-label="Día siguiente">›</button>
+          <button type="button" class="chip-btn" id="mn-day-today">Hoy</button>
+        </div>
+      </div>
+      <section class="kpis" id="mn-day-kpis"></section>
+      <div class="ad-grid">
+        <section class="ad-panel"><div class="panel-head"><h2>Movimientos del día</h2></div><div class="tbl-wrap" id="mn-day-list"></div></section>
+        <section class="ad-panel"><div class="panel-head"><h2>Saldos por cobrar del día</h2></div><ul class="due-list compact" id="mn-day-pending"></ul></section>
+      </div>
     </section>
 
-    <aside class="ad-side">
-      <section class="ad-panel" aria-labelledby="chart1-h">
-        <div class="panel-head"><h2 id="chart1-h">Citas por día</h2></div>
-        <div class="chart" id="ad-chart-days"></div>
+    <section class="ad-block">
+      <div class="ad-toolbar">
+        <h2 class="block-h">Ganancia del mes</h2>
+        <div class="ad-nav">
+          <button type="button" class="icon-btn" id="mn-month-prev" aria-label="Mes anterior">‹</button>
+          <p class="ad-title" id="mn-month-title"></p>
+          <button type="button" class="icon-btn" id="mn-month-next" aria-label="Mes siguiente">›</button>
+        </div>
+        <div class="ad-tools"><button type="button" class="btn-dark" id="mn-pdf">Descargar reporte PDF</button></div>
+      </div>
+      <section class="kpis" id="mn-month-kpis"></section>
+      <dl class="facts" id="mn-month-extra"></dl>
+      <div class="ad-grid">
+        <section class="ad-panel"><div class="panel-head"><h2>Ingresos por día</h2></div><div class="chart" id="mn-chart"></div></section>
+        <aside class="ad-side static">
+          <section class="ad-panel"><div class="panel-head"><h2>Por método de pago</h2></div><div class="svc-bars" id="mn-methods"></div></section>
+          <section class="ad-panel"><div class="panel-head"><h2>Gastos por categoría</h2></div><div class="svc-bars" id="mn-cats"></div></section>
+        </aside>
+      </div>
+      <section class="ad-panel">
+        <div class="panel-head"><h2>Gastos del mes</h2></div>
+        <form class="exp-form" id="mn-exp-form">
+          <label>Fecha<input type="date" name="fecha" required></label>
+          <label class="grow">Concepto<input name="concepto" placeholder="Pigmentos, alquiler, publicidad…" maxlength="120" required></label>
+          <label>Categoría<select name="categoria"></select></label>
+          <label>Monto (RD$)<input type="number" name="montoRD" min="1" step="1" required></label>
+          <label>Pagado con<select name="metodo"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="tarjeta">Tarjeta</option><option value="paypal">PayPal</option></select></label>
+          <button type="submit" class="btn-dark">Agregar gasto</button>
+        </form>
+        <div class="tbl-wrap" id="mn-exp-list"></div>
+        <p class="panel-note" id="mn-fee-note"></p>
       </section>
-      <section class="ad-panel" aria-labelledby="chart2-h">
-        <div class="panel-head"><h2 id="chart2-h">Horas más reservadas</h2></div>
-        <div class="chart" id="ad-chart-hours"></div>
+    </section>
+  </section>
+
+  <!-- PROMOCIONES -->
+  <section data-section="promos" id="sec-promos" hidden>
+    <div class="ad-cols">
+      <section class="ad-panel">
+        <div class="panel-head"><h2>Promociones y códigos</h2><button type="button" class="btn-dark sm" id="pr-new">+ Nueva</button></div>
+        <p class="panel-note">Las automáticas se aplican solas y se anuncian en los servicios de la web. Los códigos los escribe la clienta al reservar. Si hay varias, se aplica la que más descuenta.</p>
+        <ul class="due-list" id="pr-list"></ul>
       </section>
-      <section class="ad-panel" aria-labelledby="chart3-h">
-        <div class="panel-head"><h2 id="chart3-h">Servicios del periodo</h2></div>
-        <div class="svc-bars" id="ad-services"></div>
+      <section class="ad-panel">
+        <div class="panel-head"><h2>Tarjetas de regalo</h2><button type="button" class="btn-dark sm" id="gf-new">+ Vender tarjeta</button></div>
+        <p class="panel-note" id="gf-summary"></p>
+        <ul class="due-list" id="gf-list"></ul>
       </section>
-      <p class="ad-settings" id="ad-settings"></p>
-    </aside>
-  </div>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section data-section="ajustes" id="sec-ajustes" hidden>
+    <div class="ad-cols">
+      <section class="ad-panel"><div class="panel-head"><h2>General</h2></div><div id="aj-general"></div></section>
+      <div>
+        <section class="ad-panel">
+          <div class="panel-head"><h2>Horario</h2></div>
+          <div class="hours" id="aj-hours"></div>
+        </section>
+        <section class="ad-panel">
+          <div class="panel-head"><h2>Días cerrados</h2></div>
+          <p class="panel-note">Feriados o días libres puntuales. Para vacaciones de varios días o pausas que se repiten usa «Bloqueos» en la Agenda.</p>
+          <div class="dchips" id="aj-closed"></div>
+          <div class="inline-add"><input type="date" id="aj-closed-date" aria-label="Día cerrado"><button type="button" class="chip-btn" id="aj-closed-add">Añadir</button></div>
+        </section>
+      </div>
+    </div>
+    <section class="ad-panel">
+      <div class="panel-head"><h2>Servicios</h2><button type="button" class="chip-btn" id="aj-svc-add">+ Añadir servicio</button></div>
+      <p class="panel-note">Precio y duración que se cobran en la web. «Vuelve cada» define cuándo una clienta aparece en «Por volver». Las descripciones de cada servicio se editan en js/data/services.js.</p>
+      <div class="tbl-wrap">
+        <table class="tbl tbl-edit">
+          <thead><tr><th>Servicio</th><th>Duración (min)</th><th>Precio (RD$)</th><th class="c">Precio «desde»</th><th>Vuelve cada (días)</th><th class="c">Activo</th></tr></thead>
+          <tbody id="aj-services"></tbody>
+        </table>
+      </div>
+    </section>
+    <div class="savebar"><span>Los cambios se aplican en la web al guardar.</span><button type="button" class="btn-dark" id="aj-save">Guardar ajustes</button></div>
+  </section>
 </main>
 
-<!-- Bloquear horario -->
-<dialog class="ad-dialog" id="ad-block">
-  <form method="dialog" id="ad-block-form">
-    <h2>Bloquear horario</h2>
-    <p>Las clientas verán ese tiempo en gris y no podrán reservarlo.</p>
-    <label>Fecha<input type="date" name="date" required></label>
+<!-- Nueva cita -->
+<dialog class="ad-dialog wide" id="dlg-new" aria-labelledby="nc-h">
+  <form id="nc-form" novalidate>
+    <div class="dlg-head"><h2 id="nc-h">Nueva cita</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <p>Para citas por teléfono, WhatsApp o en persona. El horario queda ocupado en la web al instante.</p>
+    <fieldset class="fs"><legend>Servicios</legend><div class="chks" id="nc-services"></div><p class="hint">Duración: <span id="nc-dur">—</span></p></fieldset>
     <div class="row2">
-      <label>Desde<input type="time" name="from" value="10:00" step="1800"></label>
-      <label>Hasta<input type="time" name="to" value="17:00" step="1800"></label>
+      <label>Fecha<input type="date" name="date" required></label>
+      <label>Hora<input type="time" name="time" step="900" required></label>
     </div>
-    <label>Motivo <span class="opt">(solo lo ves tú)</span><input name="reason" placeholder="Vacaciones, cita por teléfono…" maxlength="120"></label>
-    <p class="dlg-msg" id="ad-block-msg" aria-live="polite"></p>
+    <div class="slot-chips" id="nc-slots"></div>
+    <fieldset class="fs"><legend>Clienta</legend>
+      <label>Nombre<input name="name" list="nc-clients" autocomplete="off" required><datalist id="nc-clients"></datalist></label>
+      <div class="row2">
+        <label>Teléfono<input name="phone" type="tel" placeholder="809 000 0000"></label>
+        <label>Correo <span class="opt">(opcional)</span><input name="email" type="email"></label>
+      </div>
+      <label>Nota <span class="opt">(opcional)</span><input name="notes" maxlength="300"></label>
+      <label>Nos conoció por<select name="origen"><option>WhatsApp</option><option>Llamada</option><option>En persona</option><option>Instagram</option><option>TikTok</option><option>Google</option><option>Recomendación de una amiga</option><option>Otro</option></select></label>
+    </fieldset>
+    <fieldset class="fs"><legend>Pago</legend>
+      <div class="row3">
+        <label>Total (RD$)<input name="total" type="number" min="0" step="1"></label>
+        <label>Depósito recibido (RD$)<input name="deposit" type="number" min="0" step="1" value="0"></label>
+        <label>Pagado con<select name="depositMethod"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="paypal">PayPal</option></select></label>
+      </div>
+    </fieldset>
+    <label class="chk"><input type="checkbox" name="notify"><span>Enviarle la confirmación por correo</span></label>
+    <p class="dlg-msg" id="nc-msg" aria-live="polite"></p>
     <div class="dlg-actions">
-      <button type="button" class="chip-btn" value="cancel" id="ad-block-cancel">Cerrar</button>
-      <button type="submit" class="btn-dark" id="ad-block-save">Bloquear</button>
+      <button type="button" class="chip-btn" data-close>Cerrar</button>
+      <button type="button" class="chip-btn" id="nc-force" hidden>Guardar de todos modos</button>
+      <button type="submit" class="btn-dark" id="nc-save">Crear cita</button>
     </div>
+  </form>
+</dialog>
+
+<!-- Reprogramar -->
+<dialog class="ad-dialog" id="dlg-move" aria-labelledby="mv-h">
+  <form id="mv-form" novalidate>
+    <div class="dlg-head"><h2 id="mv-h">Reprogramar cita</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <p id="mv-current"></p>
+    <div class="row2">
+      <label>Nueva fecha<input type="date" name="date" required></label>
+      <label>Nueva hora<input type="time" name="time" step="900" required></label>
+    </div>
+    <div class="slot-chips" id="mv-slots"></div>
+    <label class="chk"><input type="checkbox" name="notify"><span>Avisarle por correo del nuevo horario</span></label>
+    <p class="dlg-msg" id="mv-msg" aria-live="polite"></p>
+    <div class="dlg-actions">
+      <button type="button" class="chip-btn" data-close>Cerrar</button>
+      <button type="button" class="chip-btn" id="mv-force" hidden>Mover de todos modos</button>
+      <button type="submit" class="btn-dark" id="mv-save">Mover cita</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Bloqueos -->
+<dialog class="ad-dialog wide" id="dlg-blocks" aria-labelledby="bl-h">
+  <div class="dlg-pad">
+    <div class="dlg-head"><h2 id="bl-h">Bloqueos</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <p>Las clientas verán esas horas en gris y no podrán reservarlas.</p>
+    <ul class="bl-list" id="bl-list"></ul>
+    <form id="bl-form" class="bl-form" novalidate>
+      <h3>Nuevo bloqueo</h3>
+      <div class="radios" role="radiogroup" aria-label="Tipo de bloqueo">
+        <label class="chk"><input type="radio" name="tipo" value="unico" checked><span>Una vez</span></label>
+        <label class="chk"><input type="radio" name="tipo" value="rango"><span>Varios días seguidos</span></label>
+        <label class="chk"><input type="radio" name="tipo" value="semanal"><span>Cada semana</span></label>
+      </div>
+      <div class="row2">
+        <label>Desde<input type="date" name="fechaDesde" required></label>
+        <label id="bl-hasta-wrap"><span id="bl-hasta-label">Hasta</span><input type="date" name="fechaHasta"></label>
+      </div>
+      <div class="chks days" id="bl-days" hidden>
+        <label class="chk"><input type="checkbox" name="dia" value="1"><span>Lun</span></label>
+        <label class="chk"><input type="checkbox" name="dia" value="2"><span>Mar</span></label>
+        <label class="chk"><input type="checkbox" name="dia" value="3"><span>Mié</span></label>
+        <label class="chk"><input type="checkbox" name="dia" value="4"><span>Jue</span></label>
+        <label class="chk"><input type="checkbox" name="dia" value="5"><span>Vie</span></label>
+        <label class="chk"><input type="checkbox" name="dia" value="6"><span>Sáb</span></label>
+        <label class="chk"><input type="checkbox" name="dia" value="0"><span>Dom</span></label>
+      </div>
+      <label class="chk"><input type="checkbox" name="allday"><span>Todo el día</span></label>
+      <div class="row2" id="bl-hours">
+        <label>De<input type="time" name="horaDesde" value="13:00" step="900"></label>
+        <label>A<input type="time" name="horaHasta" value="14:00" step="900"></label>
+      </div>
+      <label>Motivo <span class="opt">(solo lo ves tú)</span><input name="motivo" placeholder="Almuerzo, vacaciones, curso…" maxlength="120"></label>
+      <p class="dlg-msg" id="bl-msg" aria-live="polite"></p>
+      <div class="dlg-actions"><button type="submit" class="btn-dark" id="bl-save">Guardar bloqueo</button></div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Ficha de clienta -->
+<dialog class="ad-dialog wide" id="dlg-client" aria-labelledby="cp-title">
+  <div class="dlg-pad">
+    <div class="dlg-head"><h2 id="cp-title">Clienta</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <div id="cp-body"></div>
+  </div>
+</dialog>
+
+<!-- Ver archivo -->
+<dialog class="ad-dialog wide" id="dlg-file" aria-labelledby="fv-title">
+  <div class="dlg-pad">
+    <div class="dlg-head"><h2 id="fv-title">Archivo</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <div class="fv-body" id="fv-body"></div>
+    <div class="dlg-actions">
+      <button type="button" class="chip-btn" id="fv-delete">Borrar</button>
+      <a class="btn-dark" id="fv-download" href="#" download>Descargar</a>
+    </div>
+  </div>
+</dialog>
+
+<!-- Promoción -->
+<dialog class="ad-dialog" id="dlg-promo" aria-labelledby="pr-dlg-title">
+  <form id="pr-form" novalidate>
+    <div class="dlg-head"><h2 id="pr-dlg-title">Nueva promoción</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <label>Nombre<input name="nombre" placeholder="Octubre de cejas, Bienvenida…" maxlength="80" required></label>
+    <div class="radios" role="radiogroup" aria-label="Tipo">
+      <label class="chk"><input type="radio" name="tipo" value="auto" checked><span>Automática (se anuncia en la web)</span></label>
+      <label class="chk"><input type="radio" name="tipo" value="codigo"><span>Con código</span></label>
+    </div>
+    <div class="row-code" id="pr-code-wrap" hidden>
+      <label class="grow">Código<input name="codigo" maxlength="20" autocapitalize="characters" placeholder="HOLA10"></label>
+      <button type="button" class="chip-btn" id="pr-gen">Generar</button>
+    </div>
+    <fieldset class="fs"><legend>Servicios</legend><div class="chks" id="pr-services"></div></fieldset>
+    <div class="row2">
+      <label>Tipo de descuento<select name="descuentoTipo"><option value="porcentaje">Porcentaje</option><option value="monto">Monto fijo (RD$)</option></select></label>
+      <label>Valor <span class="opt" id="pr-unit">%</span><input name="valor" type="number" min="1" step="1" required></label>
+    </div>
+    <div class="row3">
+      <label>Desde <span class="opt">(opcional)</span><input name="desde" type="date"></label>
+      <label>Hasta <span class="opt">(opcional)</span><input name="hasta" type="date"></label>
+      <label>Usos máximos <span class="opt">(vacío = sin límite)</span><input name="usosMax" type="number" min="0" step="1"></label>
+    </div>
+    <label class="chk"><input type="checkbox" name="activo" checked><span>Activa</span></label>
+    <p class="preview" id="pr-preview"></p>
+    <p class="dlg-msg" id="pr-msg" aria-live="polite"></p>
+    <div class="dlg-actions"><button type="button" class="chip-btn" data-close>Cerrar</button><button type="submit" class="btn-dark" id="pr-save">Guardar</button></div>
+  </form>
+</dialog>
+
+<!-- Tarjeta de regalo -->
+<dialog class="ad-dialog" id="dlg-gift" aria-labelledby="gf-h">
+  <form id="gf-form" novalidate>
+    <div class="dlg-head"><h2 id="gf-h">Vender tarjeta de regalo</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <p>Se genera un código único. La clienta lo escribe al reservar y el valor se descuenta de su cita.</p>
+    <div class="row2">
+      <label>Valor (RD$)<input name="montoRD" type="number" min="1" step="1" required></label>
+      <label>Pagada con<select name="metodoPago"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="paypal">PayPal</option><option value="cortesia">Cortesía (regalo del estudio)</option></select></label>
+    </div>
+    <div class="row2">
+      <label>Para<input name="para" maxlength="80" placeholder="Nombre de quien la recibe"></label>
+      <label>De<input name="comprador" maxlength="80" placeholder="Quien la compra"></label>
+    </div>
+    <label>Mensaje <span class="opt">(opcional, sale en la tarjeta)</span><input name="mensaje" maxlength="160"></label>
+    <div class="row3">
+      <label>Vendida el<input name="vendida" type="date"></label>
+      <label>Vence<input name="vence" type="date"></label>
+      <label>Código <span class="opt">(opcional)</span><input name="codigo" maxlength="20" placeholder="Automático"></label>
+    </div>
+    <p class="dlg-msg" id="gf-msg" aria-live="polite"></p>
+    <div class="dlg-actions"><button type="button" class="chip-btn" data-close>Cerrar</button><button type="submit" class="btn-dark" id="gf-save">Crear tarjeta</button></div>
   </form>
 </dialog>
 
@@ -114,11 +433,18 @@
 <div class="ad-toast" id="ad-toast" role="status" hidden></div>
 <!--MJB:BODY-END-->
 
-<script src="js/config.js?v=20261019d"></script>
-<script src="js/data/services.js?v=20261019d"></script>
-<script src="js/core/utils.js?v=20261019d"></script>
-<script src="js/integrations/booking-api.js?v=20261019d"></script>
-<script src="js/integrations/google-auth.js?v=20261019d"></script>
-<script src="js/admin.js?v=20261019d"></script>
+<script src="js/config.js?v=20261019e"></script>
+<script src="js/data/services.js?v=20261019e"></script>
+<script src="js/core/utils.js?v=20261019e"></script>
+<script src="js/integrations/booking-api.js?v=20261019e"></script>
+<script src="js/integrations/google-auth.js?v=20261019e"></script>
+<script src="js/admin/core.js?v=20261019e"></script>
+<script src="js/admin/demo.js?v=20261019e"></script>
+<script src="js/admin/agenda.js?v=20261019e"></script>
+<script src="js/admin/clientes.js?v=20261019e"></script>
+<script src="js/admin/dinero.js?v=20261019e"></script>
+<script src="js/admin/promos.js?v=20261019e"></script>
+<script src="js/admin/ajustes.js?v=20261019e"></script>
+<script>window.MJB.Admin.start();</script>
 </body>
 </html>

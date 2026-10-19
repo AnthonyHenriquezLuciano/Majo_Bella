@@ -23,6 +23,15 @@
       return blocks.join('');
     }
 
+    /* Precio con la promoción automática vigente, si la hay */
+    function priceHtml(s) {
+      const p = M.promoFor && M.promoFor(s.id);
+      if (!p) return `<p class="svc-price">${M.fmtServicePrice(s)}</p>`;
+      const until = p.until ? ` hasta el ${M.dayMonth(p.until)}` : '';
+      return `<p class="svc-price"><s>${M.fmtServicePrice(s)}</s> ${s.priceFrom ? 'Desde ' : ''}${M.fmtPrice(s.price - p.discount)}</p>
+            <p class="svc-promo"><span>${M.escapeHtml(M.promoLabel(p))}</span>${M.escapeHtml(p.name)}${until}</p>`;
+    }
+
     function card(s) {
       const on = M.state.selected.includes(s.id);
       const hasDetails = s.idealFor || (s.includes && s.includes.length);
@@ -32,7 +41,7 @@
             <h3 class="svc-name">${M.escapeHtml(s.name)}</h3>
             <p class="svc-dur">${M.fmtDurationShort(s.durationMinutes)}</p>
             <p class="svc-desc">${M.escapeHtml(s.description)}</p>
-            <p class="svc-price">${M.fmtServicePrice(s)}</p>
+            ${priceHtml(s)}
             ${hasDetails ? `<button type="button" class="svc-more" aria-expanded="false" aria-controls="det-${s.id}">Ver detalles</button>` : ''}
           </div>
           <button type="button" class="svc-add" data-add="${s.id}" aria-pressed="${on}">

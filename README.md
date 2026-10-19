@@ -19,7 +19,7 @@ js/integrations/paypal.js       Botones de PayPal para el depósito y el saldo
 js/integrations/google-auth.js  Inicio de sesión con Google
 js/integrations/appointments.js Registro de citas de la clienta (Citas)
 js/components/*.js              Menú, rostro ilustrado, cejas, servicios, barra de suma, reservas, citas, contacto
-admin.html, js/admin.js         Dashboard privado de reservas
+admin.html, js/admin/*.js       Dashboard privado: agenda, clientas, dinero, promociones y ajustes
 backend/google-apps-script/     Backend gratuito: Google Sheets + PayPal + Google Calendar (ver INSTALAR.md)
 assets/                         Logos, monograma, favicon y fuentes
 ```
@@ -59,16 +59,11 @@ PayPal no cobra en pesos dominicanos. Por eso el depósito se cobra en dólares 
 
 **Dashboard** (`admin.html`):
 - Solo entran los correos de Google en `ADMIN_EMAILS` (propiedad del script); el backend lo verifica en cada consulta.
-- Muestra:
-  - citas por día, semana o mes;
-  - cobrado y por cobrar;
-  - cancelaciones;
-  - horas y servicios más reservados.
-- Permite:
-  - marcar el saldo cobrado en efectivo;
-  - marcar citas realizadas o "no asistió";
-  - cancelar con o sin reembolso;
-  - bloquear horarios.
+- **Agenda:** día, semana o mes, citas creadas a mano, reprogramar, cobros del saldo, cancelaciones y bloqueos (una vez, varios días o cada semana).
+- **Clientas:** ficha con citas, gasto, última visita, notas, fotos de antes/después y consentimiento (en una carpeta privada de Drive); clientas por volver; de dónde vienen; pagos sin completar.
+- **Dinero:** cierre de caja, ganancia real del mes, gastos y reporte PDF mensual.
+- **Promociones:** automáticas por servicio, códigos de descuento y tarjetas de regalo. En la web, la clienta escribe el código o la tarjeta en el resumen de su cita; siempre se aplica el mejor descuento.
+- **Ajustes:** lo mismo que las pestañas Ajustes y Servicios de la hoja.
 - `admin.html?demo` muestra el dashboard con datos de ejemplo.
 
 **WhatsApp** es para dudas e información: botón flotante, contacto y "¿Dudas?" en cada cita. No confirma reservas.

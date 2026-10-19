@@ -730,3 +730,24 @@ body.modal-open { overflow: hidden; }
 
 /* ---- Contacto ---- */
 .contact-ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* ---- Promociones, códigos y origen ---- */
+.svc-price s, .sum-list dd s { color: var(--muted); font-size: 0.86em; margin-right: 4px; }
+.svc-promo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 0; font-size: 14px; color: var(--ink); }
+.svc-promo span { padding: 1px 8px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12.5px; letter-spacing: 0.04em; }
+.sum-opt dt { color: var(--ink); }
+.promo-box { border-top: 1px solid var(--line); padding-top: 12px; }
+.promo-box summary { cursor: pointer; font-size: 14.5px; color: var(--ink); text-decoration: underline; text-underline-offset: 4px; list-style: none; }
+.promo-box summary::-webkit-details-marker { display: none; }
+.promo-row { display: flex; gap: 8px; margin-top: 12px; }
+.promo-row input { flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border: 1px solid var(--line-strong); font-family: var(--serif); font-size: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
+.promo-row input::placeholder { text-transform: none; letter-spacing: 0; }
+.promo-msg { margin: 8px 0 0; font-size: 14px; color: var(--muted); }
+.promo-msg:empty { display: none; }
+.promo-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.promo-tags:empty { display: none; }
+.ctag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 10px; border: 1px solid var(--ink); border-radius: 999px; font-size: 13px; }
+.ctag button { width: 20px; height: 20px; border: 0; border-radius: 50%; background: var(--sand); cursor: pointer; line-height: 1; }
+.promo-row .btn-sm { min-height: 44px; padding: 0 16px; }
+.field select { width: 100%; padding: 10px 0; border: 0; border-bottom: 1px solid var(--line-strong); border-radius: 0; background: transparent; font-family: var(--serif); font-size: 18px; color: var(--ink); }
+.field select:focus { outline: none; border-bottom-color: var(--espresso); }
