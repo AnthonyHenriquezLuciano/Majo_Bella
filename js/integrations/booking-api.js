@@ -65,8 +65,10 @@
     url(params) { return `${API.apiUrl}${API.apiUrl.includes('?') ? '&' : '?'}${new URLSearchParams(params)}`; },
 
     async get(params) {
-      const res = await fetch(this.url(params), { method: 'GET' });
-      const data = await res.json().catch(() => ({ ok: false, error: 'Respuesta no válida del servidor.' }));
+      let res;
+      try { res = await fetch(this.url(params), { method: 'GET' }); }
+      catch (e) { throw new Error('sin conexión con el servidor de reservas'); }
+      const data = await res.json().catch(() => ({ ok: false, error: 'el servidor no respondió con datos (revisa que la implementación tenga acceso "Cualquier usuario")' }));
       if (!res.ok || data.ok === false) throw new Error(data.error || `Error ${res.status}`);
       return data;
     },

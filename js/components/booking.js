@@ -176,7 +176,7 @@
       if (!slotsBox.children.length) slotsMsg.textContent = 'Buscando horas disponibles…';
       let res;
       try { res = await API.availability(dateKey, t.minutes); }
-      catch (err) { if (req === slotReq) { slotsBox.innerHTML = ''; slotsMsg.textContent = 'No pudimos consultar la agenda. Intenta de nuevo en unos minutos.'; } return; }
+      catch (err) { if (req === slotReq) { slotsBox.innerHTML = ''; slotsMsg.textContent = `No pudimos consultar la agenda. Intenta de nuevo en unos minutos. (Detalle: ${err.message})`; } return; }
       if (req !== slotReq) return;
       // Si la hora elegida acaba de ocuparse, se libera la selección
       if (M.state.time && !res.slots.includes(M.state.time)) { takenNotice = true; M.set({ time: null }, 'booking-taken'); return; }
