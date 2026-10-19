@@ -304,6 +304,7 @@
           <button type="button" class="btn btn-line" id="bk-ics">Apple / Outlook (.ics)</button>
           ${waLink ? `<a class="btn btn-quiet" href="${waLink}" target="_blank" rel="noopener">Abrir WhatsApp otra vez</a>` : ''}
           <a class="btn btn-quiet" href="#citas">Ver mis citas</a>
+          ${M.config.contact.mapsUrl ? `<a class="btn btn-quiet" href="${M.escapeHtml(M.config.contact.mapsUrl)}" target="_blank" rel="noopener">Cómo llegar</a>` : ''}
         </div>`;
       $('bk-ics').addEventListener('click', () => M.CalendarLinks.downloadICS(evt));
       if (!M.reduceMotion()) gsap.from(result, { opacity: 0, y: 14, duration: 0.9, ease: 'power2.out' });

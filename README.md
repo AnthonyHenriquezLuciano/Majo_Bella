@@ -24,11 +24,11 @@ assets/                         Logos, monograma, favicon y fuentes
 
 ## Antes de publicar
 
-1. **WhatsApp**: en `js/config.js`, escribe el número en `whatsapp.number` (solo dígitos, con código de país; por ejemplo `1809…`).
+1. **WhatsApp**: configurado con 829-978-4986 (`whatsapp.number` en `js/config.js`).
 2. **Precios y duraciones**: en `js/data/services.js`. Los valores actuales son de ejemplo.
 3. **Google**: para el botón "Continuar con Google", crea el ID de cliente (pasos en `js/config.js`) y ponlo en `google.clientId` y en `GOOGLE_CLIENT_ID` de `Code.gs`.
-4. **Redes y contacto**: `social.instagram`, `social.tiktok`, `contact.address`, `contact.email`.
-5. **Horario**: `schedule.hours`, días cerrados en `schedule.blockedDates`.
+4. **Redes y contacto**: `social.instagram`, `social.tiktok`, `contact.email`. La dirección y el enlace de Google Maps ya están; puedes añadir calle y sector en `contact.address`.
+5. **Horario**: igual al de Google Maps (lunes cerrado, martes a sábado 10:00–5:00, domingo 10:00–1:00). Se cambia en `schedule.hours`; días cerrados puntuales en `schedule.blockedDates`.
 6. **Fuente Mistrully**: copia el archivo en `assets/fonts/` (ver `LEEME.txt`).
 
 ## Cómo funcionan las reservas

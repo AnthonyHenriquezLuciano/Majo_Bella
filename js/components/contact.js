@@ -32,11 +32,29 @@
     if (addr) {
       if (C.contact.address) {
         addr.hidden = false;
-        addr.querySelector('dd').innerHTML = C.contact.mapsUrl
-          ? `<a href="${M.escapeHtml(C.contact.mapsUrl)}" target="_blank" rel="noopener">${M.escapeHtml(C.contact.address)}</a>`
-          : M.escapeHtml(C.contact.address);
+        addr.querySelector('dd').innerHTML = `
+          <p class="addr-text">MAJOBELLA Beauty Studio<br>${M.escapeHtml(C.contact.address)}</p>
+          <div class="addr-links">
+            ${C.contact.mapsUrl ? `<a href="${M.escapeHtml(C.contact.mapsUrl)}" target="_blank" rel="noopener">Cómo llegar · Google Maps</a>` : ''}
+            ${C.contact.lat ? `<a href="https://waze.com/ul?ll=${C.contact.lat},${C.contact.lng}&navigate=yes" target="_blank" rel="noopener">Abrir en Waze</a>` : ''}
+          </div>`;
       }
     }
+    /* Dirección en el pie de página */
+    document.querySelectorAll('[data-address]').forEach((n) => {
+      if (!C.contact.address) { n.hidden = true; return; }
+      n.innerHTML = C.contact.mapsUrl
+        ? `<a href="${M.escapeHtml(C.contact.mapsUrl)}" target="_blank" rel="noopener">${M.escapeHtml(C.contact.address)}</a>`
+        : M.escapeHtml(C.contact.address);
+    });
+    /* Número de WhatsApp visible */
+    const waRow = document.getElementById('contact-wa');
+    if (waRow && M.WhatsApp.isConfigured()) {
+      waRow.hidden = false;
+      waRow.querySelector('dd').innerHTML = `<a data-wa href="#">${M.escapeHtml(M.config.whatsapp.display || M.config.whatsapp.number)}</a>`;
+      const a = waRow.querySelector('a'); a.href = M.WhatsApp.linkFromState(); a.target = '_blank'; a.rel = 'noopener';
+    }
+
     const mail = document.getElementById('contact-email');
     if (mail && C.contact.email) { mail.hidden = false; mail.querySelector('dd').textContent = C.contact.email; }
 

@@ -15,7 +15,8 @@ window.MAJOBELLA_CONFIG = {
      Ejemplo de formato: 18095551234 (código de país 1 + número).
      Mientras esté vacío, los botones de WhatsApp muestran un aviso en lugar de abrir el chat. */
   whatsapp: {
-    number: '8299784986',
+    number: '18299784986',
+    display: '829-978-4986',
     greeting: 'Hola, quiero agendar una cita en MAJOBELLA.',
   },
 
@@ -36,9 +37,11 @@ window.MAJOBELLA_CONFIG = {
 
   /* Datos de contacto visibles en la web (opcionales) */
   contact: {
-    address: '',   // ej. Calle, número, sector, ciudad
+    address: 'Santo Domingo, República Dominicana',   // añade calle, número y sector si quieres mostrarlos
     email: '',     // correo del estudio
-    mapsUrl: '',   // enlace de Google Maps
+    mapsUrl: 'https://maps.app.goo.gl/d4uX28GuoKuyHuhf8',   // enlace de Google Maps
+    lat: 18.465401,   // coordenadas del estudio (para Waze)
+    lng: -69.9737548,
   },
 
   currency: { symbol: 'RD$', locale: 'es-DO' },
@@ -50,13 +53,14 @@ window.MAJOBELLA_CONFIG = {
     timeZone: 'America/Santo_Domingo',
     utcOffset: '-04:00',      // República Dominicana no usa horario de verano
     hours: {
-      0: null,
-      1: { open: '09:00', close: '18:00' },
-      2: { open: '09:00', close: '18:00' },
-      3: { open: '09:00', close: '18:00' },
-      4: { open: '09:00', close: '18:00' },
-      5: { open: '09:00', close: '18:00' },
-      6: { open: '09:00', close: '14:00' },
+      // Igual que el horario publicado en Google Maps
+      0: { open: '10:00', close: '13:00' },
+      1: null,
+      2: { open: '10:00', close: '17:00' },
+      3: { open: '10:00', close: '17:00' },
+      4: { open: '10:00', close: '17:00' },
+      5: { open: '10:00', close: '17:00' },
+      6: { open: '10:00', close: '17:00' },
     },
     slotStepMinutes: 30,      // cada cuánto empieza una cita posible
     minNoticeHours: 3,        // antelación mínima para reservar

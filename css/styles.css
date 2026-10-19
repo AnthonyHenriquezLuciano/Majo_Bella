@@ -627,6 +627,16 @@ body.modal-open { overflow: hidden; }
 .header-login { border-bottom: 1px solid var(--line-strong); padding-bottom: 3px; }
 .mobile-login { display: block; margin-top: 16px; padding: 8px 0; border: 0; background: none; cursor: pointer; font-family: var(--serif); font-size: 16px; color: var(--ink); text-decoration: underline; text-underline-offset: 5px; }
 
+/* Resumen de la cita: mismo espaciado que los pasos 1 a 4 */
+.booking-summary .summary-title { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--espresso); }
+
+/* Dirección */
+.addr-text { margin: 0; }
+.addr-links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; }
+.addr-links a, #contact-wa a { text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 5px; }
+.footer-address { margin: 0; font-size: 14px; letter-spacing: 0; }
+.site-footer .footer-address a { font-size: 14px; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--line-strong); }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1120px) {
   .main-nav { display: none; }
