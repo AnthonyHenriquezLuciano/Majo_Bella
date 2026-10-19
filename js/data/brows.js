@@ -1,0 +1,3 @@
+/* Forma de las cejas sobre el rostro ilustrado (coordenadas del SVG de 600 x 720).
+   top y bottom recorren cada ceja desde el inicio (junto a la nariz) hasta la cola. */
+window.MAJOBELLA_BROWS = {"width": 600, "height": 720, "brows": {"L": {"top": [[284, 266], [268, 255], [247, 248], [225, 245], [207, 248], [194, 256], [187, 266]], "bottom": [[284, 287], [268, 283], [247, 279], [225, 277], [207, 276], [194, 272], [187, 266]]}, "R": {"top": [[316, 266], [332, 255], [353, 248], [375, 245], [393, 248], [406, 256], [413, 266]], "bottom": [[316, 287], [332, 283], [353, 279], [375, 277], [393, 276], [406, 272], [413, 266]]}}};

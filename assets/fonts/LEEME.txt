@@ -1,0 +1,9 @@
+Tipografía de acento: Mistrully
+
+Coloca aquí el archivo de la fuente con uno de estos nombres:
+  Mistrully.woff2   (recomendado)
+  Mistrully.otf
+
+La web lo carga automáticamente desde css/styles.css.
+Mientras no esté, las palabras manuscritas usan Corinthia (Google Fonts) como respaldo.
+Asegúrate de tener la licencia de uso web de Mistrully.
