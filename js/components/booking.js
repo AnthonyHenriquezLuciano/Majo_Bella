@@ -1,7 +1,7 @@
 /* MAJOBELLA · Reserva: servicio → fecha → hora → datos → depósito con PayPal
    - Los días y horas ya reservados se ven en gris para todas (con o sin sesión).
    - "Primer horario disponible" elige fecha y hora en un toque.
-   - La cita se aparta pagando el depósito (config.payments.depositPercent) con PayPal;
+   - La cita se aparta pagando el depósito de cada servicio (lo define el estudio en el dashboard) con PayPal;
      el saldo se paga al terminar, en efectivo o con PayPal desde "Citas".
    - Sin backend configurado, la reserva se envía como solicitud por WhatsApp (modo temporal). */
 (function (M) {
@@ -51,10 +51,13 @@
       none: 'Reserva en línea pendiente de activar.',
     }[mode];
     function renderPolicy() {
-      const pct = PAY.depositPercent;
+      const items = M.totals().items;
+      const label = items.length ? M.depositPctLabel(items) : null;
+      const none = items.length && M.depositRatio(items) === 0;
       policy.textContent = [
-        mode === 'pay' ? `Apartas tu cita con el ${pct}% y pagas el resto al terminar, en efectivo, transferencia o PayPal.` : '',
-        mode === 'pay' && P.changeHours ? `Si cancelas con ${P.changeHours} horas o más de aviso, te devolvemos el depósito.` : '',
+        mode === 'pay' && none ? 'Este servicio no requiere depósito: tu cita se confirma al instante y pagas al terminar.' : '',
+        mode === 'pay' && !none ? `Apartas tu cita con ${label ? `el ${label}` : 'un depósito según cada servicio'} y pagas el resto al terminar, en efectivo, transferencia o PayPal.` : '',
+        mode === 'pay' && !none && P.changeHours ? `Si cancelas con ${P.changeHours} horas o más de aviso, te devolvemos el depósito.` : '',
         mode !== 'pay' && P.changeHours ? `Puedes cambiar o cancelar hasta ${P.changeHours} horas antes.` : '',
         P.arriveEarlyMinutes ? `Te recomendamos llegar ${P.arriveEarlyMinutes} minutos antes.` : '',
       ].filter(Boolean).join(' ');
@@ -281,9 +284,10 @@
       $('sum-gift-row').hidden = !(t.items.length && pr.giftAppliedRD > 0);
       $('sum-gift').innerHTML = pr.giftAppliedRD > 0 ? `−${M.fmtPrice(pr.giftAppliedRD)}` : '—';
       if (mode === 'pay') {
-        sum.dep.innerHTML = t.items.length ? (pr.depositRD > 0 ? `${M.fmtPrice(pr.depositRD)}<small>${M.fmtUSD(pr.depositUSD)} con PayPal</small>` : `${M.fmtPrice(0)}<small>cubierto con tu tarjeta de regalo</small>`) : '—';
+        sum.dep.innerHTML = t.items.length ? (pr.depositRD > 0 ? `${M.fmtPrice(pr.depositRD)}<small>${M.fmtUSD(pr.depositUSD)} con PayPal</small>` : `${M.fmtPrice(0)}<small>${pr.giftAppliedRD > 0 ? 'cubierto con tu tarjeta de regalo' : 'no requiere depósito'}</small>`) : '—';
         sum.bal.innerHTML = t.items.length ? `${from}${M.fmtPrice(pr.balanceRD)}<small>efectivo, transferencia o PayPal</small>` : '—';
-        confirmBtn.textContent = t.items.length && pr.depositRD <= 0 ? 'Confirmar con tarjeta de regalo' : 'Continuar al pago del depósito';
+        confirmBtn.textContent = t.items.length && pr.depositRD <= 0 ? (pr.giftAppliedRD > 0 ? 'Confirmar con tarjeta de regalo' : 'Confirmar cita') : 'Continuar al pago del depósito';
+        renderPolicy();
       }
       const miss = missingList();
       missing.textContent = miss.length ? `Falta ${miss.length > 1 ? miss.slice(0, -1).join(', ') + ' y ' + miss.slice(-1) : miss[0]}.` : (pay.panel.hidden ? 'Todo listo.' : '');
@@ -340,7 +344,7 @@
       result.innerHTML = `
         <p class="result-title">${kind === 'paid' ? '¡Listo! Tu cita está confirmada.' : 'Tu solicitud está lista para enviar.'}</p>
         <p class="result-text">${kind === 'paid'
-          ? `Te esperamos el ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)}. ${p.depositRD > 0 ? `Recibimos tu depósito de ${M.fmtPrice(p.depositRD)} (${M.fmtUSD(p.depositUSD)}).` : 'Tu tarjeta de regalo cubrió el depósito.'} ${p.balanceRD > 0 ? `Al terminar pagas ${M.fmtPrice(p.balanceRD)} en efectivo, transferencia o PayPal.` : 'Tu cita ya está pagada.'} Te enviamos la confirmación a ${M.escapeHtml(a.client.email)}.`
+          ? `Te esperamos el ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)}. ${p.depositRD > 0 ? `Recibimos tu depósito de ${M.fmtPrice(p.depositRD)} (${M.fmtUSD(p.depositUSD)}).` : (p.giftRD > 0 ? 'Tu tarjeta de regalo cubrió el depósito.' : '')} ${p.balanceRD > 0 ? `Al terminar pagas ${M.fmtPrice(p.balanceRD)} en efectivo, transferencia o PayPal.` : 'Tu cita ya está pagada.'} Te enviamos la confirmación a ${M.escapeHtml(a.client.email)}.`
           : 'Envía el mensaje que se abrió en WhatsApp y MAJOBELLA te responderá para confirmar tu cita.'}</p>
         ${kind === 'paid' ? `<p class="result-code">Código de reserva <strong>${M.escapeHtml(a.id)}</strong></p>` : ''}
         ${prep.length ? `<div class="result-prep"><p class="rp-title">Para tu cita</p><ul>${prep.map(({ p: x }) => `<li>${M.escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
@@ -407,7 +411,8 @@
       const t = M.totals();
       const dep = M.Pricing.current(t.items);
       const base = dep.totalRD - (dep.giftAppliedRD || 0);
-      pay.info.innerHTML = `Hoy pagas <strong>${M.fmtUSD(dep.depositUSD)}</strong> (${M.fmtPrice(dep.depositRD)}, el ${PAY.depositPercent}% de ${M.fmtPrice(base)}). Al terminar pagas ${M.fmtPrice(dep.balanceRD)} en efectivo, transferencia o PayPal. <span class="pay-rate">Tasa: RD$ ${PAY.usdRate} por US$ 1.</span>`;
+      const pctLabel = M.depositPctLabel(t.items);
+      pay.info.innerHTML = `Hoy pagas <strong>${M.fmtUSD(dep.depositUSD)}</strong> (${M.fmtPrice(dep.depositRD)}${pctLabel ? `, el ${pctLabel} de ${M.fmtPrice(base)}` : ` de ${M.fmtPrice(base)}`}). Al terminar pagas ${M.fmtPrice(dep.balanceRD)} en efectivo, transferencia o PayPal. <span class="pay-rate">Tasa: RD$ ${PAY.usdRate} por US$ 1.</span>`;
       payMessage('');
       confirmBtn.hidden = true;
       pay.panel.hidden = false;
@@ -483,7 +488,7 @@
       confirmBtn.textContent = 'Confirmando…';
       try {
         const res = await API.hold(a, M.Auth.token);
-        if (!res.confirmed) throw new Error('No se pudo confirmar con la tarjeta de regalo.');
+        if (!res.confirmed) throw new Error('No se pudo confirmar la cita. Intenta de nuevo.');
         const ap = res.appointment;
         const record = { ...a, ...ap, client: { ...a.client, ...ap.client }, token: res.manageToken, remote: true, createdAt: new Date().toISOString() };
         M.Appointments.add(record);

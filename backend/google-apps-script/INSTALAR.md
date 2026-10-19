@@ -25,8 +25,8 @@ Resultado:
 | Pestaña | Qué hay | Qué puedes cambiar |
 |---|---|---|
 | Reservas | Cada cita es una fila: estado, horario, clienta, pagos | No borres columnas |
-| Servicios | Precio y duración que se cobran | Precios, duraciones; `activo = no` oculta uno |
-| Ajustes | Tasa del dólar, % de depósito, horario, días cerrados, correo de avisos | Todo |
+| Servicios | Precio, duración, % de depósito y cada cuántos días vuelve la clienta | Todo; `activo = no` oculta uno; depósito 0 = se confirma sin pagar |
+| Ajustes | Tasa del dólar, horario, días cerrados, correo de avisos | Todo |
 
 ## 2. Llaves de PayPal (modo de prueba)
 

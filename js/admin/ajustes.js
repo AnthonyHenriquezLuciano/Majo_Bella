@@ -7,7 +7,6 @@
   const DAY_KEYS = ['horario_domingo', 'horario_lunes', 'horario_martes', 'horario_miercoles', 'horario_jueves', 'horario_viernes', 'horario_sabado'];
   const GROUPS = [
     ['Reservas y pagos', [
-      ['porcentajeDeposito', 'Depósito para apartar la cita', '%', 'number'],
       ['tasaUSD', 'Tasa del dólar (RD$ por US$ 1)', 'RD$', 'number'],
       ['horasCancelacion', 'Reembolso si cancela con al menos', 'horas', 'number'],
       ['minutosRetencion', 'Minutos para pagar antes de liberar el horario', 'min', 'number'],
@@ -77,6 +76,7 @@
       <td><input name="duracionMin" type="number" min="5" step="5" value="${esc(sv.duracionMin || 30)}" aria-label="Duración en minutos"></td>
       <td><input name="precioRD" type="number" min="0" step="50" value="${esc(sv.precioRD || 0)}" aria-label="Precio"></td>
       <td class="c"><input name="precioDesde" type="checkbox" ${/^s[ií]$/i.test(sv.precioDesde) ? 'checked' : ''} aria-label="Precio desde"></td>
+      <td><input name="depositoPct" type="number" min="0" max="100" step="5" value="${esc(sv.depositoPct === undefined || sv.depositoPct === '' ? (A.settingsMap().porcentajeDeposito || 50) : sv.depositoPct)}" aria-label="Depósito para apartar (%)"></td>
       <td><input name="volverDias" type="number" min="0" step="1" value="${esc(sv.volverDias || 0)}" aria-label="Vuelve cada (días)"></td>
       <td class="c"><input name="activo" type="checkbox" ${/^no$/i.test(sv.activo) ? '' : 'checked'} aria-label="Activo"></td>
     </tr>`;
@@ -94,6 +94,7 @@
       id: tr.dataset.id, nombre: tr.querySelector('[name=nombre]').value.trim(),
       duracionMin: tr.querySelector('[name=duracionMin]').value, precioRD: tr.querySelector('[name=precioRD]').value,
       precioDesde: tr.querySelector('[name=precioDesde]').checked ? 'si' : 'no', volverDias: tr.querySelector('[name=volverDias]').value,
+      depositoPct: tr.querySelector('[name=depositoPct]').value,
       activo: tr.querySelector('[name=activo]').checked ? 'si' : 'no',
     })).filter((x) => x.nombre);
     await A.busy(btn, async () => {
@@ -130,7 +131,7 @@
         if (b) { closed = closed.filter((d) => d !== b.dataset.closedDel); renderClosed(); }
       });
       $('aj-svc-add').addEventListener('click', () => {
-        $('aj-services').insertAdjacentHTML('beforeend', serviceRow({ duracionMin: 60, precioRD: 0, volverDias: 30, activo: 'si' }));
+        $('aj-services').insertAdjacentHTML('beforeend', serviceRow({ duracionMin: 60, precioRD: 0, volverDias: 30, depositoPct: 50, activo: 'si' }));
         $('aj-services').lastElementChild.querySelector('input').focus();
       });
     },

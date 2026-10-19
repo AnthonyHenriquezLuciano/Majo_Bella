@@ -41,12 +41,12 @@ Las reservas se guardan en una hoja de Google de MAJOBELLA y la cita se aparta p
 **Con el backend activo** (`booking.apiUrl` y `payments.paypalClientId` en `js/config.js`):
 
 1. **Elegir la cita.** La clienta elige servicio, día y hora. Los días llenos y las horas ya reservadas se ven en gris para todas, con o sin sesión. La agenda se actualiza al volver a la pestaña y cada dos minutos.
-2. **Pagar el depósito.** Al continuar, ve el depósito (50% del total, en RD$ y en US$) y paga con PayPal (tarjeta o cuenta). Mientras paga, el horario queda apartado 15 minutos.
+2. **Pagar el depósito.** Al continuar, ve el depósito (el % que tiene cada servicio, en RD$ y en US$) y paga con PayPal (tarjeta o cuenta). Mientras paga, el horario queda apartado 15 minutos.
 3. **Confirmación.** Con el pago:
    - la cita pasa a **confirmada** en la hoja;
    - se agenda en Google Calendar;
    - la clienta recibe un correo y MAJOBELLA un aviso.
-4. **Saldo.** El otro 50% se paga al terminar:
+4. **Saldo.** El resto se paga al terminar:
    - en efectivo (se marca en el dashboard);
    - o con PayPal desde **Citas**.
 5. **Cancelación.** Desde **Citas**:

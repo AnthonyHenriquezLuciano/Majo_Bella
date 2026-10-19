@@ -13,11 +13,11 @@
   const nowIso = () => new Date().toISOString();
 
   const services = [
-    { id: 'faciales', nombre: 'Faciales', duracionMin: '60', precioRD: '2500', precioDesde: 'no', activo: 'si', volverDias: '30' },
-    { id: 'cejas', nombre: 'Cejas', duracionMin: '45', precioRD: '900', precioDesde: 'no', activo: 'si', volverDias: '28' },
-    { id: 'pestanas', nombre: 'Pestañas', duracionMin: '60', precioRD: '1800', precioDesde: 'no', activo: 'si', volverDias: '21' },
-    { id: 'micropigmentacion', nombre: 'Micropigmentación', duracionMin: '150', precioRD: '12000', precioDesde: 'no', activo: 'si', volverDias: '365' },
-    { id: 'depilacion', nombre: 'Depilación facial y corporal', duracionMin: '30', precioRD: '500', precioDesde: 'si', activo: 'si', volverDias: '30' },
+    { id: 'faciales', nombre: 'Faciales', duracionMin: '60', precioRD: '2500', precioDesde: 'no', activo: 'si', volverDias: '30', depositoPct: '50' },
+    { id: 'cejas', nombre: 'Cejas', duracionMin: '45', precioRD: '900', precioDesde: 'no', activo: 'si', volverDias: '28', depositoPct: '50' },
+    { id: 'pestanas', nombre: 'Pestañas', duracionMin: '60', precioRD: '1800', precioDesde: 'no', activo: 'si', volverDias: '21', depositoPct: '50' },
+    { id: 'micropigmentacion', nombre: 'Micropigmentación', duracionMin: '150', precioRD: '12000', precioDesde: 'no', activo: 'si', volverDias: '365', depositoPct: '30' },
+    { id: 'depilacion', nombre: 'Depilación facial y corporal', duracionMin: '30', precioRD: '500', precioDesde: 'si', activo: 'si', volverDias: '30', depositoPct: '0' },
   ];
   const svc = (id) => { const s = services.find((x) => x.id === id); return { id: s.id, name: s.nombre, price: Number(s.precioRD), durationMinutes: Number(s.duracionMin) }; };
   const settings = [
@@ -188,7 +188,7 @@
           (d.services || []).forEach((s) => {
             const id = s.id || s.nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-');
             const row = services.find((x) => x.id === id);
-            const v = { id, nombre: s.nombre, duracionMin: String(s.duracionMin), precioRD: String(s.precioRD), precioDesde: s.precioDesde, activo: s.activo, volverDias: String(s.volverDias) };
+            const v = { id, nombre: s.nombre, duracionMin: String(s.duracionMin), precioRD: String(s.precioRD), precioDesde: s.precioDesde, activo: s.activo, volverDias: String(s.volverDias), depositoPct: String(s.depositoPct) };
             if (row) Object.assign(row, v); else services.push(v);
           });
           const map = Object.fromEntries(settings.map((s) => [s.key, s.value]));

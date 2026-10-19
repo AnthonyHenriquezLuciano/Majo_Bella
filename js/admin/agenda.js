@@ -65,7 +65,8 @@
     renderList(items);
     renderCharts();
     const s = A.settingsMap();
-    $('ag-settings').innerHTML = `Depósito ${esc(s.porcentajeDeposito || '50')}% · Tasa RD$ ${esc(s.tasaUSD || '63')} por US$ 1 · Reembolso con ${esc(s.horasCancelacion || '24')} h de aviso · PayPal ${A.data.paypalEnv === 'live' ? 'en vivo' : 'en modo de prueba'}. <button type="button" class="link" data-sec="ajustes">Cambiar en Ajustes</button>`;
+    const pcts = [...new Set((A.data.services || []).filter((x) => !/^no$/i.test(x.activo)).map((x) => (x.depositoPct === undefined || x.depositoPct === '' ? s.porcentajeDeposito || '50' : x.depositoPct)))];
+    $('ag-settings').innerHTML = `Depósito ${pcts.length === 1 ? `${esc(pcts[0])}%` : 'según cada servicio'} · Tasa RD$ ${esc(s.tasaUSD || '63')} por US$ 1 · Reembolso con ${esc(s.horasCancelacion || '24')} h de aviso · PayPal ${A.data.paypalEnv === 'live' ? 'en vivo' : 'en modo de prueba'}. <button type="button" class="link" data-sec="ajustes">Cambiar en Ajustes</button>`;
   }
 
   function renderKpis(items) {

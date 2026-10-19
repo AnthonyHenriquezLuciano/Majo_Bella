@@ -47,8 +47,8 @@ const HEADERS = [
 ];
 const TABLES = {
   Reservas: HEADERS,
-  Servicios: ['id', 'nombre', 'duracionMin', 'precioRD', 'precioDesde', 'activo', 'volverDias'],
   Ajustes: ['clave', 'valor', 'qué es'],
+  Servicios: ['id', 'nombre', 'duracionMin', 'precioRD', 'precioDesde', 'activo', 'volverDias', 'depositoPct'],
   Bloqueos: ['id', 'tipo', 'dias', 'horaDesde', 'horaHasta', 'fechaDesde', 'fechaHasta', 'motivo', 'activo', 'creada'],
   Clientas: ['clave', 'nombre', 'telefono', 'correo', 'notas', 'cumpleanos', 'actualizada'],
   Archivos: ['id', 'clave', 'tipo', 'nombre', 'mime', 'driveId', 'citaId', 'fecha', 'nota', 'creada'],
@@ -62,7 +62,7 @@ const BUSY_STATES = ['confirmada', 'completada', 'no-asistio', 'bloqueo'];
 
 const DEFAULT_SETTINGS = [
   ['tasaUSD', '63', 'Pesos dominicanos por 1 US$. PayPal no cobra en RD$: el depósito se convierte con esta tasa.'],
-  ['porcentajeDeposito', '50', 'Porcentaje del total que se cobra para apartar la cita.'],
+  ['porcentajeDeposito', '50', 'Depósito para servicios sin porcentaje propio (cada servicio lo define en la pestaña Servicios).'],
   ['minutosRetencion', '15', 'Minutos que se aparta el horario mientras la clienta paga.'],
   ['horasCancelacion', '24', 'Si cancela con al menos estas horas de aviso, se le devuelve el depósito.'],
   ['minAntelacionHoras', '3', 'Antelación mínima para reservar.'],
@@ -90,11 +90,11 @@ const SETTING_KEYS = DEFAULT_SETTINGS.map(function (x) { return x[0]; });
 
 // Igual que js/data/services.js. Desde el dashboard o la hoja "Servicios" se cambian precios y duraciones.
 const DEFAULT_SERVICES = [
-  ['faciales', 'Faciales', 60, 2500, 'no', 'si', 30],
-  ['cejas', 'Cejas', 45, 900, 'no', 'si', 28],
-  ['pestanas', 'Pestañas', 60, 1800, 'no', 'si', 21],
-  ['micropigmentacion', 'Micropigmentación', 150, 12000, 'no', 'si', 365],
-  ['depilacion', 'Depilación facial y corporal', 30, 500, 'si', 'si', 30],
+  ['faciales', 'Faciales', 60, 2500, 'no', 'si', 30, 50],
+  ['cejas', 'Cejas', 45, 900, 'no', 'si', 28, 50],
+  ['pestanas', 'Pestañas', 60, 1800, 'no', 'si', 21, 50],
+  ['micropigmentacion', 'Micropigmentación', 150, 12000, 'no', 'si', 365, 50],
+  ['depilacion', 'Depilación facial y corporal', 30, 500, 'si', 'si', 30, 50],
 ];
 const DAY_KEYS = ['horario_domingo', 'horario_lunes', 'horario_martes', 'horario_miercoles', 'horario_jueves', 'horario_viernes', 'horario_sabado'];
 const FILE_TYPES = ['antes', 'despues', 'consentimiento', 'otro'];
@@ -140,13 +140,17 @@ function setup() {
       const rows = readTable_('Servicios');
       if (!rows.length) {
         DEFAULT_SERVICES.forEach(function (x) {
-          appendRow_('Servicios', { id: x[0], nombre: x[1], duracionMin: x[2], precioRD: x[3], precioDesde: x[4], activo: x[5], volverDias: x[6] });
+          appendRow_('Servicios', { id: x[0], nombre: x[1], duracionMin: x[2], precioRD: x[3], precioDesde: x[4], activo: x[5], volverDias: x[6], depositoPct: x[7] });
         });
       } else {
+        let globalPct = '50';
+        try { globalPct = (readTable_('Ajustes').filter(function (x) { return x.clave === 'porcentajeDeposito'; })[0] || {}).valor || '50'; } catch (e) { /* sin Ajustes todavía */ }
         rows.forEach(function (r) {
-          if (r.volverDias) return;
           const def = DEFAULT_SERVICES.filter(function (x) { return x[0] === r.id; })[0];
-          updateTable_('Servicios', r._row, { volverDias: def ? def[6] : 30 });
+          const patch = {};
+          if (!r.volverDias) patch.volverDias = def ? def[6] : 30;
+          if (r.depositoPct === undefined || r.depositoPct === '') patch.depositoPct = globalPct;
+          if (Object.keys(patch).length) updateTable_('Servicios', r._row, patch);
         });
       }
     }
@@ -237,7 +241,7 @@ function catalog_() {
   const today = todayKey_();
   return {
     ok: true,
-    services: services_().map(function (x) { return { id: x.id, name: x.name, durationMinutes: x.durationMinutes, price: x.price, priceFrom: x.priceFrom }; }),
+    services: services_().map(function (x) { return { id: x.id, name: x.name, durationMinutes: x.durationMinutes, price: x.price, priceFrom: x.priceFrom, depositPercent: x.depositPercent }; }),
     payments: {
       usdRate: num_(s.tasaUSD, 63),
       depositPercent: num_(s.porcentajeDeposito, 50),
@@ -357,8 +361,9 @@ function pricing_(items, code, giftCode) {
     else { giftApplied = Math.min(Number(gift.saldoRD) || 0, total); giftStatus = 'ok'; }
   }
   const remaining = total - giftApplied;
-  const pct = num_(s.porcentajeDeposito, 50) / 100;
-  const depositRD = Math.round(remaining * pct);
+  // Cada servicio tiene su % de depósito: se usa el promedio ponderado por precio
+  const ratio = depositRatio_(items, num_(s.porcentajeDeposito, 50));
+  const depositRD = Math.round(remaining * ratio);
   return {
     subtotal: subtotal, discount: discount, total: total, promo: promo, codeStatus: codeStatus, codeLabel: codeLabel,
     gift: gift, giftApplied: giftApplied, giftStatus: giftStatus, giftBalance: gift ? Number(gift.saldoRD) || 0 : 0,
@@ -460,7 +465,7 @@ function hold_(d) {
     intent: 'CAPTURE',
     purchase_units: [{
       reference_id: id, custom_id: id, invoice_id: id + '-D',
-      description: ('Depósito ' + Math.round(num_(s.porcentajeDeposito, 50)) + '% · ' + row.servicios).slice(0, 127),
+      description: ('Depósito · ' + row.servicios).slice(0, 127),
       amount: { currency_code: 'USD', value: p.depositUSD.toFixed(2) },
     }],
     application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
@@ -827,6 +832,7 @@ function adminSaveSettings_(d) {
         precioDesde: /^(si|sí|true)$/i.test(String(sv.precioDesde)) ? 'si' : 'no',
         activo: /^(no|false)$/i.test(String(sv.activo)) ? 'no' : 'si',
         volverDias: Math.max(0, Math.round(Number(sv.volverDias) || 0)),
+        depositoPct: Math.max(0, Math.min(100, Math.round(Number(sv.depositoPct === '' || sv.depositoPct == null ? 50 : sv.depositoPct) || 0))),
       };
       const r = rows.filter(function (x) { return x.id === id; })[0];
       if (r) updateTable_('Servicios', r._row, patch); else appendRow_('Servicios', patch);
@@ -1059,6 +1065,7 @@ function services_() {
     return {
       id: String(r.id).trim(), name: String(r.nombre).trim(), durationMinutes: Number(r.duracionMin) || 30,
       price: Number(r.precioRD) || 0, priceFrom: /^s[ií]$/i.test(String(r.precioDesde)), returnDays: Number(r.volverDias) || 0,
+      depositPercent: pctOrNull_(r.depositoPct),
     };
   });
 }
@@ -1457,6 +1464,13 @@ function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
+// % de depósito de un servicio (vacío = usar el general; 0 = sin depósito)
+function pctOrNull_(v) { const t = String(v == null ? '' : v).trim(); if (t === '') return null; const n = Number(t.replace(',', '.')); return isFinite(n) ? Math.max(0, Math.min(100, n)) : null; }
+function depositRatio_(items, fallbackPct) {
+  const base = items.reduce(function (t, x) { return t + x.price; }, 0);
+  if (!base) return (items.length ? (items[0].depositPercent == null ? fallbackPct : items[0].depositPercent) : fallbackPct) / 100;
+  return items.reduce(function (t, x) { return t + x.price * (x.depositPercent == null ? fallbackPct : x.depositPercent); }, 0) / base / 100;
+}
 function todayKey_() { return Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd'); }
 function normCode_(c) { return String(c || '').toUpperCase().replace(/[^A-Z0-9-]/g, ''); }
 function randCode_(n) { const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < n; i++) s += a.charAt(Math.floor(Math.random() * a.length)); return s; }

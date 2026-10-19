@@ -91,7 +91,7 @@
       const data = await this.get({ action: 'catalog' });
       (data.services || []).forEach((r) => {
         const s = M.serviceById[r.id];
-        if (s) { s.price = r.price; s.durationMinutes = r.durationMinutes; s.priceFrom = !!r.priceFrom; }
+        if (s) { s.price = r.price; s.durationMinutes = r.durationMinutes; s.priceFrom = !!r.priceFrom; s.depositPercent = r.depositPercent; }
       });
       if (data.payments) Object.assign(M.config.payments, data.payments);
       if (data.schedule) {
@@ -104,7 +104,7 @@
       // Servicios nuevos creados en el dashboard que aún no están en services.js
       (data.services || []).forEach((r) => {
         if (M.serviceById[r.id]) return;
-        const s = { id: r.id, category: r.name, name: r.name, description: '', durationMinutes: r.durationMinutes, price: r.price, priceFrom: !!r.priceFrom };
+        const s = { id: r.id, category: r.name, name: r.name, description: '', durationMinutes: r.durationMinutes, price: r.price, priceFrom: !!r.priceFrom, depositPercent: r.depositPercent };
         M.services.push(s); M.serviceById[s.id] = s;
       });
       M.promos = data.promos || [];
@@ -214,7 +214,7 @@
       const subtotal = items.reduce((t, s) => t + s.price, 0);
       const discount = Math.min(subtotal, items.reduce((t, s) => { const p = M.promoFor(s.id); return t + (p ? p.discount : 0); }, 0));
       const total = subtotal - discount;
-      const dep = M.deposit(total);
+      const dep = M.deposit(total, items);
       const promo = items.map((s) => M.promoFor(s.id)).find(Boolean);
       return { subtotalRD: subtotal, discountRD: discount, totalRD: total, promoName: promo ? promo.name : '', giftAppliedRD: 0, depositRD: dep.depositRD, depositUSD: dep.depositUSD, balanceRD: dep.balanceRD };
     },
@@ -266,9 +266,24 @@
   M.Origin.capture();
 
   /* Montos del depósito (se muestran antes de pagar; el backend calcula los definitivos) */
-  M.deposit = function (totalRD) {
+  /* % de depósito de un servicio (lo define el estudio en el dashboard; vacío = el general) */
+  M.depositPct = (s) => (s && s.depositPercent != null && s.depositPercent !== '' ? Number(s.depositPercent) : M.config.payments.depositPercent);
+  /* Porcentaje de una cita con varios servicios: promedio ponderado por precio */
+  M.depositRatio = (items) => {
+    const base = items.reduce((t, s) => t + s.price, 0);
+    if (!items.length) return M.config.payments.depositPercent / 100;
+    if (!base) return M.depositPct(items[0]) / 100;
+    return items.reduce((t, s) => t + s.price * M.depositPct(s), 0) / base / 100;
+  };
+  /* Texto del porcentaje: "50%" si todos coinciden; si no, null */
+  M.depositPctLabel = (items) => {
+    const set = [...new Set(items.map((s) => M.depositPct(s)))];
+    return set.length === 1 ? `${set[0]}%` : null;
+  };
+  M.deposit = function (totalRD, items) {
     const P = M.config.payments;
-    const depositRD = Math.round(totalRD * (P.depositPercent / 100));
+    const ratio = items && items.length ? M.depositRatio(items) : P.depositPercent / 100;
+    const depositRD = Math.round(totalRD * ratio);
     const depositUSD = Math.ceil((depositRD / P.usdRate) * 100) / 100;
     return { depositRD, depositUSD, balanceRD: totalRD - depositRD };
   };
