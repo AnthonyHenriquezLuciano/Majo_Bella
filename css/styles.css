@@ -35,7 +35,7 @@
 
   /* Ritmo */
   --gutter: clamp(20px, 4vw, 56px);
-  --section: clamp(84px, 11vw, 148px);
+  --section: clamp(52px, 6.5vw, 88px);
   --ease: cubic-bezier(.22, .61, .36, 1);
 
   color-scheme: light;
@@ -195,7 +195,7 @@ body::before {
 .mobile-slogan { margin-top: 28px; font-size: 12px; letter-spacing: 0.3em; color: var(--muted); }
 
 /* ---------- Hero ---------- */
-.hero { position: relative; padding-block: clamp(28px, 4vw, 56px) clamp(64px, 8vw, 110px); overflow: hidden; }
+.hero { position: relative; padding-block: clamp(24px, 3vw, 44px) clamp(40px, 5vw, 64px); overflow: hidden; }
 .hero::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background:
@@ -236,7 +236,7 @@ body::before {
 
 /* ---------- Secciones ---------- */
 .section { padding-block: var(--section); }
-.section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); gap: 20px 48px; align-items: end; margin-bottom: clamp(36px, 5vw, 64px); }
+.section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); gap: 20px 48px; align-items: end; margin-bottom: clamp(28px, 3.5vw, 44px); }
 .section-head > div:first-child { display: flex; flex-direction: column; gap: 14px; }
 .section-head-side { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
 .section-head-side p { margin: 0; color: var(--muted); max-width: 44ch; }
@@ -253,7 +253,7 @@ body::before {
 .principles div { border-top: 1px solid var(--line-strong); padding-top: 16px; display: flex; flex-direction: column; gap: 6px; }
 .principles dt { font-size: 12px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--espresso); }
 .principles dd { margin: 0; font-size: 15.5px; color: var(--muted); }
-.slogan-band { display: flex; align-items: center; gap: 24px; margin: clamp(64px, 9vw, 120px) auto 0; max-width: 1240px; padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px)); font-size: 13px; letter-spacing: 0.42em; color: var(--espresso); white-space: nowrap; }
+.slogan-band { display: flex; align-items: center; gap: 24px; margin: clamp(40px, 5vw, 64px) auto 0; max-width: 1240px; padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px)); font-size: 13px; letter-spacing: 0.42em; color: var(--espresso); white-space: nowrap; }
 .slogan-band .rule { flex: 1; height: 1px; background: var(--line-strong); }
 
 /* Servicios (menú estilo Fresha: blanco y negro, tarjetas y pestañas) */
@@ -324,7 +324,7 @@ body.has-selbar .wa-float { bottom: calc(96px + env(safe-area-inset-bottom, 0px)
 .b-line { width: 44px; height: 1px; background: var(--espresso); margin-bottom: 12px; }
 .benefits h3 { margin: 0; font-weight: 400; font-size: 22px; color: var(--ink); }
 .benefits p { margin: 0; color: var(--muted); font-size: 16px; }
-.experience-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 32px; margin-top: clamp(56px, 7vw, 88px); }
+.experience-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 32px; margin-top: clamp(36px, 4.5vw, 56px); }
 .experience-cta .script { font-size: clamp(44px, 5vw, 64px); }
 
 /* Reservas */
@@ -481,7 +481,7 @@ body.has-selbar .wa-float { bottom: calc(96px + env(safe-area-inset-bottom, 0px)
 .social a { text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 5px; }
 
 /* Pie de página */
-.site-footer { background: #ffffff; color: var(--text); border-top: 1px solid var(--line-strong); padding-top: clamp(56px, 7vw, 88px); }
+.site-footer { background: #ffffff; color: var(--text); border-top: 1px solid var(--line-strong); padding-top: clamp(40px, 5vw, 64px); }
 .footer-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap: 36px; align-items: start; }
 .footer-brand { display: flex; flex-direction: column; gap: 16px; }
 .footer-brand img { width: 210px; height: auto; }
@@ -489,7 +489,7 @@ body.has-selbar .wa-float { bottom: calc(96px + env(safe-area-inset-bottom, 0px)
 .footer-links, .footer-social { display: flex; flex-direction: column; gap: 10px; }
 .site-footer a { color: inherit; text-decoration: none; font-size: 15px; transition: color .5s var(--ease); }
 .site-footer a:hover { color: #000000; text-decoration: underline; text-underline-offset: 5px; }
-.footer-base { margin-top: clamp(44px, 6vw, 72px); padding-block: 22px calc(22px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); }
+.footer-base { margin-top: clamp(32px, 4vw, 48px); padding-block: 22px calc(22px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); }
 .footer-base p { margin: 0; font-size: 13px; color: var(--muted); }
 
 /* WhatsApp flotante */
@@ -510,7 +510,7 @@ body.has-selbar .wa-float { bottom: calc(96px + env(safe-area-inset-bottom, 0px)
 
 /* ---------- Experiencia de reserva (CX) ---------- */
 /* Cómo funciona */
-.how { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding-block: clamp(40px, 6vw, 64px); }
+.how { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding-block: clamp(32px, 4vw, 48px); }
 .how-title { margin: 0 0 28px; font-size: 13px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
 .how-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(20px, 3vw, 44px); }
 .how-steps li { display: flex; gap: 16px; align-items: flex-start; min-width: 0; }
