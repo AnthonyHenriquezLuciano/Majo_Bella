@@ -15,7 +15,7 @@ window.MAJOBELLA_CONFIG = {
      Ejemplo de formato: 18095551234 (código de país 1 + número).
      Mientras esté vacío, los botones de WhatsApp muestran un aviso en lugar de abrir el chat. */
   whatsapp: {
-    number: '',
+    number: '8299784986',
     greeting: 'Hola, quiero agendar una cita en MAJOBELLA.',
   },
 
