@@ -81,7 +81,7 @@ window.MAJOBELLA_CONFIG = {
      se ven en gris para todas y el dashboard (admin.html) muestra la agenda.
      Pasos en backend/google-apps-script/INSTALAR.md */
   booking: {
-    apiUrl: '',
+    apiUrl: 'https://script.google.com/macros/s/AKfycbxTtcibU04A-shJ2iKioIu6glN9uLDloUoSiJ3Y2bSuSAPDaRdzQ9TjEMTwxmaG5HVp/exec',
     studioCalendarName: 'MAJOBELLA',
     reminderMinutesBefore: 120,
   },
@@ -94,7 +94,7 @@ window.MAJOBELLA_CONFIG = {
      El secreto de PayPal NUNCA va aquí: se guarda en las propiedades del script de Apps Script. */
   payments: {
     enabled: true,
-    paypalClientId: '',
+    paypalClientId: 'BAAPu52Nua2n7aV6kWfyDD9Am8Hn6IDSnL9-eztQfm3_TpDqZxiuiR6wFwzCp9bZpL3mbZRers9Rn5Arns',
     depositPercent: 50,
     usdRate: 63,              // RD$ por 1 US$ (ejemplo: actualízala en la hoja "Ajustes")
     holdMinutes: 15,          // minutos que se aparta el horario mientras la clienta paga
