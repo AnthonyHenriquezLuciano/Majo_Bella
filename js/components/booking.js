@@ -283,11 +283,12 @@
       $('sum-disc-row').hidden = !(t.items.length && pr.discountRD > 0);
       $('sum-discount').innerHTML = pr.discountRD > 0 ? `−${M.fmtPrice(pr.discountRD)}${pr.promoName ? `<small>${M.escapeHtml(pr.promoName)}</small>` : ''}` : '—';
       $('sum-gift-row').hidden = !(t.items.length && pr.giftAppliedRD > 0);
+      $('sum-gift-label').textContent = pr.giftKind === 'bono' ? 'Paquete' : 'Tarjeta de regalo';
       $('sum-gift').innerHTML = pr.giftAppliedRD > 0 ? `−${M.fmtPrice(pr.giftAppliedRD)}` : '—';
       if (mode === 'pay') {
-        sum.dep.innerHTML = t.items.length ? (pr.depositRD > 0 ? `${M.fmtPrice(pr.depositRD)}<small>${M.fmtUSD(pr.depositUSD)} con PayPal</small>` : `${M.fmtPrice(0)}<small>${pr.giftAppliedRD > 0 ? 'cubierto con tu tarjeta de regalo' : 'no requiere depósito'}</small>`) : '—';
+        sum.dep.innerHTML = t.items.length ? (pr.depositRD > 0 ? `${M.fmtPrice(pr.depositRD)}<small>${M.fmtUSD(pr.depositUSD)} con PayPal</small>` : `${M.fmtPrice(0)}<small>${pr.giftAppliedRD > 0 ? (pr.giftKind === 'bono' ? 'cubierto con tu paquete' : 'cubierto con tu tarjeta de regalo') : 'no requiere depósito'}</small>`) : '—';
         sum.bal.innerHTML = t.items.length ? `${from}${M.fmtPrice(pr.balanceRD)}<small>efectivo, transferencia o PayPal</small>` : '—';
-        confirmBtn.textContent = t.items.length && pr.depositRD <= 0 ? (pr.giftAppliedRD > 0 ? 'Confirmar con tarjeta de regalo' : 'Confirmar cita') : 'Continuar al pago del depósito';
+        confirmBtn.textContent = t.items.length && pr.depositRD <= 0 ? (pr.giftAppliedRD > 0 ? (pr.giftKind === 'bono' ? 'Confirmar con mi paquete' : 'Confirmar con tarjeta de regalo') : 'Confirmar cita') : 'Continuar al pago del depósito';
         renderPolicy();
       }
       const miss = missingList();
@@ -306,7 +307,7 @@
         date: M.state.dateKey, time: M.state.time,
         start: start.toISOString(), end: end.toISOString(),
         durationMinutes: t.minutes, totalPrice: t.price, currency: M.config.currency.symbol,
-        client: { name: fields.name.value.trim(), phone: fields.phone.value.trim(), email: fields.email.value.trim(), notes: fields.notes.value.trim() },
+        client: { name: fields.name.value.trim(), phone: fields.phone.value.trim(), email: fields.email.value.trim(), notes: fields.notes.value.trim(), birthday: birthday() },
         origen: $('bk-origen').value,
       };
     }
@@ -362,7 +363,7 @@
     }
 
     function rememberClient(a) {
-      if (remember.checked) { saveClient({ name: a.client.name, phone: a.client.phone, email: a.client.email }); savedNote.hidden = false; }
+      if (remember.checked) { saveClient({ name: a.client.name, phone: a.client.phone, email: a.client.email, birthday: a.client.birthday || '' }); savedNote.hidden = false; }
       else forgetClient();
     }
 
@@ -455,7 +456,7 @@
               rememberClient(record);
               paying = false;
               pay.panel.hidden = true; pay.box.innerHTML = ''; confirmBtn.hidden = false;
-              M.Pricing.clear('gift'); M.Pricing.clear('code'); renderCodeTags(); codeMsg.textContent = '';
+              M.Pricing.clear('gift'); M.Pricing.clear('code'); M.Pricing.loyal = false; $('bk-loyal').hidden = true; renderCodeTags(); codeMsg.textContent = '';
               M.set({ time: null }, 'booked'); // ese horario ya es suyo; se libera la selección
               showResult(record, 'paid');
               API.refreshBusy(true).catch(() => {});
@@ -494,7 +495,7 @@
         const record = { ...a, ...ap, client: { ...a.client, ...ap.client }, token: res.manageToken, remote: true, createdAt: new Date().toISOString() };
         M.Appointments.add(record);
         rememberClient(record);
-        M.Pricing.clear('gift'); M.Pricing.clear('code'); renderCodeTags(); codeMsg.textContent = '';
+        M.Pricing.clear('gift'); M.Pricing.clear('code'); M.Pricing.loyal = false; $('bk-loyal').hidden = true; renderCodeTags(); codeMsg.textContent = '';
         M.set({ time: null }, 'booked');
         showResult(record, 'paid');
         API.refreshBusy(true).catch(() => {});
@@ -512,7 +513,7 @@
     function renderCodeTags() {
       const tags = [];
       if (M.Pricing.code) tags.push(`<span class="ctag">Código ${M.escapeHtml(M.Pricing.code)}<button type="button" data-clear="code" aria-label="Quitar código">×</button></span>`);
-      if (M.Pricing.gift) tags.push(`<span class="ctag">Tarjeta ${M.escapeHtml(M.Pricing.gift)}<button type="button" data-clear="gift" aria-label="Quitar tarjeta">×</button></span>`);
+      if (M.Pricing.gift) tags.push(`<span class="ctag">${/^PAQ-/.test(M.Pricing.gift) ? 'Paquete' : 'Tarjeta'} ${M.escapeHtml(M.Pricing.gift)}<button type="button" data-clear="gift" aria-label="Quitar">×</button></span>`);
       codeTags.innerHTML = tags.join('');
     }
     async function applyCode() {
@@ -524,7 +525,12 @@
       try {
         const res = await API.checkCode(items.map((s) => s.id), v, v);
         const pr = res.pricing;
-        if (pr.giftStatus === 'ok') {
+        if (pr.giftStatus === 'ok' && pr.giftKind === 'bono') {
+          M.Pricing.gift = v;
+          codeMsg.textContent = `Paquete aplicado: ${pr.bonoName}. Te quedan ${pr.bonoLeft} ${pr.bonoLeft === 1 ? 'sesión' : 'sesiones'} (esta incluida).`;
+        } else if (pr.giftStatus === 'notApplicable') {
+          codeMsg.textContent = 'Ese paquete es para otro servicio. Añade ese servicio a tu cita para usarlo.';
+        } else if (pr.giftStatus === 'ok') {
           M.Pricing.gift = v;
           codeMsg.textContent = `Tarjeta de regalo aplicada: ${M.fmtPrice(Math.min(pr.giftBalanceRD, pr.totalRD))} de ${M.fmtPrice(pr.giftBalanceRD)} disponibles.`;
         } else if (pr.codeStatus === 'ok') {
@@ -547,6 +553,13 @@
       renderSummary();
     }
     $('bk-code-apply').addEventListener('click', applyCode);
+    /* Aplica un código desde otra sección (por ejemplo, al comprar un paquete) */
+    M.applyBookingCode = (code) => {
+      const box = $('bk-promo');
+      if (box && box.tagName === 'DETAILS') box.open = true;
+      codeInput.value = code;
+      return applyCode();
+    };
     codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyCode(); } });
     codeTags.addEventListener('click', async (e) => {
       const b = e.target.closest('[data-clear]');
@@ -559,13 +572,77 @@
     });
     let priceT = null;
     function repriceSoon() {
-      if (!(M.Pricing.code || M.Pricing.gift)) return;
+      if (!(M.Pricing.code || M.Pricing.gift || M.Pricing.loyal)) return;
       clearTimeout(priceT);
       priceT = setTimeout(async () => {
         try { await M.Pricing.refresh(M.totals().items); } catch (err) { /* se reintenta al pagar */ }
         renderSummary();
       }, 250);
     }
+
+    /* ---- Cumpleaños (día y mes, sin año) ---- */
+    const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    $('bk-bday-d').insertAdjacentHTML('beforeend', Array.from({ length: 31 }, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}">${i + 1}</option>`).join(''));
+    $('bk-bday-m').insertAdjacentHTML('beforeend', MONTHS.map((m, i) => `<option value="${String(i + 1).padStart(2, '0')}">${m}</option>`).join(''));
+    function birthday() { const d = $('bk-bday-d').value, m = $('bk-bday-m').value; return d && m ? `${m}-${d}` : ''; }
+    if (saved && saved.birthday) { const [bm, bd] = saved.birthday.split('-'); $('bk-bday-m').value = bm || ''; $('bk-bday-d').value = bd || ''; }
+
+    /* ---- Premio de fidelidad: se revisa al escribir el correo o el teléfono ---- */
+    const loyaltyInfo = M.loyalty || { enabled: false };
+    let loyalSig = '';
+    async function checkLoyalty() {
+      if (!loyaltyInfo.enabled || !API.enabled()) return;
+      const client = { email: valid.email() ? fields.email.value.trim() : '', phone: valid.phone() ? fields.phone.value.trim() : '' };
+      if (!client.email && !client.phone) return;
+      const key = `${client.email}|${client.phone}`;
+      if (key === loyalSig) return;
+      loyalSig = key;
+      try {
+        const res = await API.loyalty(client);
+        const was = M.Pricing.loyal;
+        M.Pricing.client = client;
+        M.Pricing.loyal = !!res.eligible;
+        const note = $('bk-loyal');
+        note.hidden = !res.eligible;
+        if (res.eligible) note.innerHTML = `<strong>¡Tienes tu premio de fidelidad!</strong> ${res.kind === 'monto' ? M.fmtPrice(res.value) : `${res.value}%`} de descuento en esta cita por tus ${res.every} visitas.`;
+        if (!was && !res.eligible) return; // nada cambió: no se toca el pago en curso
+        await M.Pricing.refresh(M.totals().items);
+      } catch (err) { return; /* sin premio si no hay conexión */ }
+      closePay(); renderSummary();
+    }
+    [fields.email, fields.phone].forEach((f) => f.addEventListener('blur', checkLoyalty));
+    if (saved) setTimeout(checkLoyalty, 300);
+
+    /* ---- Lista de espera ---- */
+    const wait = { box: $('bk-wait'), panel: $('bk-wait-box') };
+    const waitOn = API.enabled() && !!(M.waitlistInfo && M.waitlistInfo.enabled);
+    function renderWait() {
+      wait.box.hidden = !waitOn || !M.state.selected.length;
+      if (wait.box.hidden) return;
+      const max = M.addDaysKey ? M.addDaysKey(M.todayKey(), M.config.schedule.maxDaysAhead) : '';
+      $('bk-wait-date').min = M.todayKey();
+      if (max) $('bk-wait-date').max = max;
+      if (M.state.dateKey && !$('bk-wait-date').dataset.touched) $('bk-wait-date').value = M.state.dateKey;
+      const who = valid.name() && valid.phone() && valid.email();
+      $('bk-wait-who').textContent = who ? `Te avisaremos a ${fields.email.value.trim()}.` : 'Completa tu nombre, teléfono y correo en "Tus datos" para unirte.';
+    }
+    $('bk-wait-date').addEventListener('input', (e) => { e.target.dataset.touched = '1'; });
+    $('bk-wait-open').addEventListener('click', () => { wait.panel.hidden = !wait.panel.hidden; renderWait(); });
+    $('bk-wait-join').addEventListener('click', async (e) => {
+      const msg = $('bk-wait-msg');
+      if (!(valid.name() && valid.phone() && valid.email())) { msg.textContent = 'Completa tu nombre, teléfono y correo en "Tus datos".'; msg.className = 'gf-msg is-error'; M.scrollTo('#step-datos'); return; }
+      const date = $('bk-wait-date').value;
+      if (!date) { msg.textContent = 'Elige el día.'; msg.className = 'gf-msg is-error'; return; }
+      const btn = e.currentTarget; btn.disabled = true; msg.className = 'gf-msg'; msg.textContent = 'Guardando…';
+      try {
+        const res = await API.waitlistJoin({ date, franja: $('bk-wait-franja').value, services: M.state.selected, client: { name: fields.name.value.trim(), phone: fields.phone.value.trim(), email: fields.email.value.trim() } });
+        if (res.available && res.available.length) {
+          msg.innerHTML = `¡Ese día ya hay horario libre: ${res.available.slice(0, 4).map(M.fmtTime12).join(', ')}! Puedes reservarlo ahora. Igual te dejamos en la lista.`;
+          if (date !== M.state.dateKey) M.set({ dateKey: date, time: null }, 'booking-date');
+        } else msg.textContent = res.already ? 'Ya estabas en la lista de ese día. Te avisaremos por correo.' : `Listo. Te avisaremos a ${fields.email.value.trim()} si se libera un horario.`;
+      } catch (err) { msg.textContent = err.message; msg.className = 'gf-msg is-error'; }
+      btn.disabled = false;
+    });
 
     // "¿Cómo nos conociste?" sugerido por el enlace con el que llegó
     if (M.Origin.guess() && !$('bk-origen').value) $('bk-origen').value = M.Origin.guess();
@@ -623,6 +700,7 @@
       result.hidden = true;
       if (!['booking-date', 'booking-slot', 'booking-fast', 'booking-taken', 'booked'].includes(source)) repriceSoon();
       renderSummary();
+      renderWait();
     });
 
     M.refreshBookingCatalog = () => { renderPolicy(); renderQuick(); renderCalendar(); renderSlots(); findFastest(); renderSummary(); };

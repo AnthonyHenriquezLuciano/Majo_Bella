@@ -63,6 +63,7 @@ window.MJB = window.MJB || {};
   /* Fecha y hora del estudio convertidas a un instante real (Date) */
   M.studioDate = (key, hhmm) => new Date(`${key}T${hhmm}:00${C.schedule.utcOffset}`);
   /* "Hoy" en la zona horaria del estudio */
+  M.addDaysKey = (key, n) => { const [y, m, d] = key.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); };
   M.todayKey = () => {
     const parts = new Intl.DateTimeFormat('en-CA', { timeZone: C.schedule.timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     return parts; // en-CA da AAAA-MM-DD

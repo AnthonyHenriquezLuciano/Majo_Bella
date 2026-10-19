@@ -8,6 +8,19 @@
     return Promise.race([M.BookingAPI.loadCatalog().catch(() => null), timeout]);
   }
 
+  /* Enlaces de los correos: ?servicio=cejas,pestanas&fecha=AAAA-MM-DD#reservar */
+  function deepLink() {
+    const q = new URLSearchParams(location.search);
+    const ids = (q.get('servicio') || '').split(',').map((x) => x.trim()).filter((id) => M.serviceById[id]);
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(q.get('fecha') || '') ? q.get('fecha') : null;
+    if (!ids.length && !date) return;
+    const patch = {};
+    if (ids.length) patch.selected = ids;
+    if (date && date >= M.todayKey()) patch.dateKey = date;
+    M.set(Object.assign(patch, { time: null }), 'link');
+    setTimeout(() => M.scrollTo('#reservar'), 400);
+  }
+
   async function start() {
     if (window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
     M.initNav();
@@ -23,7 +36,9 @@
     M.initCitas();
     M.initSite();
     M.initGiftShop();
+    M.initPackages();
     M.initReveal();
+    deepLink();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();

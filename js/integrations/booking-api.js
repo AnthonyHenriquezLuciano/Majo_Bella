@@ -109,8 +109,10 @@
       });
       M.promos = data.promos || [];
       M.site = Object.assign(M.site || {}, data.site || {}, {
-        gallery: data.gallery || [], reviews: data.reviews || [], giftShop: data.giftShop || null, loaded: true,
+        gallery: data.gallery || [], reviews: data.reviews || [], giftShop: data.giftShop || null, packages: data.packages || [], loaded: true,
       });
+      M.loyalty = data.loyalty || { enabled: false };
+      M.waitlistInfo = data.waitlist || { enabled: false };
       return true;
     },
 
@@ -167,14 +169,18 @@
         action: 'hold',
         services: appointment.services.map((s) => s.id),
         date: appointment.date, time: appointment.time,
-        client: appointment.client, idToken: idToken || null,
+        client: appointment.client, idToken: idToken || null, birthday: appointment.client.birthday || '',
         code: M.Pricing.code || '', giftCode: M.Pricing.gift || '',
         origen: appointment.origen || '', canal: M.Origin.channel(),
       }, 'No se pudo apartar el horario.');
     },
     checkCode(serviceIds, code, giftCode) {
-      return this.post({ action: 'checkCode', services: serviceIds, code: code || '', giftCode: giftCode || '' }, 'No se pudo revisar el código.');
+      return this.post({ action: 'checkCode', services: serviceIds, code: code || '', giftCode: giftCode || '', client: M.Pricing.client || null }, 'No se pudo revisar el código.');
     },
+    loyalty(client) { return this.post({ action: 'loyalty', client }, 'No se pudo revisar tu premio.'); },
+    waitlistJoin(d) { return this.post(Object.assign({ action: 'waitlistJoin' }, d), 'No se pudo guardar tu lugar en la lista.'); },
+    bonoOrder(d) { return this.post(Object.assign({ action: 'bonoOrder' }, d), 'No se pudo preparar el pago del paquete.'); },
+    bonoCapture(id, orderId) { return this.post({ action: 'bonoCapture', id, orderId }, 'No se pudo confirmar el pago del paquete.'); },
     giftOrder(d) { return this.post(Object.assign({ action: 'giftOrder' }, d), 'No se pudo preparar el pago de la tarjeta.'); },
     giftCapture(id, orderId) { return this.post({ action: 'giftCapture', id, orderId }, 'No se pudo confirmar el pago de la tarjeta.'); },
     capture(id, orderId) { return this.post({ action: 'capture', id, orderId }, 'No se pudo confirmar el pago.'); },
@@ -183,6 +189,7 @@
     /* ---- Citas ---- */
     async myAppointments(idToken) {
       const data = await this.post({ action: 'myAppointments', idToken }, 'No se pudieron cargar tus citas.');
+      M.myLoyalty = data.loyalty || null;
       return data.items || [];
     },
     async lookup(items) {
@@ -212,9 +219,9 @@
 
   /* ---- Precio de la cita: promociones automáticas, código y tarjeta de regalo ----
      Sin código ni tarjeta se calcula aquí con las promociones publicadas; con código o tarjeta lo calcula el backend. */
-  const sigOf = (ids) => `${ids.join(',')}|${M.Pricing.code}|${M.Pricing.gift}`;
+  const sigOf = (ids) => `${ids.join(',')}|${M.Pricing.code}|${M.Pricing.gift}|${M.Pricing.loyal ? JSON.stringify(M.Pricing.client) : ''}`;
   M.Pricing = {
-    code: '', gift: '', server: null, label: '', giftBalance: 0,
+    code: '', gift: '', server: null, label: '', giftBalance: 0, loyal: false, client: null,
     local(items) {
       const subtotal = items.reduce((t, s) => t + s.price, 0);
       const discount = Math.min(subtotal, items.reduce((t, s) => { const p = M.promoFor(s.id); return t + (p ? p.discount : 0); }, 0));
@@ -225,12 +232,12 @@
     },
     current(items) {
       const ids = items.map((s) => s.id);
-      if ((this.code || this.gift) && this.server && this.server.sig === sigOf(ids)) return this.server.pricing;
+      if ((this.code || this.gift || this.loyal) && this.server && this.server.sig === sigOf(ids)) return this.server.pricing;
       return this.local(items);
     },
     /* Pide al backend el precio con el código o la tarjeta; devuelve el estado de cada uno */
     async refresh(items) {
-      if (!(this.code || this.gift) || !items.length || !M.BookingAPI.enabled()) { this.server = null; return null; }
+      if (!(this.code || this.gift || this.loyal) || !items.length || !M.BookingAPI.enabled()) { this.server = null; return null; }
       const ids = items.map((s) => s.id);
       const sig = sigOf(ids);
       const res = await M.BookingAPI.checkCode(ids, this.code, this.gift);

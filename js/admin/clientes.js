@@ -62,6 +62,12 @@
     $('cl-n-todas').textContent = clients.length;
     $('cl-n-volver').textContent = due.filter((d) => d.days >= 0).length;
     $('cl-n-pagos').textContent = abandoned.length;
+    const retouch = retouchList(clients);
+    const bdays = birthdayList(clients);
+    $('cl-n-retoques').textContent = retouch.length;
+    $('cl-n-cumple').textContent = bdays.length;
+    if (st.tab === 'retoques') renderRetouch(retouch);
+    if (st.tab === 'cumple') renderBirthdays(bdays);
     if (st.tab === 'todas') renderAll(clients);
     if (st.tab === 'volver') renderDue(due);
     if (st.tab === 'origen') renderOrigin(clients);
@@ -138,6 +144,63 @@
           <button type="button" class="act" data-book="${esc(d.client.key)}">Agendar</button>
         </div></li>`;
     }).join('') : '<li class="empty">Ninguna clienta está por volver en los próximos 7 días. Los días de cada servicio se cambian en Ajustes → Servicios.</li>';
+  }
+
+  /* Retoques: servicios con "retoque a los N días" sin retoque reservado */
+  function retouchList(clients) {
+    const today = M.todayKey();
+    const svc = Object.fromEntries(A.services().filter((x) => x.retoqueDias > 0).map((x) => [x.id, x]));
+    const out = [];
+    clients.forEach((c) => {
+      c.appts.filter((a) => a.status === 'completada').forEach((a) => {
+        (a.services || []).forEach((sv) => {
+          const def = svc[sv.id];
+          if (!def) return;
+          const ideal = A.addDays(a.date, def.retoqueDias);
+          const after = c.appts.some((b) => b.id !== a.id && b.date > a.date && ['confirmada', 'completada'].includes(b.status) && (b.services || []).some((x) => x.id === sv.id));
+          const diff = A.daysBetween(ideal, today);
+          if (!after && diff >= -21 && diff <= 30) out.push({ client: c, appt: a, service: def, ideal, days: diff });
+        });
+      });
+    });
+    return out.sort((x, y) => x.ideal.localeCompare(y.ideal));
+  }
+  function renderRetouch(list) {
+    const web = A.settingsMap().webUrl || '';
+    $('cl-retouch').innerHTML = list.length ? list.map((r) => {
+      const first = r.client.name.split(' ')[0];
+      const wa = A.waLink(r.client.phone, `Hola ${first}, te escribimos de MAJOBELLA. Ya se acerca el retoque de tu ${r.service.name.toLowerCase()} (lo ideal es alrededor del ${M.dayMonth(r.ideal)}). ¿Te lo agendamos?${web ? ` También puedes reservarlo aquí: ${web}?servicio=${r.service.id}#reservar` : ''}`);
+      const when = r.days > 0 ? `<span class="tag tag-warn">Fecha ideal hace ${A.plural(r.days, 'día')}</span>` : r.days === 0 ? '<span class="tag tag-warn">Fecha ideal: hoy</span>' : `<span class="tag">Fecha ideal en ${A.plural(-r.days, 'día')}</span>`;
+      return `<li class="due"><div><button type="button" class="t-name link" data-client="${esc(r.client.key)}">${esc(r.client.name)}</button>
+          <p class="t-sub">${esc(r.service.name)} el ${A.shortDate(r.appt.date)} · retoque ideal ${A.shortDate(r.ideal)}${r.appt.retouchNoticeAt && /^\d{4}-/.test(r.appt.retouchNoticeAt) ? ' · correo enviado' : ''}</p><p>${when}</p></div>
+        <div class="due-actions">${wa ? `<a class="act act-dark" href="${wa}" target="_blank" rel="noopener">Escribir por WhatsApp</a>` : ''}<button type="button" class="act" data-book="${esc(r.client.key)}">Agendar</button></div></li>`;
+    }).join('') : `<li class="empty">${A.services().some((x) => x.retoqueDias > 0) ? 'No hay retoques pendientes en estas semanas.' : 'Ningún servicio tiene días de retoque. Configúralo en Ajustes → Servicios.'}</li>`;
+  }
+
+  /* Cumpleaños de los próximos 30 días */
+  const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const mdOf = (v) => { const t = String(v || ''); const m = t.match(/^(?:\d{4}-)?(\d{2})-(\d{2})$/); return m ? `${m[1]}-${m[2]}` : ''; };
+  function birthdayList(clients) {
+    const today = M.todayKey();
+    const out = [];
+    clients.forEach((c) => {
+      const md = mdOf(c.birthday);
+      if (!md) return;
+      for (let i = 0; i <= 30; i++) { const k = A.addDays(today, i); if (k.slice(5) === md) { out.push({ client: c, md, days: i }); break; } }
+    });
+    return out.sort((a, b) => a.days - b.days);
+  }
+  function renderBirthdays(list) {
+    const s = A.settingsMap();
+    const auto = /^s[ií]$/i.test(s.cumpleActivo || '');
+    $('cl-bday-note').textContent = auto ? `Ese día les llega un correo con un código de ${s.cumpleDescuento || 15}% (válido ${s.cumpleDias || 30} días). Se cambia en Correos.` : 'El correo de cumpleaños está apagado (Correos → Cumpleaños).';
+    $('cl-bday').innerHTML = list.length ? list.map((b) => {
+      const [m, d] = b.md.split('-').map(Number);
+      const wa = A.waLink(b.client.phone, `¡Feliz cumpleaños, ${b.client.name.split(' ')[0]}! De parte de todo MAJOBELLA te deseamos un día precioso.`);
+      return `<li class="due"><div><button type="button" class="t-name link" data-client="${esc(b.client.key)}">${esc(b.client.name)}</button>
+        <p class="t-sub">${d} de ${MONTHS[m - 1]} · ${b.days === 0 ? '<strong>hoy</strong>' : b.days === 1 ? 'mañana' : `en ${b.days} días`}</p></div>
+        <div class="due-actions">${wa ? `<a class="act" href="${wa}" target="_blank" rel="noopener">Felicitar por WhatsApp</a>` : ''}</div></li>`;
+    }).join('') : '<li class="empty">Nadie cumple años en los próximos 30 días. Las clientas pueden dejar su cumpleaños al reservar, o lo añades en su ficha.</li>';
   }
 
   /* De dónde vienen */
@@ -234,7 +297,7 @@
         <label>Notas de la clienta <span class="opt">(alergias, tipo de piel, pigmento y técnica usados…)</span>
           <textarea name="notas" rows="4" maxlength="3000">${esc(c.notes)}</textarea></label>
         <div class="row2">
-          <label>Cumpleaños<input type="date" name="cumpleanos" value="${esc(c.birthday)}"></label>
+          <label>Cumpleaños<span class="bday-sel">${bdaySelects(c.birthday)}</span></label>
           <div class="cp-save"><button type="submit" class="btn-dark">Guardar notas</button></div>
         </div>
       </form>
@@ -243,10 +306,32 @@
       <label class="cp-date">Fecha de las fotos <input type="date" id="cp-file-date" value="${M.todayKey()}"></label>
       <p class="cp-up-msg" id="cp-up-msg" aria-live="polite"></p>
       ${['antes', 'despues', 'consentimiento'].map(group).join('')}${c.files.some((f) => f.tipo === 'otro') ? group('otro') : ''}
+      ${profileExtras(c)}
       <h3 class="cp-h">Citas</h3>
       <ul class="cp-appts">${c.appts.slice().reverse().map((a) => `
         <li><span class="cpa-d">${A.shortDate(a.date)} · ${M.fmtTime12(a.time)}</span><span class="cpa-s">${esc(a.servicesText)} · ${A.money(a.totalPrice)}</span><span class="pill st-${esc(a.status)}">${A.STATUS[a.status] || esc(a.status)}</span></li>`).join('')}</ul>`;
     loadThumbs(c.files);
+  }
+
+  function bdaySelects(v) {
+    const md = mdOf(v);
+    const [m, d] = md ? md.split('-') : ['', ''];
+    return `<select name="bday-d" aria-label="Día"><option value="">Día</option>${Array.from({ length: 31 }, (_, i) => { const x = String(i + 1).padStart(2, '0'); return `<option value="${x}"${x === d ? ' selected' : ''}>${i + 1}</option>`; }).join('')}</select>
+      <select name="bday-m" aria-label="Mes"><option value="">Mes</option>${MONTHS.map((n, i) => { const x = String(i + 1).padStart(2, '0'); return `<option value="${x}"${x === m ? ' selected' : ''}>${n}</option>`; }).join('')}</select>`;
+  }
+  function profileExtras(c) {
+    const parts = [];
+    const l = A.loyaltyOf ? A.loyaltyOf(c) : null;
+    if (l) parts.push(`<div class="cp-extra"><p class="kpi-l">Fidelidad</p><p>${l.eligible ? `<strong>Premio disponible:</strong> ${A.loyaltyText(l)} en su próxima cita` : `${l.visits} de ${l.every} visitas para el premio de ${A.loyaltyText(l)}`}</p></div>`);
+    const key = c.key;
+    const bonos = (A.data.bonos || []).filter((b) => A.clientKey(b.correo, b.telefono, b.clienta) === key || (b.correo && b.correo === c.email));
+    if (bonos.length) parts.push(`<div class="cp-extra"><p class="kpi-l">Paquetes</p>${bonos.map((b) => `<p><code>${esc(b.codigo)}</code> · ${esc(b.nombre)} · ${Number(b.usadas) || 0} de ${b.sesiones} usadas${b.estado !== 'activo' ? ` · ${esc(b.estado)}` : ''}</p>`).join('')}</div>`);
+    const signed = c.appts.filter((a) => a.consent && a.consent.signed).length;
+    const pending = c.appts.filter((a) => a.status === 'confirmada' && a.consent && a.consent.needed && !a.consent.signed);
+    if (signed || pending.length) parts.push(`<div class="cp-extra"><p class="kpi-l">Consentimiento</p>${signed ? `<p>${A.plural(signed, 'firmado')} en la web (PDF en sus archivos)</p>` : ''}${pending.map((a) => `<p>Falta para el ${A.shortDate(a.date)} · <a href="${esc(a.consent.url)}" target="_blank" rel="noopener">Abrir para firmar</a></p>`).join('')}</div>`);
+    const photos = c.appts.find((a) => a.photoPermission);
+    if (photos) parts.push(`<div class="cp-extra"><p class="kpi-l">Fotos en la web</p><p>${photos.photoPermission === 'si' ? 'Autorizó publicar sus fotos sin su nombre' : 'No autorizó publicar sus fotos'}</p></div>`);
+    return parts.length ? `<div class="cp-extras">${parts.join('')}</div>` : '';
   }
 
   async function loadThumbs(files) {
@@ -332,7 +417,8 @@
     const f = e.target;
     await A.busy(f.querySelector('button'), async () => {
       try {
-        const res = await A.call('adminSaveClient', { clave: c.key, nombre: c.name, telefono: c.phone, correo: c.email, notas: f.notas.value, cumpleanos: f.cumpleanos.value });
+        const bd = f['bday-d'].value, bm = f['bday-m'].value;
+        const res = await A.call('adminSaveClient', { clave: c.key, nombre: c.name, telefono: c.phone, correo: c.email, notas: f.notas.value, cumpleanos: bd && bm ? `${bm}-${bd}` : '' });
         A.upsert('clients', res.client, 'clave');
         A.toast('Notas guardadas.');
       } catch (err) { A.toast(err.message); }

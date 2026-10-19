@@ -22,9 +22,11 @@ js/integrations/giftcard.js     Imagen PNG de la tarjeta de regalo (web y dashbo
 js/components/*.js              Menú, rostro ilustrado, cejas, servicios, barra de suma, reservas, citas, contacto
 js/components/site.js           Franja de anuncio, Conoce a Majo, galería, reseñas y mapa (contenido del dashboard → Web)
 js/components/giftshop.js       Compra de tarjetas de regalo con PayPal
+js/components/packages.js       Compra de paquetes de sesiones con PayPal
+consentimiento.html, js/consent.js  Consentimiento digital con cuestionario de salud y firma
 privacidad.html, cancelacion.html  Políticas de privacidad y de cancelación/reembolsos/tarjetas
 sitemap.xml, assets/og-image.jpg   Google (sitemap) y vista previa al compartir en WhatsApp/redes
-admin.html, js/admin/*.js       Dashboard privado: agenda, clientas, dinero, promociones, web y ajustes
+admin.html, js/admin/*.js       Dashboard privado: agenda, clientas, dinero, promociones (paquetes y fidelidad), web, correos y ajustes
 backend/google-apps-script/     Backend gratuito: Google Sheets + PayPal + Google Calendar (ver INSTALAR.md)
 assets/                         Logos, monograma, favicon y fuentes
 ```
@@ -89,6 +91,7 @@ Implementado en `backend/google-apps-script/Code.gs`; otro backend podría respo
 - `POST { action: 'capture', id, orderId }` → `{ appointment }`
 - `POST { action: 'release' | 'cancel' | 'balanceOrder' | 'balanceCapture', id, token | idToken, … }`
 - `POST { action: 'myAppointments', idToken }` · `{ action: 'lookup', items: [{ id, token }] }`
+- `POST { action: 'loyalty', client }` · `{ action: 'waitlistJoin', date, franja, services, client }` · `{ action: 'consentInfo' | 'consentSign', c, … }` · `{ action: 'bonoOrder' | 'bonoCapture', … }`
 - `POST { action: 'giftOrder', montoRD, correo, correoPara, de, para, mensaje }` → `{ id, orderId }` · `{ action: 'giftCapture', id, orderId }` → `{ gift: { codigo, … } }`
 - `POST { action: 'adminList' | 'adminUpdate' | 'adminBlock', idToken, … }` (solo administradoras)
 

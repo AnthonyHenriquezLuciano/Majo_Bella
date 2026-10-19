@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261019g">
+<link rel="stylesheet" href="css/styles.css?v=20261019h">
 </head>
 <body class="legal-page">
 <header class="legal-header">
@@ -41,7 +41,7 @@
 </div>
 
 <nav class="legal-toc" aria-label="En esta página">
-  <a href="#deposito">Depósito</a><a href="#cancelar">Cancelar</a><a href="#cambiar">Cambiar de día</a><a href="#estudio">Si cancela el estudio</a><a href="#saldo">El resto del pago</a><a href="#promos">Promociones</a><a href="#tarjetas">Tarjetas de regalo</a>
+  <a href="#deposito">Depósito</a><a href="#cancelar">Cancelar</a><a href="#cambiar">Cambiar de día</a><a href="#estudio">Si cancela el estudio</a><a href="#saldo">El resto del pago</a><a href="#promos">Promociones</a><a href="#paquetes">Paquetes</a><a href="#tarjetas">Tarjetas de regalo</a>
 </nav>
 
 <h2 id="deposito">1. Depósito para apartar tu cita</h2>
@@ -72,7 +72,18 @@
 <h2 id="promos">6. Promociones y códigos de descuento</h2>
 <p>Las promociones tienen fecha y condiciones propias. No se acumulan entre sí: si aplican varias, se usa la que más te descuenta. El descuento se aplica al reservar y no se puede pedir después.</p>
 
-<h2 id="tarjetas">7. Tarjetas de regalo</h2>
+<h2 id="paquetes">7. Paquetes de sesiones</h2>
+<ul>
+  <li>Cada paquete es para el servicio que indica y se usa escribiendo su código al reservar cada sesión.</li>
+  <li>Tienen la validez que se indica al comprarlos. Las sesiones no usadas en ese plazo vencen.</li>
+  <li>Si cancelas una sesión con <span data-v="cancelHours">24</span> horas o más de aviso, la sesión vuelve a tu paquete. Con menos aviso, o si no te presentas, la sesión se cuenta como usada.</li>
+  <li>Son personales, no se pueden cambiar por dinero en efectivo ni se reembolsan una vez comprados.</li>
+</ul>
+
+<h2 id="fidelidad">8. Premio de fidelidad</h2>
+<p>Cuando el programa está activo, después de cierto número de visitas realizadas tu siguiente cita tiene un descuento. Se aplica solo al reservar con el mismo correo o teléfono y no se acumula con otras promociones: se usa el mayor descuento.</p>
+
+<h2 id="tarjetas">9. Tarjetas de regalo</h2>
 <ul>
   <li>Son válidas por <span data-v="giftValid">12 meses</span> desde la compra, para cualquier servicio.</li>
   <li>Se usan escribiendo el código al reservar en la web. Si el servicio cuesta menos que el saldo de la tarjeta, el resto queda disponible para otra cita.</li>
@@ -89,7 +100,7 @@
     <p>© <span data-year>2026</span> MAJOBELLA Beauty Studio · Santo Domingo, República Dominicana</p>
   </div>
 </footer>
-<script src="js/config.js?v=20261019g"></script>
+<script src="js/config.js?v=20261019h"></script>
 <script>
 /* Completa los valores con los ajustes actuales del estudio (si el sistema de reservas responde) */
 (function () {

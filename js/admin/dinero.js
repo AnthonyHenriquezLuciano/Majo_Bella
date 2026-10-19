@@ -5,7 +5,7 @@
   const A = M.Admin;
   const { $, esc } = A;
   const st = { day: M.todayKey(), month: M.todayKey().slice(0, 8) + '01' };
-  const METHOD = { efectivo: 'Efectivo', transferencia: 'Transferencia', paypal: 'PayPal', 'tarjeta de regalo': 'Tarjeta de regalo', cortesia: 'Cortesía' };
+  const METHOD = { efectivo: 'Efectivo', transferencia: 'Transferencia', paypal: 'PayPal', 'tarjeta de regalo': 'Tarjeta de regalo', paquete: 'Paquete', cortesia: 'Cortesía' };
   const CATS = ['Insumos', 'Alquiler', 'Servicios (luz, agua, internet)', 'Publicidad', 'Equipos', 'Sueldos', 'Comisiones', 'Otros'];
 
   /* ---------- Movimientos de dinero ---------- */
@@ -16,7 +16,7 @@
       const p = a.payment || {};
       const who = a.client && a.client.name;
       const depMethod = p.depositMethod || (p.paypalCapture ? 'paypal' : '');
-      if (p.depositRD > 0 && p.depositPaid && depMethod !== 'tarjeta de regalo') {
+      if (p.depositRD > 0 && p.depositPaid && depMethod !== 'tarjeta de regalo' && depMethod !== 'paquete') {
         const at = p.depositPaidAt || a.createdAt || a.start;
         out.push({ at, date: A.dayOf(at), kind: 'Depósito', method: depMethod || 'paypal', amount: Number(p.depositRD), who, appt: a });
       }
@@ -37,6 +37,10 @@
     (A.data.gifts || []).forEach((g) => {
       if (g.metodoPago === 'cortesia') return;
       out.push({ at: g.creada || g.vendida, date: g.vendida, kind: 'Tarjeta de regalo', method: g.metodoPago || 'efectivo', amount: Number(g.montoRD) || 0, who: g.comprador || g.para || g.codigo });
+    });
+    (A.data.bonos || []).forEach((b) => {
+      if (b.metodoPago === 'cortesia' || b.estado === 'pendiente' || !(Number(b.montoRD) > 0)) return;
+      out.push({ at: b.creada || b.vendida, date: b.vendida, kind: 'Paquete', method: b.metodoPago || 'efectivo', amount: Number(b.montoRD) || 0, who: b.clienta || b.codigo });
     });
     return out.sort((a, b) => String(a.at).localeCompare(String(b.at)));
   };

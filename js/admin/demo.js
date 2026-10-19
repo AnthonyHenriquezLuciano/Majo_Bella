@@ -13,11 +13,11 @@
   const nowIso = () => new Date().toISOString();
 
   const services = [
-    { id: 'faciales', nombre: 'Faciales', duracionMin: '60', precioRD: '2500', precioDesde: 'no', activo: 'si', volverDias: '30', depositoPct: '50' },
-    { id: 'cejas', nombre: 'Cejas', duracionMin: '45', precioRD: '900', precioDesde: 'no', activo: 'si', volverDias: '28', depositoPct: '50' },
-    { id: 'pestanas', nombre: 'Pestañas', duracionMin: '60', precioRD: '1800', precioDesde: 'no', activo: 'si', volverDias: '21', depositoPct: '50' },
-    { id: 'micropigmentacion', nombre: 'Micropigmentación', duracionMin: '150', precioRD: '12000', precioDesde: 'no', activo: 'si', volverDias: '365', depositoPct: '30' },
-    { id: 'depilacion', nombre: 'Depilación facial y corporal', duracionMin: '30', precioRD: '500', precioDesde: 'si', activo: 'si', volverDias: '30', depositoPct: '0' },
+    { id: 'faciales', nombre: 'Faciales', duracionMin: '60', precioRD: '2500', precioDesde: 'no', activo: 'si', volverDias: '30', depositoPct: '50', retoqueDias: '0', consentimiento: 'si' },
+    { id: 'cejas', nombre: 'Cejas', duracionMin: '45', precioRD: '900', precioDesde: 'no', activo: 'si', volverDias: '28', depositoPct: '50', retoqueDias: '0', consentimiento: 'no' },
+    { id: 'pestanas', nombre: 'Pestañas', duracionMin: '60', precioRD: '1800', precioDesde: 'no', activo: 'si', volverDias: '21', depositoPct: '50', retoqueDias: '0', consentimiento: 'si' },
+    { id: 'micropigmentacion', nombre: 'Micropigmentación', duracionMin: '150', precioRD: '12000', precioDesde: 'no', activo: 'si', volverDias: '365', depositoPct: '30', retoqueDias: '45', consentimiento: 'si' },
+    { id: 'depilacion', nombre: 'Depilación facial y corporal', duracionMin: '30', precioRD: '500', precioDesde: 'si', activo: 'si', volverDias: '30', depositoPct: '0', retoqueDias: '0', consentimiento: 'no' },
   ];
   const svc = (id) => { const s = services.find((x) => x.id === id); return { id: s.id, name: s.nombre, price: Number(s.precioRD), durationMinutes: Number(s.duracionMin) }; };
   const settings = [
@@ -29,6 +29,8 @@
     ['webUrl', 'https://anthonyhenriquezluciano.github.io/Majo_Bella/'], ['comisionPaypalPct', '5.4'], ['comisionPaypalFijoUSD', '0.30'], ['conversionPct', '3.5'],
     ['anuncioActivo', 'si'], ['anuncioTexto', ''], ['anuncioEnlace', ''], ['googleRating', '4.9'], ['googleResenas', '27'], ['googleUrl', ''], ['googleResenaUrl', ''],
     ['majoTitulo', 'Conoce a Majo'], ['majoTexto', ''], ['majoCerts', ''], ['majoFotoUrl', ''], ['tarjetasEnLinea', 'si'], ['tarjetaMin', '500'], ['tarjetaMax', '30000'], ['tarjetaVenceDias', '365'],
+    ['whatsapp', '18299784986'], ['recordatorioActivo', 'si'], ['recordatorioHoras', '24'], ['resenaActiva', 'si'], ['resenaHoras', '3'], ['retoqueActivo', 'si'],
+    ['cumpleActivo', 'si'], ['cumpleDescuento', '15'], ['cumpleDias', '30'], ['esperaActiva', 'si'], ['fidelidadActiva', 'si'], ['fidelidadVisitas', '5'], ['fidelidadTipo', 'porcentaje'], ['fidelidadValor', '20'], ['consentimientoTexto', ''],
   ].map(([key, value]) => ({ key, value, help: '' }));
 
   const people = ['Ana Pérez', 'Laura Martínez', 'Carolina Reyes', 'Paola Jiménez', 'Michelle Santos', 'Yarisa Gómez', 'Nicole Peña', 'Daniela Cruz',
@@ -50,6 +52,20 @@
     { id: 'RES-2', autora: 'Reseña de ejemplo 2', estrellas: '5', texto: 'Las reseñas de ejemplo solo existen en el modo demo.', fecha: A.addDays(today, -30), visible: 'si', orden: '0', creada: nowIso() },
   ];
   const gallery = [];
+  const packages = [
+    { id: 'PKG-CEJAS', nombre: '4 sesiones de cejas', servicio: 'cejas', sesiones: '4', precioRD: '3000', venceDias: '180', descripcion: 'Diseño y mantenimiento, una sesión al mes.', enWeb: 'si', activo: 'si', creada: nowIso() },
+    { id: 'PKG-PEST', nombre: '3 retoques de pestañas', servicio: 'pestanas', sesiones: '3', precioRD: '4600', venceDias: '120', descripcion: '', enWeb: 'no', activo: 'si', creada: nowIso() },
+  ];
+  const bonos = [
+    { id: 'BON-1', codigo: 'PAQ-7KQ2-M4TD', paqueteId: 'PKG-CEJAS', nombre: '4 sesiones de cejas', servicio: 'cejas', sesiones: '4', usadas: '2', clienta: 'Carolina Reyes', telefono: '809 555 2174', correo: 'carolina.reyes@ejemplo.com', montoRD: '3000', metodoPago: 'transferencia', vendida: A.addDays(today, -50), vence: A.addDays(today, 130), estado: 'activo', creada: `${A.addDays(today, -50)}T15:00:00Z` },
+  ];
+  const waitlist = [
+    { id: 'ESP-1', fecha: A.addDays(today, 3), franja: 'tarde', serviciosJson: '[{"id":"pestanas","name":"Pestañas"}]', servicios: 'Pestañas', duracionMin: '60', clienta: 'Gabriela Núñez', telefono: '809 555 2433', correo: 'gabriela.nunez@ejemplo.com', estado: 'esperando', creada: nowIso(), avisada: '' },
+    { id: 'ESP-2', fecha: A.addDays(today, 5), franja: 'cualquiera', serviciosJson: '[{"id":"cejas","name":"Cejas"}]', servicios: 'Cejas', duracionMin: '45', clienta: 'Isabel Mejía', telefono: '809 555 2729', correo: 'isabel.mejia@ejemplo.com', estado: 'avisada', creada: nowIso(), avisada: nowIso() },
+  ];
+  const emails = [];
+  [['recordatorio', 'Ana Pérez', 'Tu cita es mañana'], ['confirmacion', 'Laura Martínez', 'Tu cita en MAJOBELLA está confirmada'], ['resena', 'Paola Jiménez', '¿Cómo te fue en MAJOBELLA, Paola?'], ['cumpleanos', 'Rosa Almonte', '¡Feliz cumpleaños, Rosa! Un regalo de MAJOBELLA']]
+    .forEach(([tipo, n, subj], i) => emails.push({ fecha: new Date(Date.now() - i * 5 * 3600000).toISOString(), tipo, para: `${n.split(' ')[0].toLowerCase()}@ejemplo.com`, asunto: subj, ref: '', estado: 'enviado' }));
   const expenses = [];
   [[-62, 'Alquiler del local', 'Alquiler', 18000, 'transferencia'], [-31, 'Alquiler del local', 'Alquiler', 18000, 'transferencia'], [-1, 'Alquiler del local', 'Alquiler', 18000, 'transferencia'],
     [-45, 'Pigmentos y agujas', 'Insumos', 6200, 'efectivo'], [-12, 'Pestañas y pegamento', 'Insumos', 3400, 'efectivo'], [-8, 'Publicidad en Instagram', 'Publicidad', 2500, 'paypal'],
@@ -67,6 +83,11 @@
   const items = [];
   const toMin = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
   const hhmm = (t) => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+  const consentSvcs = ['faciales', 'pestanas', 'micropigmentacion'];
+  function consentFor(svcs, key) {
+    const needed = svcs.some((x) => consentSvcs.includes(x.id));
+    return { needed, signed: needed && (key < today || rnd() < 0.5), signedAt: '', url: needed ? `${location.origin}${location.pathname.replace(/admin\.html$/, '')}consentimiento.html?c=DEMO` : '' };
+  }
   function makeAppt(p, key, time, svcs, opts = {}) {
     const minutes = svcs.reduce((t, s) => t + s.durationMinutes, 0);
     const start = M.studioDate(key, time);
@@ -85,6 +106,7 @@
       client: { name: p.name, email: p.email, phone: p.phone, notes: '' }, clientKey: keyOf(p),
       createdAt: created, createdBy: manual ? 'estudio' : 'web', origin: manual ? pick(['WhatsApp', 'Llamada', 'En persona']) : p.origin,
       channel: manual ? 'dashboard' : weighted([['', 50], ['instagram.com', 30], ['google.com', 15], ['tiktok.com', 5]]), code: opts.code || '', promoId: opts.promoId || '', giftCode: '', internalNote: '',
+      consent: consentFor(svcs, key), reminderAt: '', loyalty: false, bono: null,
     };
   }
   for (let i = -70; i <= 28; i++) {
@@ -140,7 +162,9 @@
   const uploaded = {};
 
   const db = () => ({
-    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, services, gallery, reviews,
+    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, services, gallery, reviews, packages, bonos, waitlist, emails,
+    automation: { trigger: true, quota: 96, lastRun: { at: new Date(Date.now() - 22 * 60000).toISOString(), out: {} } },
+    consentDefault: 'Declaro que la información que di sobre mi salud es verdadera y completa…\n\n(Texto general de ejemplo.)',
     schedule: { hours: M.config.schedule.hours, blocked: ['2026-12-25', '2027-01-01'], minNotice: 3, maxDays: 60, step: 30 },
     paypalEnv: 'sandbox', sheetUrl: '',
   });
@@ -279,6 +303,44 @@
           settings.find((x) => x.key === 'majoFotoUrl').value = url;
           return { ok: true, url };
         }
+        case 'adminSendReminder': { const a = find(d.id); a.reminderAt = nowIso(); emails.unshift({ fecha: nowIso(), tipo: 'recordatorio', para: a.client.email, asunto: 'Tu cita se acerca', ref: a.id, estado: 'enviado' }); return { ok: true, item: clone(a) }; }
+        case 'adminSavePackage': {
+          const k = d.pkg;
+          if (!k.nombre) throw new Error('Ponle un nombre al paquete.');
+          if (!(Number(k.precioRD) > 0)) throw new Error('Escribe el precio del paquete.');
+          const v = { ...k, id: k.id || uid('PKG'), sesiones: String(k.sesiones), precioRD: String(k.precioRD), venceDias: String(k.venceDias || 0) };
+          const i = packages.findIndex((x) => x.id === v.id);
+          if (i >= 0) packages[i] = Object.assign(packages[i], v); else packages.push(Object.assign(v, { creada: nowIso() }));
+          return { ok: true, pkg: clone(packages.find((x) => x.id === v.id)) };
+        }
+        case 'adminDeletePackage': { const i = packages.findIndex((x) => x.id === d.id); if (i >= 0) packages.splice(i, 1); return { ok: true }; }
+        case 'adminSellBono': {
+          const k = packages.find((x) => x.id === d.paqueteId);
+          if (!d.client.name) throw new Error('Escribe el nombre de la clienta.');
+          const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+          const r4 = () => Array.from({ length: 4 }, () => a[Math.floor(Math.random() * a.length)]).join('');
+          const v = { id: uid('BON'), codigo: `PAQ-${r4()}-${r4()}`, paqueteId: k.id, nombre: k.nombre, servicio: k.servicio, sesiones: k.sesiones, usadas: '0', clienta: d.client.name, telefono: d.client.phone, correo: d.client.email, montoRD: String(d.montoRD || k.precioRD), metodoPago: d.metodoPago, vendida: today, vence: Number(k.venceDias) ? A.addDays(today, Number(k.venceDias)) : '', estado: 'activo', creada: nowIso() };
+          bonos.push(v);
+          return { ok: true, bono: clone(v) };
+        }
+        case 'adminSaveBono': {
+          const b = bonos.find((x) => x.id === d.id);
+          if (d.usadas != null) b.usadas = String(Math.max(0, Math.min(Number(b.sesiones), Number(d.usadas))));
+          if (d.estado === 'anulado') b.estado = 'anulado'; else b.estado = Number(b.usadas) >= Number(b.sesiones) ? 'agotado' : 'activo';
+          return { ok: true, bono: clone(b) };
+        }
+        case 'adminWaitlist': {
+          const i = waitlist.findIndex((x) => x.id === d.id);
+          if (d.op === 'eliminar') { waitlist.splice(i, 1); return { ok: true, removed: true }; }
+          waitlist[i].estado = d.estado || waitlist[i].estado; return { ok: true, item: clone(waitlist[i]) };
+        }
+        case 'adminEmailPreview': {
+          const TITLE = { confirmacion: '¡Te esperamos, Ana!', recordatorio: 'Tu cita es mañana, Ana', resena: '¿Cómo te sentiste, Ana?', retoque: 'Es momento de tu retoque', cumpleanos: '¡Feliz cumpleaños, Ana!', espera: 'Se liberó un horario', paquete: '¡Gracias, Ana!', cancelacion: 'Cancelaste tu cita', consentimiento: 'Recibimos tu consentimiento' };
+          const html = `<!doctype html><body style="margin:0;background:#f4f4f2;font-family:Georgia,serif"><div style="max-width:560px;margin:28px auto;background:#fff;border:1px solid #e6e6e6"><div style="text-align:center;padding:30px;border-bottom:1px solid #111"><img src="assets/logo-majobella.png" width="170" alt="MAJOBELLA"></div><div style="padding:30px 36px"><p style="letter-spacing:4px;font-size:11px;color:#6b6b6b">EJEMPLO</p><h1 style="font-weight:normal">${TITLE[d.tipo] || 'Correo'}</h1><p style="color:#333">En el modo demo se muestra un ejemplo simplificado. Con la hoja conectada verás el correo real con los datos de la cita.</p></div><div style="background:#111;color:#fff;text-align:center;padding:22px;letter-spacing:5px;font-size:12px">MÁS YO, MÁS BELLA.</div></div></body>`;
+          return { ok: true, subject: `${TITLE[d.tipo] || 'Correo'} · MAJOBELLA`, html };
+        }
+        case 'adminEmailTest': return { ok: true, to: 'tu-correo@ejemplo.com (demo: no se envía)' };
+        case 'adminRunAutomations': return { ok: true, result: { recordatorios: 0, resenas: 0, retoques: 0, cumpleanos: 0, espera: 0 }, automation: { trigger: true, quota: 96, lastRun: { at: nowIso(), out: {} } }, emails: clone(emails) };
         default: throw new Error('Acción no disponible en el ejemplo.');
       }
     },

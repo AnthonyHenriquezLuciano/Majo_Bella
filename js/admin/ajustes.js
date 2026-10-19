@@ -22,6 +22,7 @@
     ['Datos del estudio', [
       ['direccion', 'Dirección (correos y calendario)', '', 'text'],
       ['mapsUrl', 'Enlace de Google Maps', '', 'url'],
+      ['whatsapp', 'WhatsApp para los correos (con 1, solo números)', '', 'text'],
       ['webUrl', 'Dirección de la web', '', 'url'],
     ]],
     ['Comisiones (para la ganancia real)', [
@@ -78,6 +79,8 @@
       <td class="c"><input name="precioDesde" type="checkbox" ${/^s[ií]$/i.test(sv.precioDesde) ? 'checked' : ''} aria-label="Precio desde"></td>
       <td><input name="depositoPct" type="number" min="0" max="100" step="5" value="${esc(sv.depositoPct === undefined || sv.depositoPct === '' ? (A.settingsMap().porcentajeDeposito || 50) : sv.depositoPct)}" aria-label="Depósito para apartar (%)"></td>
       <td><input name="volverDias" type="number" min="0" step="1" value="${esc(sv.volverDias || 0)}" aria-label="Vuelve cada (días)"></td>
+      <td><input name="retoqueDias" type="number" min="0" step="1" value="${esc(sv.retoqueDias || 0)}" aria-label="Retoque a los (días)"></td>
+      <td class="c"><input name="consentimiento" type="checkbox" ${/^s[ií]$/i.test(sv.consentimiento) ? 'checked' : ''} aria-label="Pide consentimiento"></td>
       <td class="c"><input name="activo" type="checkbox" ${/^no$/i.test(sv.activo) ? '' : 'checked'} aria-label="Activo"></td>
     </tr>`;
   }
@@ -95,6 +98,8 @@
       duracionMin: tr.querySelector('[name=duracionMin]').value, precioRD: tr.querySelector('[name=precioRD]').value,
       precioDesde: tr.querySelector('[name=precioDesde]').checked ? 'si' : 'no', volverDias: tr.querySelector('[name=volverDias]').value,
       depositoPct: tr.querySelector('[name=depositoPct]').value,
+      retoqueDias: tr.querySelector('[name=retoqueDias]').value,
+      consentimiento: tr.querySelector('[name=consentimiento]').checked ? 'si' : 'no',
       activo: tr.querySelector('[name=activo]').checked ? 'si' : 'no',
     })).filter((x) => x.nombre);
     await A.busy(btn, async () => {
@@ -131,7 +136,7 @@
         if (b) { closed = closed.filter((d) => d !== b.dataset.closedDel); renderClosed(); }
       });
       $('aj-svc-add').addEventListener('click', () => {
-        $('aj-services').insertAdjacentHTML('beforeend', serviceRow({ duracionMin: 60, precioRD: 0, volverDias: 30, depositoPct: 50, activo: 'si' }));
+        $('aj-services').insertAdjacentHTML('beforeend', serviceRow({ duracionMin: 60, precioRD: 0, volverDias: 30, depositoPct: 50, retoqueDias: 0, consentimiento: 'no', activo: 'si' }));
         $('aj-services').lastElementChild.querySelector('input').focus();
       });
     },

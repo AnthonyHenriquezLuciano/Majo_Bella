@@ -100,7 +100,8 @@ El dinero llega en dólares a tu PayPal. Desde PayPal puedes retirarlo a tu banc
    - Crea las pestañas y columnas nuevas sin tocar tus datos.
    - La primera vez crea también la carpeta privada **MAJOBELLA · Fichas de clientas** en tu Drive.
    - También crea la carpeta **MAJOBELLA · Web pública (galería)**. Ahí van solo las copias de las fotos que publicas en la web y tu foto de "Conoce a Majo", compartidas como "cualquier persona con el enlace puede ver". No muevas ni borres esa carpeta.
-   - Si Google pide un permiso nuevo, acéptalo igual que antes.
+   - Crea también el **disparador de las tareas automáticas** (recordatorios, reseñas, retoques, cumpleaños y lista de espera), que se ejecuta cada hora. Puedes verlo en Apps Script → **Activadores** (ícono del reloj): `tareasProgramadas`, cada hora.
+   - Si Google pide un permiso nuevo (por ejemplo, para crear el activador), acéptalo igual que antes.
 3. **Implementar → Gestionar implementaciones → lápiz (editar) → Versión: Nueva versión → Implementar.**
 
    Así se mantiene la misma URL `/exec` y no hay que cambiar nada en la web.
@@ -112,6 +113,7 @@ El dinero llega en dólares a tu PayPal. Desde PayPal puedes retirarlo a tu banc
   - **Clientas:** lista con visitas, gasto, última visita y próxima cita; ficha con notas, fotos de antes y después y consentimiento (se guardan en tu Drive); **Por volver**; **De dónde vienen**; **Pagos sin completar**.
   - **Dinero:** cierre de caja del día, ganancia real del mes (ingresos − reembolsos − comisiones de PayPal − gastos), registro de gastos y **reporte PDF** mensual.
   - **Promociones:** descuentos automáticos por servicio (se anuncian en la web), códigos de descuento y tarjetas de regalo con imagen para enviar.
+  - **Correos:** activar y ajustar los correos automáticos, ver cada correo de ejemplo, enviarte una prueba, editar el texto del consentimiento y ver el historial de todo lo enviado.
   - **Web:** galería de antes y después (se publica desde la ficha de la clienta, con su permiso), reseñas de Google, "Conoce a Majo" con tu foto, la franja de anuncio de arriba, tu puntuación y enlaces de Google, y la venta de tarjetas de regalo en la web.
   - **Ajustes:** depósito, tasa, horario, días cerrados, correos, comisiones y servicios (precio, duración y cada cuántos días vuelve la clienta).
 - **Tasa del dólar, precios, horario y días cerrados**: desde **Ajustes** en el dashboard (o en las pestañas de la hoja). Se aplican a las reservas nuevas. Las descripciones de los servicios siguen en `js/data/services.js`.
@@ -139,3 +141,31 @@ Si un reembolso falla (por ejemplo, saldo insuficiente en PayPal), queda anotado
 - Al pagar se genera el código. Le llega por correo a quien compra (y a quien la recibe, si escribió su correo), y a ti te llega un aviso.
 - Aparecen en el dashboard → **Promociones**, marcadas como "comprada en la web".
 - Para pausarlas: dashboard → **Web** → quita "Vender tarjetas de regalo con PayPal".
+
+## Correos automáticos
+
+Se revisan cada hora (activador `tareasProgramadas`). Los avisos de reseña, retoque y cumpleaños solo salen entre 8:00 a. m. y 9:00 p. m.
+
+| Correo | Cuándo | Dónde se ajusta |
+|---|---|---|
+| Recordatorio | X horas antes de la cita (24 por defecto) | Correos |
+| Pedir reseña | X horas después de marcar la cita como realizada, una vez cada 120 días por clienta | Correos (necesita el enlace de reseña en Web) |
+| Retoque | Una semana antes de la fecha ideal, si no ha reservado | Días por servicio en Ajustes → Servicios |
+| Cumpleaños | El día, con un código de un solo uso | Correos (%, días de validez) |
+| Lista de espera | Cuando se libera un horario en un día lleno | Correos |
+
+- Gmail permite unos **100 correos al día** con una cuenta normal (1,500 con Google Workspace). El dashboard muestra cuántos quedan.
+- Para probar sin esperar: **Correos → Revisar ahora**, o **Enviarme una prueba** en cada correo.
+
+## Consentimiento digital
+
+- En **Ajustes → Servicios**, marca «Consentimiento» en los servicios que lo piden.
+- La clienta recibe el enlace en la confirmación y en el recordatorio. También lo ve en **Citas** en la web, y desde la Agenda puedes copiarlo, mandarlo por WhatsApp o abrirlo en una tablet en el estudio.
+- Al firmar, se guarda un PDF en su ficha (carpeta privada de Drive) y le llega una copia por correo. Si autorizó publicar sus fotos, se ve en su ficha.
+- El texto se edita en **Correos → Consentimiento digital**. Revísalo con un abogado o con quien te formó en cada técnica antes de usarlo.
+
+## Paquetes y fidelidad
+
+- **Paquetes** (Promociones): creas el paquete (servicio, sesiones, precio, validez). Si lo marcas «en la web», se compra con PayPal en la sección Paquetes. También lo vendes en el estudio con **+ Vender paquete**.
+- La clienta escribe el código del paquete al reservar: cubre ese servicio completo y descuenta una sesión. Si cancela con aviso, la sesión vuelve al paquete.
+- **Premio de fidelidad** (Promociones): cada N visitas realizadas, la siguiente cita tiene un descuento. Se aplica solo al reservar con el mismo correo o teléfono y compite con las promociones (gana el mayor).

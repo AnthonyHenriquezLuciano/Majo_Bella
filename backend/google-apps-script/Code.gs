@@ -11,6 +11,13 @@
  *   - Promociones  descuentos automáticos por servicio y códigos de descuento
  *   - Tarjetas     tarjetas de regalo
  *   - Gastos       gastos del estudio (para la ganancia real del mes)
+ *   - Galeria, Resenas  contenido de la web
+ *   - Paquetes     paquetes de sesiones que vende el estudio; Bonos: los vendidos a cada clienta
+ *   - Espera       lista de espera por día
+ *   - Correos      historial de correos enviados
+ *
+ * Tareas automáticas (cada hora, función tareasProgramadas): recordatorios, pedir reseña, retoques,
+ * cumpleaños y aviso a la lista de espera. setup() crea el disparador.
  *
  * Cómo se reserva:
  *   1. La web pide 'hold': se valida el horario, se aplican promociones, códigos y tarjetas de regalo,
@@ -44,20 +51,27 @@ const HEADERS = [
   'retenidaHasta', 'eventoId', 'canceladaEn', 'canceladaPor', 'reembolso', 'notaInterna',
   'subtotalRD', 'descuentoRD', 'promoId', 'codigo', 'giftCodigo', 'giftRD',
   'metodoDeposito', 'origen', 'canal', 'creadaPor', 'reprogramadaDe',
+  'recordatorio', 'resenaPedida', 'retoqueAviso', 'firmaToken', 'consentimiento', 'consentimientoArchivo', 'permisoFotos',
+  'bonoCodigo', 'bonoRD', 'fidelidad', 'cumpleanos',
 ];
 const TABLES = {
   Reservas: HEADERS,
   Ajustes: ['clave', 'valor', 'qué es'],
-  Servicios: ['id', 'nombre', 'duracionMin', 'precioRD', 'precioDesde', 'activo', 'volverDias', 'depositoPct'],
+  Servicios: ['id', 'nombre', 'duracionMin', 'precioRD', 'precioDesde', 'activo', 'volverDias', 'depositoPct', 'retoqueDias', 'consentimiento'],
   Bloqueos: ['id', 'tipo', 'dias', 'horaDesde', 'horaHasta', 'fechaDesde', 'fechaHasta', 'motivo', 'activo', 'creada'],
-  Clientas: ['clave', 'nombre', 'telefono', 'correo', 'notas', 'cumpleanos', 'actualizada'],
+  Clientas: ['clave', 'nombre', 'telefono', 'correo', 'notas', 'cumpleanos', 'actualizada', 'cumpleEnviado'],
   Archivos: ['id', 'clave', 'tipo', 'nombre', 'mime', 'driveId', 'citaId', 'fecha', 'nota', 'creada'],
   Promociones: ['id', 'nombre', 'tipo', 'codigo', 'servicios', 'descuentoTipo', 'valor', 'desde', 'hasta', 'usosMax', 'usos', 'activo', 'creada'],
   Tarjetas: ['id', 'codigo', 'montoRD', 'saldoRD', 'comprador', 'para', 'mensaje', 'metodoPago', 'vendida', 'vence', 'estado', 'creada', 'correoComprador', 'correoPara', 'paypalOrden', 'paypalCaptura'],
   Gastos: ['id', 'fecha', 'concepto', 'categoria', 'montoRD', 'metodo', 'creada'],
   Galeria: ['id', 'servicio', 'antesId', 'despuesId', 'antesUrl', 'despuesUrl', 'texto', 'orden', 'visible', 'creada'],
   Resenas: ['id', 'autora', 'estrellas', 'texto', 'fecha', 'visible', 'orden', 'creada'],
+  Paquetes: ['id', 'nombre', 'servicio', 'sesiones', 'precioRD', 'venceDias', 'descripcion', 'enWeb', 'activo', 'creada'],
+  Bonos: ['id', 'codigo', 'paqueteId', 'nombre', 'servicio', 'sesiones', 'usadas', 'clienta', 'telefono', 'correo', 'montoRD', 'metodoPago', 'vendida', 'vence', 'estado', 'paypalOrden', 'paypalCaptura', 'creada'],
+  Espera: ['id', 'fecha', 'franja', 'serviciosJson', 'servicios', 'duracionMin', 'clienta', 'telefono', 'correo', 'estado', 'creada', 'avisada'],
+  Correos: ['fecha', 'tipo', 'para', 'asunto', 'ref', 'estado'],
 };
+const AUTO_TRIGGER = 'tareasProgramadas';
 
 // Estados que ocupan la agenda
 const BUSY_STATES = ['confirmada', 'completada', 'no-asistio', 'bloqueo'];
@@ -102,17 +116,33 @@ const DEFAULT_SETTINGS = [
   ['tarjetaMin', '500', 'Valor mínimo de una tarjeta de regalo en la web (RD$).'],
   ['tarjetaMax', '30000', 'Valor máximo de una tarjeta de regalo en la web (RD$).'],
   ['tarjetaVenceDias', '365', 'Días de validez de las tarjetas compradas en la web.'],
+  ['whatsapp', '18299784986', 'WhatsApp del estudio con código de país, solo números (para los correos).'],
+  ['recordatorioActivo', 'si', 'si/no: correo de recordatorio antes de cada cita.'],
+  ['recordatorioHoras', '24', 'Cuántas horas antes de la cita se envía el recordatorio.'],
+  ['resenaActiva', 'si', 'si/no: pedir una reseña de Google después de la cita realizada.'],
+  ['resenaHoras', '3', 'Horas después de terminar la cita para pedir la reseña.'],
+  ['retoqueActivo', 'si', 'si/no: avisar a la clienta cuando le toca el retoque (días por servicio en Servicios).'],
+  ['cumpleActivo', 'si', 'si/no: correo de cumpleaños con un código de regalo.'],
+  ['cumpleDescuento', '15', 'Descuento del regalo de cumpleaños (%).'],
+  ['cumpleDias', '30', 'Días de validez del código de cumpleaños.'],
+  ['esperaActiva', 'si', 'si/no: lista de espera en la web y aviso cuando se libera un horario.'],
+  ['fidelidadActiva', 'si', 'si/no: premio por visitas.'],
+  ['fidelidadVisitas', '5', 'Cada cuántas visitas realizadas se gana el premio (en la siguiente cita).'],
+  ['fidelidadTipo', 'porcentaje', 'porcentaje o monto.'],
+  ['fidelidadValor', '20', 'Valor del premio (% o RD$).'],
+  ['consentimientoTexto', '', 'Texto del consentimiento que firma la clienta (vacío = texto general).'],
 ];
-const LONG_SETTINGS = ['majoTexto', 'majoCerts'];
+const LONG_SETTINGS = ['majoTexto', 'majoCerts', 'consentimientoTexto'];
 const SETTING_KEYS = DEFAULT_SETTINGS.map(function (x) { return x[0]; });
 
 // Igual que js/data/services.js. Desde el dashboard o la hoja "Servicios" se cambian precios y duraciones.
+// [id, nombre, minutos, precio, desde, activo, vuelve cada, % depósito, retoque a los días, pide consentimiento]
 const DEFAULT_SERVICES = [
-  ['faciales', 'Faciales', 60, 2500, 'no', 'si', 30, 50],
-  ['cejas', 'Cejas', 45, 900, 'no', 'si', 28, 50],
-  ['pestanas', 'Pestañas', 60, 1800, 'no', 'si', 21, 50],
-  ['micropigmentacion', 'Micropigmentación', 150, 12000, 'no', 'si', 365, 50],
-  ['depilacion', 'Depilación facial y corporal', 30, 500, 'si', 'si', 30, 50],
+  ['faciales', 'Faciales', 60, 2500, 'no', 'si', 30, 50, 0, 'si'],
+  ['cejas', 'Cejas', 45, 900, 'no', 'si', 28, 50, 0, 'no'],
+  ['pestanas', 'Pestañas', 60, 1800, 'no', 'si', 21, 50, 0, 'si'],
+  ['micropigmentacion', 'Micropigmentación', 150, 12000, 'no', 'si', 365, 50, 45, 'si'],
+  ['depilacion', 'Depilación facial y corporal', 30, 500, 'si', 'si', 30, 50, 0, 'no'],
 ];
 const DAY_KEYS = ['horario_domingo', 'horario_lunes', 'horario_martes', 'horario_miercoles', 'horario_jueves', 'horario_viernes', 'horario_sabado'];
 const FILE_TYPES = ['antes', 'despues', 'consentimiento', 'otro'];
@@ -158,7 +188,7 @@ function setup() {
       const rows = readTable_('Servicios');
       if (!rows.length) {
         DEFAULT_SERVICES.forEach(function (x) {
-          appendRow_('Servicios', { id: x[0], nombre: x[1], duracionMin: x[2], precioRD: x[3], precioDesde: x[4], activo: x[5], volverDias: x[6], depositoPct: x[7] });
+          appendRow_('Servicios', { id: x[0], nombre: x[1], duracionMin: x[2], precioRD: x[3], precioDesde: x[4], activo: x[5], volverDias: x[6], depositoPct: x[7], retoqueDias: x[8], consentimiento: x[9] });
         });
       } else {
         let globalPct = '50';
@@ -168,6 +198,8 @@ function setup() {
           const patch = {};
           if (!r.volverDias) patch.volverDias = def ? def[6] : 30;
           if (r.depositoPct === undefined || r.depositoPct === '') patch.depositoPct = globalPct;
+          if (r.retoqueDias === undefined || r.retoqueDias === '') patch.retoqueDias = def ? def[8] : 0;
+          if (r.consentimiento === undefined || r.consentimiento === '') patch.consentimiento = def ? def[9] : 'no';
           if (Object.keys(patch).length) updateTable_('Servicios', r._row, patch);
         });
       }
@@ -185,6 +217,10 @@ function setup() {
   if (pubId) { try { pub = DriveApp.getFolderById(pubId); } catch (e) { pub = null; } }
   if (!pub) { pub = DriveApp.createFolder('MAJOBELLA · Web pública (galería)'); props.setProperty('PUBLIC_FOLDER_ID', pub.getId()); }
 
+  // Disparador de las tareas automáticas (cada hora)
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === AUTO_TRIGGER) ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger(AUTO_TRIGGER).timeBased().everyHours(1).create();
+
   const blank = ss.getSheetByName('Hoja 1') || ss.getSheetByName('Sheet1');
   if (blank && ss.getSheets().length > Object.keys(TABLES).length) ss.deleteSheet(blank);
   Logger.log('Listo. Hoja de cálculo: ' + ss.getUrl());
@@ -201,6 +237,7 @@ function testPaypal() {
    ========================================================================= */
 
 function doGet(e) {
+  SVC_CACHE_ = null; SETTINGS_CACHE_ = null;
   try {
     const p = (e && e.parameter) || {};
     if (p.action === 'catalog') return json_(catalog_());
@@ -213,6 +250,7 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  SVC_CACHE_ = null; SETTINGS_CACHE_ = null;
   let data;
   try { data = JSON.parse((e && e.postData && e.postData.contents) || '{}'); }
   catch (err) { return json_({ ok: false, error: 'Datos no válidos.' }); }
@@ -231,6 +269,12 @@ function doPost(e) {
     lookup: N(lookup_),
     giftOrder: L(giftOrder_),
     giftCapture: L(giftCapture_),
+    bonoOrder: L(bonoOrder_),
+    bonoCapture: L(bonoCapture_),
+    loyalty: N(loyalty_),
+    waitlistJoin: L(waitlistJoin_),
+    consentInfo: N(consentInfo_),
+    consentSign: L(consentSign_),
     // Dashboard
     adminData: N(adminData_),
     adminList: N(adminData_), // compatibilidad
@@ -255,6 +299,15 @@ function doPost(e) {
     adminSaveReview: L(adminSaveReview_),
     adminDeleteReview: L(adminDeleteReview_),
     adminUploadPublic: L(adminUploadPublic_),
+    adminSendReminder: L(adminSendReminder_),
+    adminSavePackage: L(adminSavePackage_),
+    adminDeletePackage: L(adminDeletePackage_),
+    adminSellBono: L(adminSellBono_),
+    adminSaveBono: L(adminSaveBono_),
+    adminWaitlist: L(adminWaitlist_),
+    adminEmailPreview: N(adminEmailPreview_),
+    adminEmailTest: N(adminEmailTest_),
+    adminRunAutomations: L(adminRunAutomations_),
   };
   const fn = actions[data.action];
   if (!fn) return json_({ ok: false, error: 'Acción no válida.' });
@@ -291,6 +344,9 @@ function catalog_() {
     reviews: readOpt_('Resenas').filter(function (r) { return !/^no$/i.test(r.visible); })
       .sort(function (a, b) { return (Number(a.orden) || 0) - (Number(b.orden) || 0) || String(b.fecha).localeCompare(String(a.fecha)); })
       .map(function (r) { return { id: r.id, author: r.autora, stars: Number(r.estrellas) || 5, text: r.texto, date: r.fecha }; }),
+    packages: readOpt_('Paquetes').filter(function (k) { return !/^no$/i.test(k.activo) && /^s[ií]$/i.test(k.enWeb); }).map(packageOut_),
+    loyalty: { enabled: on_(s.fidelidadActiva), every: num_(s.fidelidadVisitas, 5), kind: s.fidelidadTipo === 'monto' ? 'monto' : 'porcentaje', value: num_(s.fidelidadValor, 20) },
+    waitlist: { enabled: on_(s.esperaActiva) },
     giftShop: {
       enabled: /^s[ií]$/i.test(s.tarjetasEnLinea || 'si') && !!PropertiesService.getScriptProperties().getProperty('PAYPAL_CLIENT_ID'),
       min: num_(s.tarjetaMin, 500), max: num_(s.tarjetaMax, 30000), validDays: num_(s.tarjetaVenceDias, 365),
@@ -365,11 +421,24 @@ function giftUsable_(g, today) {
 }
 
 /* Calcula el total de una cita: la mejor promoción (automática o código) y la tarjeta de regalo */
-function pricing_(items, code, giftCode) {
+function pricing_(items, code, giftCode, client) {
   const s = settings_();
   const today = todayKey_();
   const subtotal = items.reduce(function (t, x) { return t + x.price; }, 0);
   const promos = promos_(today);
+  // Paquete de sesiones: cubre por completo un servicio de su tipo (los descuentos se calculan sobre el resto)
+  let bono = null, bonoStatus = '', covered = null;
+  if (normCode_(giftCode) && !findGift_(giftCode)) {
+    bono = findBono_(giftCode);
+    if (!bono) { bono = null; }
+    else if (!bonoUsable_(bono, today)) { bonoStatus = 'invalid'; bono = null; }
+    else {
+      covered = items.filter(function (x) { return x.id === bono.servicio; })[0] || null;
+      if (!covered) { bonoStatus = 'notApplicable'; bono = null; } else bonoStatus = 'ok';
+    }
+  }
+  const all = items;
+  items = covered ? items.filter(function (x) { return x !== covered; }) : items;
   // Automáticas: la mejor por servicio
   let auto = 0, autoPromo = null;
   items.forEach(function (it) {
@@ -394,21 +463,33 @@ function pricing_(items, code, giftCode) {
       else codeStatus = 'notBetter';
     }
   }
-  discount = Math.min(discount, subtotal);
+  // Premio de fidelidad: compite con las promociones (se aplica el mayor)
+  const loyal = loyaltyFor_(client, s);
+  let loyalApplied = false;
+  if (loyal && loyal.eligible) {
+    const base = items.reduce(function (t, x) { return t + x.price; }, 0);
+    const ld = loyal.kind === 'monto' ? Math.min(base, Math.round(loyal.value)) : Math.round(base * Math.min(100, loyal.value) / 100);
+    if (ld > discount) { discount = ld; promo = { id: '', nombre: 'Premio de fidelidad' }; loyalApplied = true; codeStatus = codeStatus === 'ok' ? 'notBetter' : codeStatus; }
+  }
+  const coveredPrice = covered ? covered.price : 0;
+  discount = Math.min(discount, subtotal - coveredPrice);
   const total = subtotal - discount;
   let gift = null, giftApplied = 0, giftStatus = '';
-  if (normCode_(giftCode)) {
+  if (bono) { giftApplied = Math.min(coveredPrice, total); giftStatus = 'ok'; }
+  else if (bonoStatus) giftStatus = bonoStatus === 'notApplicable' ? 'notApplicable' : 'invalid';
+  else if (normCode_(giftCode)) {
     gift = findGift_(giftCode);
     if (!giftUsable_(gift, today)) { giftStatus = 'invalid'; gift = null; }
     else { giftApplied = Math.min(Number(gift.saldoRD) || 0, total); giftStatus = 'ok'; }
   }
   const remaining = total - giftApplied;
   // Cada servicio tiene su % de depósito: se usa el promedio ponderado por precio
-  const ratio = depositRatio_(items, num_(s.porcentajeDeposito, 50));
+  const ratio = depositRatio_(items.length ? items : all, num_(s.porcentajeDeposito, 50));
   const depositRD = Math.round(remaining * ratio);
   return {
     subtotal: subtotal, discount: discount, total: total, promo: promo, codeStatus: codeStatus, codeLabel: codeLabel,
     gift: gift, giftApplied: giftApplied, giftStatus: giftStatus, giftBalance: gift ? Number(gift.saldoRD) || 0 : 0,
+    bono: bono, bonoLeft: bono ? (Number(bono.sesiones) || 0) - (Number(bono.usadas) || 0) : 0, loyalApplied: loyalApplied, loyalty: loyal,
     remaining: remaining, depositRD: depositRD, balanceRD: remaining - depositRD,
     depositUSD: usd_(depositRD, num_(s.tasaUSD, 63)), usdRate: num_(s.tasaUSD, 63),
   };
@@ -425,7 +506,7 @@ function checkCode_(d) {
   const ids = (d.services || []).map(function (x) { return typeof x === 'string' ? x : x && x.id; }).filter(Boolean);
   const items = catalogItems_(ids);
   if (!items.length || items.some(function (x) { return !x; })) return { ok: false, error: 'Elige primero tus servicios.' };
-  const p = pricing_(items, d.code, d.giftCode);
+  const p = pricing_(items, d.code, d.giftCode, d.client);
   return { ok: true, pricing: pricingOut_(p) };
 }
 
@@ -434,6 +515,8 @@ function pricingOut_(p) {
     subtotalRD: p.subtotal, discountRD: p.discount, totalRD: p.total,
     promoName: p.promo ? p.promo.nombre : '', codeStatus: p.codeStatus,
     giftAppliedRD: p.giftApplied, giftStatus: p.giftStatus, giftBalanceRD: p.giftBalance,
+    giftKind: p.bono ? 'bono' : (p.gift ? 'tarjeta' : ''), bonoName: p.bono ? p.bono.nombre : '', bonoLeft: p.bonoLeft,
+    loyaltyApplied: p.loyalApplied,
     depositRD: p.depositRD, depositUSD: p.depositUSD.toFixed(2), balanceRD: p.balanceRD, usdRate: p.usdRate,
   };
 }
@@ -468,9 +551,10 @@ function hold_(d) {
   if (conflicts_(start, end, null).length) return { ok: false, error: 'Ese horario acaba de reservarse. Elige otro, por favor.' };
 
   // Montos con promociones y tarjeta de regalo
-  const p = pricing_(items, d.code, d.giftCode);
+  const p = pricing_(items, d.code, d.giftCode, { email: email, phone: phone });
   if (normCode_(d.code) && p.codeStatus === 'invalid') return { ok: false, error: 'Ese código de descuento no es válido o ya venció.' };
-  if (normCode_(d.giftCode) && p.giftStatus === 'invalid') return { ok: false, error: 'Esa tarjeta de regalo no es válida o no tiene saldo.' };
+  if (normCode_(d.giftCode) && p.giftStatus === 'invalid') return { ok: false, error: 'Esa tarjeta o paquete no es válido o no tiene saldo.' };
+  if (normCode_(d.giftCode) && p.giftStatus === 'notApplicable') return { ok: false, error: 'Ese paquete es para otro servicio.' };
 
   const holdMin = num_(s.minutosRetencion, 15);
   const id = 'MJB-' + Utilities.formatDate(start, TZ, 'yyMMdd') + '-' + Utilities.getUuid().slice(0, 6).toUpperCase();
@@ -481,7 +565,9 @@ function hold_(d) {
     servicios: items.map(function (x) { return x.name; }).join(' + '),
     serviciosJson: JSON.stringify(items.map(function (x) { return { id: x.id, name: x.name, price: x.price, durationMinutes: x.durationMinutes }; })),
     subtotalRD: p.subtotal, descuentoRD: p.discount, promoId: p.promo ? p.promo.id : '', codigo: p.codeStatus === 'ok' ? normCode_(d.code) : '',
-    giftCodigo: p.gift ? p.gift.codigo : '', giftRD: p.giftApplied,
+    giftCodigo: p.gift ? p.gift.codigo : '', giftRD: p.gift ? p.giftApplied : 0,
+    bonoCodigo: p.bono ? p.bono.codigo : '', bonoRD: p.bono ? p.giftApplied : 0, fidelidad: p.loyalApplied ? 'si' : '',
+    cumpleanos: monthDay_(c.birthday), firmaToken: Utilities.getUuid().replace(/-/g, '').slice(0, 20),
     totalRD: p.total, depositoRD: p.depositRD, depositoUSD: p.depositUSD.toFixed(2), saldoRD: p.balanceRD,
     clienta: name, telefono: phone, correo: email, nota: notes, tokenHash: hash_(token),
     saldoEstado: p.balanceRD > 0 ? 'pendiente' : 'pagado', retenidaHasta: new Date(Date.now() + holdMin * 60000).toISOString(),
@@ -491,10 +577,13 @@ function hold_(d) {
   // La tarjeta de regalo cubre todo el depósito: se confirma sin PayPal
   if (p.depositRD <= 0) {
     row.estado = 'confirmada';
-    row.metodoDeposito = p.giftApplied ? 'tarjeta de regalo' : '';
+    row.metodoDeposito = p.bono ? 'paquete' : (p.giftApplied ? 'tarjeta de regalo' : '');
     row.depositoPagado = new Date().toISOString();
     row.retenidaHasta = '';
     applyGift_(row, -1);
+    applyBono_(row, -1);
+    saveBirthday_(row);
+    markWaitlistBooked_(row);
     usePromo_(row.promoId);
     row.eventoId = calendarCreate_(row, s);
     appendRow_('Reservas', row);
@@ -553,7 +642,10 @@ function capture_(d) {
   Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
   const s = settings_();
   applyGift_(r, -1);
+  applyBono_(r, -1);
   usePromo_(r.promoId);
+  saveBirthday_(r);
+  markWaitlistBooked_(r);
   patch.saldoRD = r.saldoRD;
   patch.saldoEstado = r.saldoEstado;
   patch.giftRD = r.giftRD;
@@ -644,7 +736,7 @@ function myAppointments_(d) {
   if (!u) return { ok: false, error: 'Tu sesión expiró. Vuelve a iniciar sesión.' };
   const items = rows_().filter(function (r) { return r.correo === u.email && r.estado !== 'retenida' && r.estado !== 'expirada' && r.estado !== 'bloqueo'; })
     .map(publicRow_);
-  return { ok: true, items: items };
+  return { ok: true, items: items, loyalty: loyaltyFor_({ email: u.email }, settings_()) };
 }
 
 /* Citas reservadas como invitada: la web guarda id + clave de gestión */
@@ -671,11 +763,12 @@ function cancel_(d) {
   const patch = { estado: 'cancelada', canceladaEn: new Date().toISOString(), canceladaPor: 'clienta' };
   patch.reembolso = refundable && r.paypalCaptura ? tryRefund_(r.paypalCaptura, r.id + '-refund') : (refundable ? 'sin pago por PayPal' : 'no aplica (menos de ' + num_(s.horasCancelacion, 24) + ' h)');
   if (r.saldoCaptura) patch.reembolso += ' · saldo: ' + tryRefund_(r.saldoCaptura, r.id + '-refund-saldo');
-  if (refundable) applyGift_(r, +1);
+  if (refundable) { applyGift_(r, +1); applyBono_(r, +1); }
   updateRow_(found.index, patch);
   Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
   calendarCancel_(r, s);
   notifyCancelled_(r, s, refundable && /^reembolsado/.test(patch.reembolso));
+  notifyWaitlist_(r.fecha);
   return { ok: true, refunded: refundable && /^reembolsado/.test(patch.reembolso), appointment: publicRow_(r) };
 }
 
@@ -705,6 +798,12 @@ function adminData_(d) {
     expenses: readTable_('Gastos').map(strip_),
     gallery: readOpt_('Galeria').map(strip_),
     reviews: readOpt_('Resenas').map(strip_),
+    packages: readOpt_('Paquetes').map(strip_),
+    bonos: readOpt_('Bonos').filter(function (b) { return b.estado !== 'pendiente'; }).map(strip_),
+    waitlist: readOpt_('Espera').map(strip_),
+    emails: readOpt_('Correos').slice(-200).reverse().map(strip_),
+    automation: automationStatus_(),
+    consentDefault: DEFAULT_CONSENT,
     settings: readTable_('Ajustes').map(function (r) { return { key: r.clave, value: r.valor, help: r['qué es'] || '' }; }),
     services: readTable_('Servicios').map(strip_),
     schedule: schedule_(s),
@@ -735,7 +834,7 @@ function adminUpdate_(d) {
       if (r.estado === 'bloqueo') { patch.canceladaPor = 'bloqueo eliminado'; break; }
       patch.reembolso = d.refund && r.paypalCaptura ? tryRefund_(r.paypalCaptura, r.id + '-refund') : (d.refund ? 'devolver a mano (pago fuera de PayPal)' : 'sin reembolso');
       if (r.saldoCaptura) patch.reembolso += ' · saldo: ' + tryRefund_(r.saldoCaptura, r.id + '-refund-saldo');
-      if (d.refund) applyGift_(r, +1);
+      if (d.refund) { applyGift_(r, +1); applyBono_(r, +1); }
       break;
     default: return { ok: false, error: 'Acción no válida.' };
   }
@@ -745,6 +844,7 @@ function adminUpdate_(d) {
     calendarCancel_(r, s);
     if (d.notify !== false) notifyCancelled_(r, s, /^reembolsado/.test(patch.reembolso || ''), true);
   }
+  if (d.op === 'cancelar') notifyWaitlist_(r.fecha);
   return { ok: true, item: adminRow_(r) };
 }
 
@@ -781,7 +881,7 @@ function adminCreate_(d) {
     depositoPagado: dep > 0 ? now : '', metodoDeposito: depMethod,
     saldoEstado: total - dep > 0 ? 'pendiente' : 'pagado',
     clienta: name, telefono: clean_(c.phone, 30), correo: clean_(c.email, 120).toLowerCase(), nota: clean_(c.notes, 300),
-    tokenHash: hash_(Utilities.getUuid()),
+    tokenHash: hash_(Utilities.getUuid()), firmaToken: Utilities.getUuid().replace(/-/g, '').slice(0, 20),
     origen: clean_(d.origen, 40) || 'estudio', canal: 'dashboard', creadaPor: 'estudio',
   };
   row.eventoId = calendarCreate_(row, s);
@@ -805,11 +905,13 @@ function adminReschedule_(d) {
     if (clash.length) return { ok: false, conflict: true, error: 'Ese horario choca con ' + describeClash_(clash[0]) + '. Puedes moverla igual si lo confirmas.' };
   }
   const before = whenText_(r);
-  const patch = { fecha: d.date, hora: d.time, inicio: start.toISOString(), fin: end.toISOString(), reprogramadaDe: r.fecha + ' ' + r.hora };
+  const oldDate = r.fecha;
+  const patch = { fecha: d.date, hora: d.time, inicio: start.toISOString(), fin: end.toISOString(), reprogramadaDe: r.fecha + ' ' + r.hora, recordatorio: '' };
   updateRow_(found.index, patch);
   Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
   calendarMove_(r, settings_());
   if (d.notify && r.correo) notifyRescheduled_(r, settings_(), before);
+  notifyWaitlist_(oldDate);
   return { ok: true, item: adminRow_(r) };
 }
 
@@ -877,11 +979,14 @@ function adminSaveSettings_(d) {
         activo: /^(no|false)$/i.test(String(sv.activo)) ? 'no' : 'si',
         volverDias: Math.max(0, Math.round(Number(sv.volverDias) || 0)),
         depositoPct: Math.max(0, Math.min(100, Math.round(Number(sv.depositoPct === '' || sv.depositoPct == null ? 50 : sv.depositoPct) || 0))),
+        retoqueDias: Math.max(0, Math.round(Number(sv.retoqueDias) || 0)),
+        consentimiento: /^(si|sí|true)$/i.test(String(sv.consentimiento)) ? 'si' : 'no',
       };
       const r = rows.filter(function (x) { return x.id === id; })[0];
       if (r) updateTable_('Servicios', r._row, patch); else appendRow_('Servicios', patch);
     });
   }
+  SVC_CACHE_ = null; SETTINGS_CACHE_ = null;
   return adminData_(d);
 }
 
@@ -892,7 +997,7 @@ function adminSaveClient_(d) {
   if (!clave) return { ok: false, error: 'Falta la clienta.' };
   const patch = {
     clave: clave, nombre: clean_(d.nombre, 80), telefono: clean_(d.telefono, 30), correo: clean_(d.correo, 120).toLowerCase(),
-    notas: clean_(d.notas, 3000), cumpleanos: isDateKey_(d.cumpleanos) ? d.cumpleanos : '', actualizada: new Date().toISOString(),
+    notas: clean_(d.notas, 3000), cumpleanos: monthDay_(d.cumpleanos), actualizada: new Date().toISOString(),
   };
   const r = readTable_('Clientas').filter(function (x) { return x.clave === clave; })[0];
   if (r) updateTable_('Clientas', r._row, patch); else appendRow_('Clientas', patch);
@@ -1209,27 +1314,654 @@ function giftOut_(g) {
 }
 
 function giftCardHtml_(g, s) {
-  const web = s.webUrl ? '<p style="margin:18px 0 0;font-size:13px;color:#666">Reserva en <a href="' + s.webUrl + '#reservar" style="color:#111">' + esc_(s.webUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')) + '</a> y escribe el código en el resumen de tu cita.</p>' : '';
-  return '<div style="font-family:Georgia,serif;color:#111;max-width:520px;border:2px solid #111;padding:28px;text-align:center">' +
-    '<p style="letter-spacing:.3em;font-size:12px;margin:0">MAJOBELLA</p>' +
-    '<p style="letter-spacing:.25em;font-size:11px;color:#666;margin:18px 0 6px">TARJETA DE REGALO</p>' +
-    '<p style="font-size:44px;margin:0">RD$ ' + money_(g.montoRD) + '</p>' +
-    (g.para ? '<p style="font-style:italic;font-size:18px;margin:10px 0 0">Para ' + esc_(g.para) + (g.comprador ? ' · de ' + esc_(g.comprador) : '') + '</p>' : '') +
-    (g.mensaje ? '<p style="color:#555;margin:12px 0 0">“' + esc_(g.mensaje) + '”</p>' : '') +
-    '<p style="margin:22px 0 0"><span style="display:inline-block;background:#111;color:#fff;padding:12px 22px;font-family:monospace;font-size:22px;letter-spacing:.12em">' + esc_(g.codigo) + '</span></p>' +
-    '<p style="font-size:13px;color:#666;margin:10px 0 0">Válida hasta el ' + esc_(g.vence) + '</p>' + web + '</div>';
+  const F = "Georgia,'Times New Roman',serif";
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:2px solid #111111;margin:4px 0 18px"><tr><td align="center" style="padding:26px 18px;font-family:' + F + ';color:#111111">' +
+    '<p style="margin:0 0 6px;font-size:11px;letter-spacing:4px;color:#6b6b6b">TARJETA DE REGALO</p>' +
+    '<p style="margin:0;font-size:40px;line-height:1.1">RD$ ' + money_(g.montoRD) + '</p>' +
+    (g.para ? '<p style="margin:10px 0 0;font-style:italic;font-size:17px">Para ' + esc_(g.para) + (g.comprador ? ' · de ' + esc_(g.comprador) : '') + '</p>' : '') +
+    (g.mensaje ? '<p style="margin:10px 0 0;color:#555555">“' + esc_(g.mensaje) + '”</p>' : '') +
+    '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:18px auto 0"><tr><td style="background:#111111;padding:12px 22px;font-family:\'Courier New\',monospace;font-size:20px;letter-spacing:4px;color:#ffffff">' + esc_(g.codigo) + '</td></tr></table>' +
+    (g.vence ? '<p style="margin:10px 0 0;font-size:13px;color:#6b6b6b">Válida hasta el ' + esc_(longDate_(g.vence)) + '</p>' : '') +
+    '</td></tr></table>';
 }
 
 function notifyGift_(g, s) {
-  safeMail_(g.correoComprador, 'Tu tarjeta de regalo MAJOBELLA · ' + g.codigo,
-    '<div style="font-family:Georgia,serif;color:#111"><p>¡Gracias por tu compra! Esta es la tarjeta de regalo:</p></div>' + giftCardHtml_(g, s));
+  const card = giftCardHtml_(g, s);
+  const how = 'Se usa escribiendo el código al reservar en la web, en el resumen de la cita.';
+  safeMail_(g.correoComprador, 'Tu tarjeta de regalo MAJOBELLA · ' + g.codigo, layout_(s, {
+    kicker: 'Tarjeta de regalo', title: '¡Gracias por tu compra!', intro: 'Esta es la tarjeta de regalo. Puedes reenviar este correo o compartir el código.',
+    body: card + '<p style="margin:0">' + how + '</p>', cta: { text: 'Ir a la web', url: mailUrl_(s, '#reservar') },
+  }), { tipo: 'tarjeta', ref: g.id });
   if (g.correoPara) {
-    safeMail_(g.correoPara, (g.comprador ? g.comprador + ' te regaló' : 'Te regalaron') + ' una experiencia en MAJOBELLA',
-      '<div style="font-family:Georgia,serif;color:#111"><p>Tienes una tarjeta de regalo para usar en MAJOBELLA Beauty Studio.</p></div>' + giftCardHtml_(g, s));
+    safeMail_(g.correoPara, (g.comprador ? g.comprador + ' te regaló' : 'Te regalaron') + ' una experiencia en MAJOBELLA', layout_(s, {
+      kicker: 'Un regalo para ti', title: (g.para ? g.para + ', tienes' : 'Tienes') + ' un regalo', intro: (g.comprador ? esc_(g.comprador) + ' te regaló' : 'Te regalaron') + ' una tarjeta para usar en MAJOBELLA Beauty Studio.',
+      body: card + '<p style="margin:0">' + how + '</p>', cta: { text: 'Reservar mi cita', url: mailUrl_(s, '#reservar') },
+    }), { tipo: 'tarjeta', ref: g.id });
   }
-  safeMail_(adminTo_(s), 'Tarjeta de regalo vendida en la web · RD$ ' + money_(g.montoRD),
-    '<p>Código: ' + esc_(g.codigo) + '<br>De: ' + esc_(g.comprador || '—') + ' (' + esc_(g.correoComprador) + ')<br>Para: ' + esc_(g.para || '—') + '</p>');
+  safeMail_(adminTo_(s), 'Tarjeta de regalo vendida en la web · RD$ ' + money_(g.montoRD), layout_(s, {
+    kicker: 'Tarjeta vendida', title: 'RD$ ' + money_(g.montoRD),
+    details: [['Código', esc_(g.codigo)], ['De', esc_((g.comprador || '—') + ' · ' + g.correoComprador)], ['Para', esc_(g.para || '—')]],
+    cta: { text: 'Abrir dashboard', url: mailUrl_(s, 'admin.html#promos') },
+  }), { tipo: 'aviso', ref: g.id });
 }
+
+/* =========================================================================
+   Tareas automáticas (disparador cada hora: tareasProgramadas)
+   ========================================================================= */
+
+/** La ejecuta el disparador que crea setup(). También se puede ejecutar a mano desde el editor. */
+function tareasProgramadas() {
+  return locked_(function () { return runAutomations_(); });
+}
+
+function runAutomations_() {
+  SVC_CACHE_ = null; SETTINGS_CACHE_ = null;
+  const s = settings_();
+  const now = new Date();
+  const hour = Number(Utilities.formatDate(now, TZ, 'H'));
+  const daytime = hour >= 8 && hour < 21;
+  const out = { recordatorios: 0, resenas: 0, retoques: 0, cumpleanos: 0, espera: 0 };
+  const rows = rows_();
+  const step = function (key, fn) { try { out[key] = fn(); } catch (e) { out[key] = 'error: ' + msg_(e); } };
+  if (on_(s.recordatorioActivo) && hour >= 7 && hour < 22) step('recordatorios', function () { return sendReminders_(rows, s, now); });
+  if (daytime && on_(s.resenaActiva) && s.googleResenaUrl) step('resenas', function () { return askReviews_(rows, s, now); });
+  if (daytime && on_(s.retoqueActivo)) step('retoques', function () { return retouchNotices_(rows, s); });
+  if (daytime && on_(s.cumpleActivo)) step('cumpleanos', function () { return birthdays_(rows, s); });
+  if (on_(s.esperaActiva)) step('espera', function () { return checkWaitlist_(s, null); });
+  PropertiesService.getScriptProperties().setProperty('LAST_AUTO', JSON.stringify({ at: now.toISOString(), out: out }));
+  return out;
+}
+
+function automationStatus_() {
+  const st = { lastRun: null, trigger: false, quota: null };
+  try { st.lastRun = safeJson_(PropertiesService.getScriptProperties().getProperty('LAST_AUTO'), null); } catch (e) { /* nada */ }
+  try { st.trigger = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === AUTO_TRIGGER; }); } catch (e) { st.trigger = null; }
+  try { st.quota = MailApp.getRemainingDailyQuota(); } catch (e) { /* nada */ }
+  return st;
+}
+
+/* Recordatorio X horas antes (una vez por cita) */
+function sendReminders_(rows, s, now) {
+  const H = num_(s.recordatorioHoras, 24);
+  let n = 0;
+  rows.forEach(function (r) {
+    if (r.estado !== 'confirmada' || r.recordatorio || !r.correo) return;
+    const hoursLeft = (new Date(r.inicio).getTime() - now.getTime()) / 3600000;
+    const age = (now.getTime() - new Date(r.creada || r.depositoPagado || 0).getTime()) / 3600000;
+    if (hoursLeft > H || hoursLeft < 1 || age < 6) return;
+    const m = mailReminder_(r, s);
+    if (safeMail_(r.correo, m.subject, m.html, { tipo: 'recordatorio', ref: r.id })) { updateRow_(r._row, { recordatorio: now.toISOString() }); n++; }
+  });
+  return n;
+}
+
+/* Pedir reseña unas horas después de una cita realizada (una vez cada 120 días por clienta) */
+function askReviews_(rows, s, now) {
+  const H = Math.max(0, Number(String(s.resenaHoras).replace(',', '.')) || 0);
+  const lastAsked = {};
+  rows.forEach(function (r) { if (r.resenaPedida && /^\d{4}-/.test(r.resenaPedida)) { const k = clientKey_(r.correo, r.telefono, r.clienta); if (!lastAsked[k] || r.resenaPedida > lastAsked[k]) lastAsked[k] = r.resenaPedida; } });
+  let n = 0;
+  rows.forEach(function (r) {
+    if (r.estado !== 'completada' || r.resenaPedida || !r.correo) return;
+    const end = new Date(r.fin).getTime();
+    if (now.getTime() < end + H * 3600000 || now.getTime() > end + 7 * 86400000) return;
+    const k = clientKey_(r.correo, r.telefono, r.clienta);
+    if (lastAsked[k] && now.getTime() - new Date(lastAsked[k]).getTime() < 120 * 86400000) { updateRow_(r._row, { resenaPedida: 'no (pedida hace poco)' }); return; }
+    const m = mailReview_(r, s);
+    if (safeMail_(r.correo, m.subject, m.html, { tipo: 'resena', ref: r.id })) { updateRow_(r._row, { resenaPedida: now.toISOString() }); lastAsked[k] = now.toISOString(); n++; }
+  });
+  return n;
+}
+
+/* Aviso de retoque una semana antes de la fecha ideal (días por servicio en "Servicios") */
+function retouchNotices_(rows, s) {
+  const svcs = servicesMap_();
+  const today = todayKey_();
+  let n = 0;
+  rows.forEach(function (r) {
+    if (r.estado !== 'completada' || r.retoqueAviso || !r.correo) return;
+    const ids = safeJson_(r.serviciosJson, []).map(function (x) { return x.id; });
+    const svc = ids.map(function (id) { return svcs[id]; }).filter(function (x) { return x && x.retoqueDays > 0; })[0];
+    if (!svc) return;
+    const ideal = addDaysKey_(r.fecha, svc.retoqueDays);
+    if (today < addDaysKey_(ideal, -7)) return;
+    const k = clientKey_(r.correo, r.telefono, r.clienta);
+    const booked = rows.some(function (x) {
+      return x.id !== r.id && x.fecha > r.fecha && ['confirmada', 'completada', 'retenida'].indexOf(x.estado) >= 0 &&
+        clientKey_(x.correo, x.telefono, x.clienta) === k && safeJson_(x.serviciosJson, []).some(function (y) { return y.id === svc.id; });
+    });
+    if (booked) { updateRow_(r._row, { retoqueAviso: 'no (ya reservó)' }); return; }
+    if (today > addDaysKey_(ideal, 21)) { updateRow_(r._row, { retoqueAviso: 'no (pasó la fecha)' }); return; }
+    const m = mailRetouch_(r, s, svc, ideal);
+    if (safeMail_(r.correo, m.subject, m.html, { tipo: 'retoque', ref: r.id })) { updateRow_(r._row, { retoqueAviso: new Date().toISOString() }); n++; }
+  });
+  return n;
+}
+
+/* Cumpleaños: código de un solo uso con el % de Ajustes */
+function birthdays_(rows, s) {
+  const today = todayKey_();
+  const md = today.slice(5);
+  const year = today.slice(0, 4);
+  let n = 0;
+  readOpt_('Clientas').forEach(function (c) {
+    if (monthDay_(c.cumpleanos) !== md || String(c.cumpleEnviado) === year) return;
+    let email = c.correo;
+    if (!email) {
+      const last = rows.filter(function (r) { return r.correo && clientKey_(r.correo, r.telefono, r.clienta) === c.clave; }).pop();
+      email = last ? last.correo : '';
+    }
+    if (!email) return;
+    const pct = num_(s.cumpleDescuento, 15);
+    const until = addDaysKey_(today, num_(s.cumpleDias, 30));
+    let code = '';
+    for (let i = 0; i < 6 && (!code || codeTaken_(code)); i++) code = 'CUMPLE-' + randCode_(5);
+    appendRow_('Promociones', {
+      id: 'PRM-' + Utilities.getUuid().slice(0, 6).toUpperCase(), nombre: 'Cumpleaños de ' + (c.nombre || 'clienta'), tipo: 'codigo', codigo: code,
+      servicios: 'todos', descuentoTipo: 'porcentaje', valor: pct, desde: today, hasta: until, usosMax: 1, usos: 0, activo: 'si', creada: new Date().toISOString(),
+    });
+    const m = mailBirthday_(c.nombre, s, code, pct, until);
+    safeMail_(email, m.subject, m.html, { tipo: 'cumpleanos', ref: c.clave });
+    updateTable_('Clientas', c._row, { cumpleEnviado: year });
+    n++;
+  });
+  return n;
+}
+
+function codeTaken_(code) {
+  const c = normCode_(code);
+  return !!findGift_(c) || !!findBono_(c) || readTable_('Promociones').some(function (x) { return normCode_(x.codigo) === c; });
+}
+
+/* Guarda el cumpleaños de la reserva en la ficha de la clienta */
+function saveBirthday_(r) {
+  const md = monthDay_(r.cumpleanos);
+  if (!md) return;
+  try {
+    const key = clientKey_(r.correo, r.telefono, r.clienta);
+    const c = readTable_('Clientas').filter(function (x) { return x.clave === key; })[0];
+    if (c) { if (monthDay_(c.cumpleanos) !== md) updateTable_('Clientas', c._row, { cumpleanos: md, actualizada: new Date().toISOString() }); }
+    else appendRow_('Clientas', { clave: key, nombre: r.clienta, telefono: r.telefono, correo: r.correo, notas: '', cumpleanos: md, actualizada: new Date().toISOString() });
+  } catch (e) { /* no debe romper la reserva */ }
+}
+
+/* Acepta "MM-DD", "AAAA-MM-DD" o "DD/MM" y devuelve "MM-DD" */
+function monthDay_(v) {
+  const t = String(v == null ? '' : v).trim();
+  let m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return m[2] + '-' + m[3];
+  m = t.match(/^(\d{1,2})-(\d{1,2})$/);
+  if (m) return valid_(Number(m[1]), Number(m[2]));
+  m = t.match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (m) return valid_(Number(m[2]), Number(m[1]));
+  return '';
+  function valid_(mo, d) { return mo >= 1 && mo <= 12 && d >= 1 && d <= 31 ? ('0' + mo).slice(-2) + '-' + ('0' + d).slice(-2) : ''; }
+}
+
+/* =========================================================================
+   Lista de espera
+   ========================================================================= */
+
+function waitlistJoin_(d) {
+  const s = settings_();
+  if (!on_(s.esperaActiva)) return { ok: false, error: 'La lista de espera no está disponible.' };
+  const c = d.client || {};
+  const name = clean_(c.name, 80), phone = clean_(c.phone, 30), email = clean_(c.email, 120).toLowerCase();
+  if (name.length < 2 || phone.replace(/\D/g, '').length < 10 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { ok: false, error: 'Revisa tu nombre, teléfono y correo.' };
+  const sch = schedule_(s);
+  const today = todayKey_();
+  if (!isDateKey_(d.date) || d.date < today || d.date > addDaysKey_(today, sch.maxDays)) return { ok: false, error: 'Elige un día dentro de la agenda.' };
+  const ids = (d.services || []).map(function (x) { return typeof x === 'string' ? x : x && x.id; }).filter(Boolean);
+  const items = catalogItems_(ids);
+  if (!items.length || items.some(function (x) { return !x; })) return { ok: false, error: 'Elige primero tus servicios.' };
+  const minutes = items.reduce(function (t, x) { return t + x.durationMinutes; }, 0);
+  const franja = ['manana', 'tarde'].indexOf(d.franja) >= 0 ? d.franja : 'cualquiera';
+  const free = freeSlots_(d.date, minutes, franja, s);
+  const dup = readOpt_('Espera').filter(function (w) { return w.fecha === d.date && w.correo === email && w.estado === 'esperando'; })[0];
+  if (dup) return { ok: true, id: dup.id, already: true, available: free };
+  const row = {
+    id: 'ESP-' + Utilities.getUuid().slice(0, 6).toUpperCase(), fecha: d.date, franja: franja,
+    serviciosJson: JSON.stringify(items.map(function (x) { return { id: x.id, name: x.name }; })), servicios: items.map(function (x) { return x.name; }).join(' + '),
+    duracionMin: minutes, clienta: name, telefono: phone, correo: email, estado: 'esperando', creada: new Date().toISOString(), avisada: '',
+  };
+  appendRow_('Espera', row);
+  return { ok: true, id: row.id, available: free };
+}
+
+/* Horarios libres de un día para una duración (franja: manana | tarde | cualquiera) */
+function freeSlots_(date, minutes, franja, s) {
+  const sch = schedule_(s || settings_());
+  if (sch.blocked.indexOf(date) >= 0) return [];
+  const p = date.split('-').map(Number);
+  const h = sch.hours[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()];
+  if (!h) return [];
+  const busy = (busy_(date, date).busy || []).map(function (b) { return [new Date(b.start).getTime(), new Date(b.end).getTime()]; });
+  const out = [];
+  const earliest = Date.now() + sch.minNotice * 3600000;
+  for (let t = toMin_(h.open); t + minutes <= toMin_(h.close); t += sch.step) {
+    const hhmm = pad_(Math.floor(t / 60)) + ':' + pad_(t % 60);
+    if (franja === 'manana' && t >= 720) continue;
+    if (franja === 'tarde' && t < 720) continue;
+    const a = new Date(date + 'T' + hhmm + ':00' + UTC_OFFSET).getTime(), b = a + minutes * 60000;
+    if (a < earliest) continue;
+    if (busy.some(function (x) { return x[0] < b && x[1] > a; })) continue;
+    out.push(hhmm);
+  }
+  return out;
+}
+
+/* Avisa a quien espera un día cuando hay horario libre (date = null revisa todos) */
+function checkWaitlist_(s, date) {
+  const today = todayKey_();
+  let n = 0;
+  readOpt_('Espera').forEach(function (w) {
+    if (w.estado !== 'esperando') return;
+    if (w.fecha < today) { updateTable_('Espera', w._row, { estado: 'vencida' }); return; }
+    if (date && w.fecha !== date) return;
+    const slots = freeSlots_(w.fecha, Number(w.duracionMin) || 30, w.franja, s);
+    if (!slots.length) return;
+    const m = mailWaitlist_(w, s, slots);
+    if (safeMail_(w.correo, m.subject, m.html, { tipo: 'espera', ref: w.id })) { updateTable_('Espera', w._row, { estado: 'avisada', avisada: new Date().toISOString() }); n++; }
+  });
+  return n;
+}
+function notifyWaitlist_(date) {
+  try { const s = settings_(); if (on_(s.esperaActiva) && isDateKey_(date)) checkWaitlist_(s, date); } catch (e) { /* no debe romper la cancelación */ }
+}
+function markWaitlistBooked_(r) {
+  try {
+    readOpt_('Espera').forEach(function (w) {
+      if (w.fecha === r.fecha && w.correo && w.correo === r.correo && (w.estado === 'esperando' || w.estado === 'avisada')) updateTable_('Espera', w._row, { estado: 'reservo' });
+    });
+  } catch (e) { /* nada */ }
+}
+
+function adminWaitlist_(d) {
+  needAdmin_(d);
+  const w = readOpt_('Espera').filter(function (x) { return x.id === d.id; })[0];
+  if (!w) return { ok: false, error: 'No encontramos esa persona en la lista.' };
+  if (d.op === 'eliminar') { deleteRow_('Espera', w._row); return { ok: true, removed: true }; }
+  const estado = ['esperando', 'avisada', 'reservo', 'cancelada'].indexOf(d.estado) >= 0 ? d.estado : w.estado;
+  updateTable_('Espera', w._row, { estado: estado });
+  w.estado = estado;
+  return { ok: true, item: strip_(w) };
+}
+
+/* =========================================================================
+   Fidelidad: cada N visitas realizadas, la siguiente cita tiene premio
+   ========================================================================= */
+
+function loyaltyFor_(client, s) {
+  if (!client || !on_(s.fidelidadActiva)) return null;
+  const email = String(client.email || '').trim().toLowerCase();
+  const phone = String(client.phone || '').replace(/\D/g, '').slice(-10);
+  if (!email && phone.length < 10) return null;
+  const mine = rows_().filter(function (r) {
+    return (email && String(r.correo).toLowerCase() === email) || (phone.length === 10 && String(r.telefono).replace(/\D/g, '').slice(-10) === phone);
+  }).sort(function (a, b) { return String(a.inicio).localeCompare(String(b.inicio)); });
+  let since = '';
+  mine.forEach(function (r) {
+    if (r.fidelidad === 'si' && ['confirmada', 'completada', 'no-asistio'].indexOf(r.estado) >= 0) since = r.inicio;
+  });
+  const every = num_(s.fidelidadVisitas, 5);
+  const visits = mine.filter(function (r) { return r.estado === 'completada' && (!since || r.inicio > since); }).length;
+  return { enabled: true, every: every, visits: Math.min(visits, every), eligible: visits >= every, kind: s.fidelidadTipo === 'monto' ? 'monto' : 'porcentaje', value: num_(s.fidelidadValor, 20) };
+}
+
+/* La web pregunta si la clienta tiene el premio (solo dice si aplica, no cuántas visitas lleva) */
+function loyalty_(d) {
+  const l = loyaltyFor_(d.client || {}, settings_());
+  if (!l) return { ok: true, enabled: false };
+  return { ok: true, enabled: true, eligible: l.eligible, every: l.every, kind: l.kind, value: l.value };
+}
+
+/* =========================================================================
+   Paquetes de sesiones (bonos)
+   ========================================================================= */
+
+function findBono_(code) {
+  const c = normCode_(code);
+  if (!c) return null;
+  return readOpt_('Bonos').filter(function (b) { return normCode_(b.codigo) === c; })[0] || null;
+}
+function bonoUsable_(b, today) {
+  if (!b || b.estado !== 'activo') return false;
+  if (b.vence && today > b.vence) return false;
+  return (Number(b.usadas) || 0) < (Number(b.sesiones) || 0);
+}
+/* Usa (sign = -1) o devuelve (sign = +1) una sesión del paquete de una cita */
+function applyBono_(r, sign) {
+  if (!r.bonoCodigo) return;
+  const b = findBono_(r.bonoCodigo);
+  if (!b) return;
+  const used = Math.max(0, (Number(b.usadas) || 0) - sign);
+  const patch = { usadas: used };
+  if (b.estado !== 'anulado') patch.estado = used >= (Number(b.sesiones) || 0) ? 'agotado' : 'activo';
+  updateTable_('Bonos', b._row, patch);
+}
+
+function packageOut_(k) {
+  const svc = servicesMap_()[k.servicio];
+  const sessions = Number(k.sesiones) || 0, price = Number(k.precioRD) || 0;
+  const regular = svc ? svc.price * sessions : 0;
+  return {
+    id: k.id, name: k.nombre, service: k.servicio, serviceName: svc ? svc.name : k.servicio, sessions: sessions, price: price,
+    validDays: Number(k.venceDias) || 0, description: k.descripcion || '', regular: regular, savings: Math.max(0, regular - price),
+  };
+}
+
+function newBonoCode_() {
+  let code = '';
+  for (let i = 0; i < 6 && (!code || codeTaken_(code)); i++) code = 'PAQ-' + randCode_(4) + '-' + randCode_(4);
+  return code;
+}
+
+function adminSavePackage_(d) {
+  needAdmin_(d);
+  const k = d.pkg || {};
+  const nombre = clean_(k.nombre, 80);
+  if (!nombre) return { ok: false, error: 'Ponle un nombre al paquete.' };
+  if (!servicesMap_()[k.servicio]) return { ok: false, error: 'Elige el servicio del paquete.' };
+  const sesiones = Math.round(Number(k.sesiones) || 0), precio = Math.round(Number(k.precioRD) || 0);
+  if (sesiones < 1 || sesiones > 50) return { ok: false, error: 'Revisa el número de sesiones.' };
+  if (precio <= 0) return { ok: false, error: 'Escribe el precio del paquete.' };
+  const patch = {
+    id: k.id || ('PKG-' + Utilities.getUuid().slice(0, 6).toUpperCase()), nombre: nombre, servicio: k.servicio, sesiones: sesiones, precioRD: precio,
+    venceDias: Math.max(0, Math.round(Number(k.venceDias) || 0)), descripcion: clean_(k.descripcion, 300),
+    enWeb: /^(no|false)$/i.test(String(k.enWeb)) ? 'no' : 'si', activo: /^(no|false)$/i.test(String(k.activo)) ? 'no' : 'si',
+  };
+  const r = readTable_('Paquetes').filter(function (x) { return x.id === patch.id; })[0];
+  if (r) updateTable_('Paquetes', r._row, patch); else { patch.creada = new Date().toISOString(); appendRow_('Paquetes', patch); }
+  return { ok: true, pkg: patch };
+}
+
+function adminDeletePackage_(d) {
+  needAdmin_(d);
+  const r = readTable_('Paquetes').filter(function (x) { return x.id === d.id; })[0];
+  if (!r) return { ok: false, error: 'No encontramos ese paquete.' };
+  deleteRow_('Paquetes', r._row);
+  return { ok: true };
+}
+
+function createBono_(k, c, extra) {
+  const today = todayKey_();
+  const row = {
+    id: 'BON-' + Utilities.getUuid().slice(0, 6).toUpperCase(), codigo: extra.codigo || '', paqueteId: k.id, nombre: k.nombre, servicio: k.servicio,
+    sesiones: Number(k.sesiones) || 1, usadas: 0, clienta: clean_(c.name, 80), telefono: clean_(c.phone, 30), correo: clean_(c.email, 120).toLowerCase(),
+    montoRD: extra.montoRD != null ? extra.montoRD : Number(k.precioRD) || 0, metodoPago: extra.metodoPago || 'efectivo',
+    vendida: extra.estado === 'pendiente' ? '' : today, vence: extra.estado === 'pendiente' ? '' : (Number(k.venceDias) > 0 ? addDaysKey_(today, Number(k.venceDias)) : ''),
+    estado: extra.estado || 'activo', paypalOrden: extra.paypalOrden || '', creada: new Date().toISOString(),
+  };
+  appendRow_('Bonos', row);
+  return row;
+}
+
+function adminSellBono_(d) {
+  needAdmin_(d);
+  const k = readTable_('Paquetes').filter(function (x) { return x.id === d.paqueteId; })[0];
+  if (!k) return { ok: false, error: 'Elige un paquete.' };
+  const c = d.client || {};
+  if (clean_(c.name, 80).length < 2) return { ok: false, error: 'Escribe el nombre de la clienta.' };
+  const monto = d.montoRD !== '' && d.montoRD != null ? Math.max(0, Math.round(Number(d.montoRD) || 0)) : Number(k.precioRD) || 0;
+  const row = createBono_(k, c, { codigo: newBonoCode_(), montoRD: monto, metodoPago: ['efectivo', 'transferencia', 'paypal', 'cortesia'].indexOf(d.metodoPago) >= 0 ? d.metodoPago : 'efectivo' });
+  if (d.notify && row.correo) { const m = mailBono_(row, settings_()); safeMail_(row.correo, m.subject, m.html, { tipo: 'paquete', ref: row.id }); }
+  return { ok: true, bono: strip_(row) };
+}
+
+function adminSaveBono_(d) {
+  needAdmin_(d);
+  const b = readTable_('Bonos').filter(function (x) { return x.id === d.id; })[0];
+  if (!b) return { ok: false, error: 'No encontramos ese paquete.' };
+  const patch = {};
+  if (d.usadas != null) patch.usadas = Math.max(0, Math.min(Number(b.sesiones) || 0, Math.round(Number(d.usadas) || 0)));
+  if (d.vence != null) patch.vence = isDateKey_(d.vence) ? d.vence : '';
+  const used = patch.usadas != null ? patch.usadas : Number(b.usadas) || 0;
+  if (d.estado === 'anulado') patch.estado = 'anulado';
+  else if (d.estado === 'activo' || b.estado !== 'anulado') patch.estado = used >= (Number(b.sesiones) || 0) ? 'agotado' : 'activo';
+  updateTable_('Bonos', b._row, patch);
+  Object.keys(patch).forEach(function (k) { b[k] = patch[k]; });
+  return { ok: true, bono: strip_(b) };
+}
+
+/* Compra de un paquete en la web (PayPal) */
+function bonoOrder_(d) {
+  const s = settings_();
+  const k = readOpt_('Paquetes').filter(function (x) { return x.id === d.paqueteId && !/^no$/i.test(x.activo) && /^s[ií]$/i.test(x.enWeb); })[0];
+  if (!k) return { ok: false, error: 'Ese paquete ya no está disponible.' };
+  const c = d.client || {};
+  if (clean_(c.name, 80).length < 2 || clean_(c.phone, 30).replace(/\D/g, '').length < 10 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clean_(c.email, 120))) return { ok: false, error: 'Revisa tu nombre, teléfono y correo.' };
+  const rate = num_(s.tasaUSD, 63);
+  const usd = usd_(Number(k.precioRD) || 0, rate);
+  const id = 'BON-' + Utilities.getUuid().slice(0, 6).toUpperCase();
+  const order = paypal_('post', '/v2/checkout/orders', {
+    intent: 'CAPTURE',
+    purchase_units: [{ reference_id: id, custom_id: id, invoice_id: id, description: ('Paquete MAJOBELLA · ' + k.nombre).slice(0, 127), amount: { currency_code: 'USD', value: usd.toFixed(2) } }],
+    application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+  }, id + '-order');
+  const row = createBono_(k, c, { estado: 'pendiente', metodoPago: 'paypal', paypalOrden: order.id });
+  return { ok: true, id: row.id, orderId: order.id, montoUSD: usd.toFixed(2), usdRate: rate };
+}
+
+function bonoCapture_(d) {
+  const b = readTable_('Bonos').filter(function (x) { return x.id === d.id; })[0];
+  if (!b || b.paypalOrden !== d.orderId) return { ok: false, error: 'No encontramos esa compra.' };
+  if (b.estado !== 'pendiente' && b.paypalCaptura) return { ok: true, bono: bonoOut_(b) };
+  const cap = firstCapture_(paypal_('post', '/v2/checkout/orders/' + encodeURIComponent(d.orderId) + '/capture', {}, b.id + '-capture'));
+  if (!cap || cap.status !== 'COMPLETED') return { ok: false, error: 'PayPal no completó el pago. No se te cobró.' };
+  const k = readTable_('Paquetes').filter(function (x) { return x.id === b.paqueteId; })[0] || {};
+  const today = todayKey_();
+  const patch = { codigo: newBonoCode_(), estado: 'activo', vendida: today, vence: Number(k.venceDias) > 0 ? addDaysKey_(today, Number(k.venceDias)) : '', paypalCaptura: cap.id };
+  updateTable_('Bonos', b._row, patch);
+  Object.keys(patch).forEach(function (x) { b[x] = patch[x]; });
+  const s = settings_();
+  const m = mailBono_(b, s);
+  safeMail_(b.correo, m.subject, m.html, { tipo: 'paquete', ref: b.id });
+  safeMail_(adminTo_(s), 'Paquete vendido en la web · ' + b.nombre, layout_(s, {
+    kicker: 'Paquete vendido', title: b.clienta,
+    details: [['Paquete', esc_(b.nombre)], ['Monto', 'RD$ ' + money_(b.montoRD)], ['Código', esc_(b.codigo)], ['Teléfono', esc_(b.telefono)], ['Correo', esc_(b.correo)]],
+    cta: { text: 'Abrir dashboard', url: mailUrl_(s, 'admin.html#promos') },
+  }), { tipo: 'aviso', ref: b.id });
+  return { ok: true, bono: bonoOut_(b) };
+}
+function bonoOut_(b) {
+  const svc = servicesMap_()[b.servicio];
+  return { codigo: b.codigo, nombre: b.nombre, sesiones: Number(b.sesiones) || 0, servicio: b.servicio, serviceName: svc ? svc.name : b.servicio, vence: b.vence };
+}
+
+/* =========================================================================
+   Consentimiento digital
+   ========================================================================= */
+
+const CONSENT_QUESTIONS = [
+  { id: 'embarazo', text: '¿Estás embarazada o en período de lactancia?' },
+  { id: 'alergias', text: '¿Tienes alergias (medicamentos, látex, anestesia, pigmentos, cosméticos)?', detail: true },
+  { id: 'medicamentos', text: '¿Tomas algún medicamento? (por ejemplo anticoagulantes, aspirina, isotretinoína/Roaccutane, antibióticos)', detail: true },
+  { id: 'salud', text: '¿Tienes diabetes, problemas de coagulación, hipertensión o alguna enfermedad autoinmune?', detail: true },
+  { id: 'cicatrizacion', text: '¿Tienes tendencia a cicatrices queloides o problemas de cicatrización?' },
+  { id: 'piel', text: '¿Tienes alguna condición en la piel de la zona (acné activo, dermatitis, herpes, irritación)?', detail: true },
+  { id: 'procedimientos', text: '¿Te hiciste en los últimos 30 días peeling, láser, bótox o rellenos en la zona?', detail: true },
+  { id: 'lentes', text: '¿Usas lentes de contacto?' },
+];
+const DEFAULT_CONSENT = [
+  'Declaro que la información que di sobre mi salud es verdadera y completa, y que avisaré al estudio de cualquier cambio antes del servicio.',
+  'Me explicaron en qué consiste el servicio, los cuidados antes y después, y los resultados que puedo esperar. Entiendo que el resultado depende de mi tipo de piel, de mi salud y de que siga los cuidados indicados, y que puede necesitar un retoque.',
+  'Conozco las posibles reacciones, como enrojecimiento, inflamación o sensibilidad y, con menos frecuencia, reacciones alérgicas, y me comprometo a avisar al estudio si se presentan.',
+  'Autorizo a MAJOBELLA Beauty Studio a realizar el servicio y a tomar fotos de antes y después para mi ficha, que se guardan de forma privada.',
+  'Pude hacer todas las preguntas que necesité y puedo retirar este consentimiento antes de que empiece el servicio.',
+].join('\n\n');
+
+function consentText_(s) { return String(s.consentimientoTexto || '').trim() || DEFAULT_CONSENT; }
+
+function consentState_(r) {
+  const svcs = servicesMap_();
+  const needed = safeJson_(r.serviciosJson, []).some(function (x) { return svcs[x.id] && svcs[x.id].consent; });
+  const url = needed && r.firmaToken ? mailUrl_(settingsCached_(), 'consentimiento.html?c=' + encodeURIComponent(r.id + '.' + r.firmaToken)) : '';
+  return { needed: needed, signed: !!r.consentimiento, signedAt: r.consentimiento || '', url: url };
+}
+
+function consentRow_(c) {
+  const parts = String(c || '').split('.');
+  if (parts.length !== 2) return null;
+  const found = findRow_(parts[0]);
+  if (!found || !found.row.firmaToken || found.row.firmaToken !== parts[1]) return null;
+  return found;
+}
+
+function consentInfo_(d) {
+  const found = consentRow_(d.c);
+  if (!found) return { ok: false, error: 'Este enlace no es válido. Pídenos uno nuevo por WhatsApp.' };
+  const r = found.row;
+  if (['confirmada', 'completada'].indexOf(r.estado) < 0) return { ok: false, error: 'Esta cita no está activa.' };
+  const s = settings_();
+  return {
+    ok: true, id: r.id, name: r.clienta, services: r.servicios, when: whenText_(r), signed: !!r.consentimiento, signedAt: r.consentimiento || '',
+    text: consentText_(s), questions: CONSENT_QUESTIONS, studio: s.direccion || '',
+  };
+}
+
+function consentSign_(d) {
+  const found = consentRow_(d.c);
+  if (!found) return { ok: false, error: 'Este enlace no es válido. Pídenos uno nuevo por WhatsApp.' };
+  const r = found.row;
+  if (['confirmada', 'completada'].indexOf(r.estado) < 0) return { ok: false, error: 'Esta cita no está activa.' };
+  if (r.consentimiento) return { ok: false, error: 'Ya firmaste el consentimiento de esta cita.' };
+  const name = clean_(d.name, 100);
+  if (name.length < 3) return { ok: false, error: 'Escribe tu nombre completo.' };
+  if (!d.accept) return { ok: false, error: 'Debes aceptar el consentimiento para firmarlo.' };
+  const sig = String(d.signature || '');
+  if (!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(sig) || sig.length < 1500 || sig.length > 1500000) return { ok: false, error: 'Dibuja tu firma en el recuadro.' };
+  const answers = d.answers || {};
+  const missing = CONSENT_QUESTIONS.filter(function (q) { return ['si', 'no'].indexOf((answers[q.id] || {}).value) < 0; });
+  if (missing.length) return { ok: false, error: 'Responde todas las preguntas de salud.' };
+  const s = settings_();
+  const when = new Date();
+  const fotos = d.photos === 'si' ? 'si' : 'no';
+  const html = consentPdfHtml_(r, s, name, answers, clean_(d.extra, 600), fotos, sig, when);
+  let blob;
+  try { blob = Utilities.newBlob(html, 'text/html', 'consentimiento.html').getAs('application/pdf'); }
+  catch (e) { blob = Utilities.newBlob(html, 'text/html', 'consentimiento.html'); }
+  const isPdf = blob.getContentType() === 'application/pdf';
+  const fname = 'Consentimiento ' + r.fecha + ' · ' + r.clienta + (isPdf ? '.pdf' : '.html');
+  blob.setName(fname);
+  const key = clientKey_(r.correo, r.telefono, r.clienta);
+  const file = filesFolder_().createFile(blob);
+  const arc = {
+    id: 'ARC-' + Utilities.getUuid().slice(0, 8).toUpperCase(), clave: key, tipo: 'consentimiento', nombre: fname, mime: isPdf ? 'application/pdf' : 'text/html',
+    driveId: file.getId(), citaId: r.id, fecha: r.fecha, nota: 'Firmado en la web', creada: when.toISOString(),
+  };
+  appendRow_('Archivos', arc);
+  updateRow_(found.index, { consentimiento: when.toISOString(), consentimientoArchivo: arc.id, permisoFotos: fotos });
+  r.consentimiento = when.toISOString();
+  if (r.correo) { const m = mailConsentCopy_(r, s); safeMail_(r.correo, m.subject, m.html, { tipo: 'consentimiento', ref: r.id, attachments: [blob] }); }
+  return { ok: true, signedAt: r.consentimiento };
+}
+
+function consentPdfHtml_(r, s, name, answers, extra, fotos, sig, when) {
+  const F = "Georgia,'Times New Roman',serif";
+  const qs = CONSENT_QUESTIONS.map(function (q) {
+    const a = answers[q.id] || {};
+    return '<tr><td style="padding:7px 8px 7px 0;border-bottom:1px solid #ddd">' + esc_(q.text) + '</td><td style="padding:7px 0;border-bottom:1px solid #ddd;width:34%"><b>' + (a.value === 'si' ? 'Sí' : 'No') + '</b>' +
+      (a.value === 'si' && a.detail ? ' · ' + esc_(clean_(a.detail, 300)) : '') + '</td></tr>';
+  }).join('');
+  const text = consentText_(s).split(/\n\s*\n/).map(function (p) { return '<p style="margin:0 0 10px">' + esc_(p.trim()) + '</p>'; }).join('');
+  const stamp = Utilities.formatDate(when, TZ, "d/M/yyyy, h:mm a");
+  return '<html><head><meta charset="utf-8"></head><body style="font-family:' + F + ';color:#111;font-size:12px;line-height:1.5;margin:28px">' +
+    '<p style="margin:0;font-size:22px;letter-spacing:6px">MAJOBELLA</p><p style="margin:0 0 18px;font-size:10px;letter-spacing:4px;color:#666">BEAUTY STUDIO</p>' +
+    '<h1 style="font-weight:normal;font-size:20px;margin:0 0 12px;border-top:1px solid #111;padding-top:12px">Consentimiento informado</h1>' +
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:14px">' +
+    '<tr><td style="color:#666;width:30%">Clienta</td><td>' + esc_(name) + '</td></tr>' +
+    '<tr><td style="color:#666">Teléfono · correo</td><td>' + esc_(r.telefono || '—') + ' · ' + esc_(r.correo || '—') + '</td></tr>' +
+    '<tr><td style="color:#666">Servicio</td><td>' + esc_(r.servicios) + '</td></tr>' +
+    '<tr><td style="color:#666">Cita</td><td>' + esc_(whenText_(r)) + ' · ' + esc_(r.id) + '</td></tr></table>' +
+    '<h2 style="font-weight:normal;font-size:15px;margin:14px 0 6px">Cuestionario de salud</h2><table style="width:100%;border-collapse:collapse">' + qs + '</table>' +
+    (extra ? '<p style="margin:8px 0 0"><span style="color:#666">Otros datos:</span> ' + esc_(extra) + '</p>' : '') +
+    '<h2 style="font-weight:normal;font-size:15px;margin:16px 0 6px">Consentimiento</h2>' + text +
+    '<p style="margin:6px 0 0"><span style="color:#666">Publicar mis fotos de antes y después en la web y redes, sin mi nombre:</span> <b>' + (fotos === 'si' ? 'Sí autorizo' : 'No autorizo') + '</b></p>' +
+    '<div style="margin-top:18px;border-top:1px solid #111;padding-top:10px"><img src="' + sig + '" style="height:90px"><p style="margin:4px 0 0">' + esc_(name) + '</p>' +
+    '<p style="margin:2px 0 0;color:#666;font-size:10px">Firmado electrónicamente en la web de MAJOBELLA el ' + esc_(stamp) + ' (hora de Santo Domingo).</p></div>' +
+    '</body></html>';
+}
+
+/* =========================================================================
+   Dashboard: recordatorio manual, vista previa y prueba de correos
+   ========================================================================= */
+
+function adminSendReminder_(d) {
+  needAdmin_(d);
+  const found = findRow_(d.id);
+  if (!found) return { ok: false, error: 'No encontramos esa cita.' };
+  const r = found.row;
+  if (r.estado !== 'confirmada') return { ok: false, error: 'Solo se recuerdan citas confirmadas.' };
+  if (!r.correo) return { ok: false, error: 'Esta clienta no tiene correo. Usa el recordatorio por WhatsApp.' };
+  const m = mailReminder_(r, settings_());
+  if (!safeMail_(r.correo, m.subject, m.html, { tipo: 'recordatorio', ref: r.id })) return { ok: false, error: 'No se pudo enviar el correo. Revisa el límite diario de Gmail.' };
+  updateRow_(found.index, { recordatorio: new Date().toISOString() });
+  r.recordatorio = new Date().toISOString();
+  return { ok: true, item: adminRow_(r) };
+}
+
+function sampleRow_(s, email) {
+  const date = addDaysKey_(todayKey_(), 1);
+  return {
+    id: 'MJB-EJEMPLO', estado: 'confirmada', fecha: date, hora: '10:00', inicio: date + 'T14:00:00.000Z', fin: date + 'T16:30:00.000Z', duracionMin: 150,
+    servicios: 'Micropigmentación', serviciosJson: JSON.stringify([{ id: 'micropigmentacion', name: 'Micropigmentación', price: 12000 }]),
+    subtotalRD: 12000, descuentoRD: 0, totalRD: 12000, depositoRD: 6000, depositoUSD: '95.24', saldoRD: 6000, metodoDeposito: 'paypal', paypalCaptura: 'X',
+    clienta: 'Ana Pérez', telefono: '809 555 0000', correo: email, firmaToken: 'ejemplo', reembolso: 'reembolsado (ejemplo)',
+  };
+}
+
+function emailSample_(tipo, s, email) {
+  const r = sampleRow_(s, email);
+  const svc = { id: 'micropigmentacion', name: 'Micropigmentación', retoqueDays: 45 };
+  switch (tipo) {
+    case 'confirmacion': return mailConfirmed_(r, s, false);
+    case 'recordatorio': return mailReminder_(r, s);
+    case 'resena': return mailReview_(r, s);
+    case 'retoque': return mailRetouch_(r, s, svc, addDaysKey_(todayKey_(), 7));
+    case 'cumpleanos': return mailBirthday_('Ana Pérez', s, 'CUMPLE-EJEMP', num_(s.cumpleDescuento, 15), addDaysKey_(todayKey_(), num_(s.cumpleDias, 30)));
+    case 'espera': return mailWaitlist_({ id: 'ESP-EJEMPLO', fecha: r.fecha, clienta: 'Ana Pérez', servicios: 'Cejas', serviciosJson: '[{"id":"cejas"}]' }, s, ['11:00', '15:30']);
+    case 'paquete': return mailBono_({ codigo: 'PAQ-EJEM-PLO1', nombre: '4 sesiones de cejas', servicio: 'cejas', sesiones: 4, clienta: 'Ana Pérez', vence: addDaysKey_(todayKey_(), 180) }, s);
+    case 'cancelacion': return mailCancelled_(r, s, true, false);
+    case 'consentimiento': return mailConsentCopy_(r, s);
+    default: return null;
+  }
+}
+
+function adminEmailPreview_(d) {
+  const u = needAdmin_(d);
+  const m = emailSample_(d.tipo, settings_(), u.email);
+  if (!m) return { ok: false, error: 'Tipo de correo no válido.' };
+  return { ok: true, subject: m.subject, html: m.html };
+}
+
+function adminEmailTest_(d) {
+  const u = needAdmin_(d);
+  const m = emailSample_(d.tipo, settings_(), u.email);
+  if (!m) return { ok: false, error: 'Tipo de correo no válido.' };
+  if (!safeMail_(u.email, '[Prueba] ' + m.subject, m.html, { tipo: 'prueba', ref: d.tipo })) return { ok: false, error: 'No se pudo enviar. Revisa el límite diario de Gmail.' };
+  return { ok: true, to: u.email };
+}
+
+function adminRunAutomations_(d) {
+  needAdmin_(d);
+  const out = runAutomations_();
+  return { ok: true, result: out, automation: automationStatus_(), emails: readOpt_('Correos').slice(-200).reverse().map(strip_) };
+}
+
+/* ---- Utilidades ---- */
+function on_(v) { return /^s[ií]$/i.test(String(v == null ? '' : v).trim()); }
+let SVC_CACHE_ = null;
+function servicesMap_() {
+  if (!SVC_CACHE_) {
+    SVC_CACHE_ = {};
+    readTable_('Servicios').forEach(function (r) {
+      SVC_CACHE_[String(r.id).trim()] = { id: String(r.id).trim(), name: String(r.nombre).trim(), price: Number(r.precioRD) || 0, retoqueDays: Number(r.retoqueDias) || 0, consent: /^s[ií]$/i.test(String(r.consentimiento)), active: !/^no$/i.test(String(r.activo)) };
+    });
+  }
+  return SVC_CACHE_;
+}
+let SETTINGS_CACHE_ = null;
+function settingsCached_() { if (!SETTINGS_CACHE_) SETTINGS_CACHE_ = settings_(); return SETTINGS_CACHE_; }
 
 /* =========================================================================
    Hoja de cálculo (las columnas se leen por su nombre)
@@ -1309,6 +2041,7 @@ function services_() {
       id: String(r.id).trim(), name: String(r.nombre).trim(), durationMinutes: Number(r.duracionMin) || 30,
       price: Number(r.precioRD) || 0, priceFrom: /^s[ií]$/i.test(String(r.precioDesde)), returnDays: Number(r.volverDias) || 0,
       depositPercent: pctOrNull_(r.depositoPct),
+      retoqueDays: Number(r.retoqueDias) || 0, consent: /^s[ií]$/i.test(String(r.consentimiento)),
     };
   });
 }
@@ -1515,60 +2248,300 @@ function describe_(r, s) {
   ].filter(function (x) { return x !== ''; }).join('\n');
 }
 
-function mailFrame_(inner) {
-  return '<div style="font-family:Georgia,serif;color:#111;max-width:520px">' +
-    '<p style="letter-spacing:.2em;font-size:12px">MAJOBELLA</p>' + inner + '</div>';
+/* =========================================================================
+   Correos con el diseño de MAJOBELLA (blanco y negro, logo, serif)
+   ========================================================================= */
+
+function mailUrl_(s, path) {
+  const base = String(s.webUrl || '').trim();
+  return base ? base.replace(/\/?$/, '/') + (path || '') : '';
+}
+function waUrl_(s, text) {
+  const n = String(s.whatsapp || '').replace(/\D/g, '');
+  return n ? 'https://wa.me/' + n + (text ? '?text=' + encodeURIComponent(text) : '') : '';
 }
 
+/* Plantilla común. o = { preheader, kicker, title, intro, details: [[etiqueta, html]], body, cta: { text, url }, secondary: { text, url }, note } */
+function layout_(s, o) {
+  const F = "Georgia,'Times New Roman',serif";
+  const logo = mailUrl_(s, 'assets/logo-majobella.png');
+  const button = function (b, dark) {
+    if (!b || !b.url) return '';
+    return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 8px 0 0;display:inline-table"><tr><td style="' +
+      (dark ? 'background:#111111;border:1px solid #111111' : 'background:#ffffff;border:1px solid #111111') + '">' +
+      '<a href="' + esc_(b.url) + '" style="display:inline-block;padding:14px 26px;font-family:' + F + ';font-size:12px;letter-spacing:3px;text-transform:uppercase;text-decoration:none;color:' +
+      (dark ? '#ffffff' : '#111111') + '">' + esc_(b.text) + '</a></td></tr></table>';
+  };
+  const details = (o.details || []).filter(function (x) { return x && x[1] !== '' && x[1] != null; }).map(function (x) {
+    return '<tr><td style="padding:11px 12px 11px 0;border-top:1px solid #e6e6e6;font-family:' + F + ';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b6b6b;width:36%;vertical-align:top">' + esc_(x[0]) + '</td>' +
+      '<td style="padding:11px 0;border-top:1px solid #e6e6e6;font-family:' + F + ';font-size:15px;line-height:1.5;color:#111111;vertical-align:top">' + x[1] + '</td></tr>';
+  }).join('');
+  const maps = s.mapsUrl ? '<a href="' + esc_(s.mapsUrl) + '" style="color:#ffffff">Cómo llegar</a>' : '';
+  const wa = waUrl_(s, 'Hola, tengo una pregunta sobre MAJOBELLA.');
+  const web = mailUrl_(s, '');
+  const links = [maps, wa ? '<a href="' + wa + '" style="color:#ffffff">WhatsApp</a>' : '', web ? '<a href="' + esc_(web) + '" style="color:#ffffff">Web</a>' : ''].filter(Boolean).join(' &nbsp;·&nbsp; ');
+  return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + esc_(o.title || 'MAJOBELLA') + '</title></head>' +
+    '<body style="margin:0;padding:0;background:#f4f4f2">' +
+    (o.preheader ? '<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f4f4f2">' + esc_(o.preheader) + '</div>' : '') +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f2"><tr><td align="center" style="padding:28px 12px">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e6e6e6">' +
+    '<tr><td align="center" style="padding:34px 32px 24px;border-bottom:1px solid #111111">' +
+    (logo ? '<img src="' + esc_(logo) + '" width="170" alt="MAJOBELLA Beauty Studio" style="display:block;width:170px;max-width:60%;height:auto;border:0">'
+      : '<p style="margin:0;font-family:' + F + ';font-size:22px;letter-spacing:6px">MAJOBELLA</p>') +
+    '</td></tr>' +
+    '<tr><td style="padding:34px 36px 10px;font-family:' + F + ';color:#111111">' +
+    (o.kicker ? '<p style="margin:0 0 12px;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#6b6b6b">' + esc_(o.kicker) + '</p>' : '') +
+    (o.title ? '<h1 style="margin:0 0 16px;font-family:' + F + ';font-weight:normal;font-size:28px;line-height:1.2;color:#000000">' + esc_(o.title) + '</h1>' : '') +
+    (o.intro ? '<p style="margin:0 0 22px;font-size:16px;line-height:1.65;color:#333333">' + o.intro + '</p>' : '') +
+    (details ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-bottom:1px solid #e6e6e6;margin:0 0 22px">' + details + '</table>' : '') +
+    (o.body ? '<div style="font-size:15px;line-height:1.65;color:#333333">' + o.body + '</div>' : '') +
+    (o.cta || o.secondary ? '<div style="margin:18px 0 8px">' + button(o.cta, true) + button(o.secondary, false) + '</div>' : '') +
+    (o.note ? '<p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:#6b6b6b">' + o.note + '</p>' : '') +
+    '</td></tr><tr><td style="height:28px;line-height:28px">&nbsp;</td></tr>' +
+    '<tr><td align="center" style="padding:24px 24px 26px;background:#111111;font-family:' + F + '">' +
+    '<p style="margin:0 0 10px;font-size:12px;letter-spacing:5px;color:#ffffff">MÁS YO, MÁS BELLA.</p>' +
+    '<p style="margin:0;font-size:12px;line-height:1.7;color:#bdbdbd">' + esc_(s.direccion || 'MAJOBELLA Beauty Studio') + (links ? '<br>' + links : '') + '</p>' +
+    '</td></tr></table>' +
+    '<p style="margin:14px 0 0;font-family:' + F + ';font-size:11px;color:#9a9a9a">' + esc_(o.footnote || 'Correo enviado por MAJOBELLA Beauty Studio.') + '</p>' +
+    '</td></tr></table></body></html>';
+}
+
+function codeBox_(code) {
+  return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 18px"><tr><td style="background:#111111;padding:14px 24px;font-family:\'Courier New\',monospace;font-size:22px;letter-spacing:4px;color:#ffffff">' + esc_(code) + '</td></tr></table>';
+}
+
+function firstName_(n) { return String(n || '').trim().split(/\s+/)[0] || ''; }
+
+function apptDetails_(r, extra) {
+  const dep = Number(r.depositoRD) || 0;
+  const rows = [
+    ['Servicio', esc_(r.servicios)],
+    ['Fecha y hora', esc_(whenText_(r))],
+    ['Duración', r.duracionMin ? esc_(r.duracionMin + ' minutos') : ''],
+    ['Total', Number(r.descuentoRD) > 0 ? '<s style="color:#9a9a9a">RD$ ' + money_(r.subtotalRD) + '</s> RD$ ' + money_(r.totalRD) : 'RD$ ' + money_(r.totalRD)],
+    Number(r.bonoRD) > 0 ? ['Paquete', 'RD$ ' + money_(r.bonoRD) + ' cubiertos con tu paquete'] : null,
+    Number(r.giftRD) > 0 ? ['Tarjeta de regalo', 'RD$ ' + money_(r.giftRD)] : null,
+    dep ? ['Depósito', esc_(depositText_(r))] : null,
+    ['Al terminar', Number(r.saldoRD) > 0 ? 'RD$ ' + money_(r.saldoRD) + ' · efectivo, transferencia o PayPal' : 'Todo pagado'],
+    ['Código', esc_(r.id)],
+  ];
+  return rows.concat(extra || []).filter(Boolean);
+}
+
+/* ---- Constructores: devuelven { subject, html } (los usan los envíos y la vista previa del dashboard) ---- */
+
+function mailConfirmed_(r, s, byStudio) {
+  const consent = consentState_(r);
+  const dep = Number(r.depositoRD) || 0;
+  return {
+    subject: 'Tu cita en MAJOBELLA está confirmada · ' + whenText_(r),
+    html: layout_(s, {
+      preheader: 'Te esperamos el ' + whenText_(r) + '.',
+      kicker: 'Cita confirmada',
+      title: '¡Te esperamos, ' + firstName_(r.clienta) + '!',
+      intro: 'Tu cita está confirmada. Guarda este correo: aquí tienes todos los detalles.',
+      details: apptDetails_(r),
+      body: consent.needed && !consent.signed ? '<p style="margin:0">Antes de tu cita, <b>firma el consentimiento</b> desde tu celular. Toma unos 2 minutos y nos ayuda a cuidarte.</p>' : '',
+      cta: consent.needed && !consent.signed ? { text: 'Firmar consentimiento', url: consent.url } : { text: 'Ver mis citas', url: mailUrl_(s, '#citas') },
+      secondary: s.mapsUrl ? { text: 'Cómo llegar', url: s.mapsUrl } : null,
+      note: (dep && !byStudio ? 'Si cancelas con al menos ' + num_(s.horasCancelacion, 24) + ' horas de aviso te devolvemos el depósito. ' : '') + 'Te recomendamos llegar 10 minutos antes.',
+    }),
+  };
+}
+
+function mailAdminNew_(r, s) {
+  return {
+    subject: 'Nueva reserva · ' + r.clienta + ' · ' + whenText_(r),
+    html: layout_(s, {
+      kicker: 'Nueva reserva', title: r.clienta,
+      details: apptDetails_(r, [
+        ['Teléfono', esc_(r.telefono || '—')], ['Correo', esc_(r.correo || '—')],
+        r.nota ? ['Nota', esc_(r.nota)] : null, r.origen ? ['Nos conoció por', esc_(r.origen)] : null,
+        r.fidelidad === 'si' ? ['Fidelidad', 'Usó su premio de fidelidad'] : null,
+      ]),
+      cta: { text: 'Abrir dashboard', url: mailUrl_(s, 'admin.html') },
+    }),
+  };
+}
+
+function mailRescheduled_(r, s, before) {
+  return {
+    subject: 'Tu cita en MAJOBELLA cambió de horario · ' + whenText_(r),
+    html: layout_(s, {
+      kicker: 'Nuevo horario', title: 'Tu cita cambió de horario',
+      intro: 'Antes: ' + esc_(before) + '<br><b>Ahora: ' + esc_(whenText_(r)) + '</b>',
+      details: apptDetails_(r),
+      body: '<p style="margin:0">Tu depósito sigue aplicado a la cita. Si el nuevo horario no te funciona, escríbenos.</p>',
+      cta: waUrl_(s) ? { text: 'Escribir por WhatsApp', url: waUrl_(s, 'Hola, es sobre mi cita ' + r.id + '.') } : null,
+      secondary: s.mapsUrl ? { text: 'Cómo llegar', url: s.mapsUrl } : null,
+    }),
+  };
+}
+
+function mailCancelled_(r, s, refunded, byStudio) {
+  const dep = Number(r.depositoRD) || 0;
+  return {
+    subject: 'Tu cita en MAJOBELLA fue cancelada · ' + whenText_(r),
+    html: layout_(s, {
+      kicker: 'Cita cancelada', title: byStudio ? 'Cancelamos tu cita' : 'Cancelaste tu cita',
+      intro: esc_(r.servicios) + ' · ' + esc_(whenText_(r)),
+      body: dep ? '<p style="margin:0">' + (refunded ? 'Te devolvimos el depósito en PayPal. Puede tardar unos días en reflejarse.' : (byStudio ? 'Te contactaremos para coordinar la devolución o una nueva cita.' : 'El depósito no es reembolsable para esta cancelación.')) + '</p>' : '',
+      cta: { text: 'Reservar otra cita', url: mailUrl_(s, '#reservar') },
+      note: 'Código de reserva: ' + esc_(r.id),
+    }),
+  };
+}
+
+function mailAdminCancelled_(r, s, byStudio) {
+  return {
+    subject: 'Cita cancelada · ' + r.clienta + ' · ' + whenText_(r),
+    html: layout_(s, {
+      kicker: 'Cita cancelada', title: r.clienta,
+      intro: (byStudio ? 'Cancelada desde el dashboard.' : 'La clienta canceló.') + ' Reembolso: ' + esc_(r.reembolso || 'no'),
+      details: apptDetails_(r, [['Teléfono', esc_(r.telefono || '—')]]),
+      cta: { text: 'Abrir dashboard', url: mailUrl_(s, 'admin.html') },
+    }),
+  };
+}
+
+function mailReminder_(r, s) {
+  const consent = consentState_(r);
+  const today = todayKey_();
+  const tomorrow = addDaysKey_(today, 1);
+  const title = r.fecha === today ? 'Tu cita es hoy' : (r.fecha === tomorrow ? 'Tu cita es mañana' : 'Tu cita se acerca');
+  return {
+    subject: title + ' · ' + whenText_(r) + ' · MAJOBELLA',
+    html: layout_(s, {
+      preheader: esc_(r.servicios) + ', ' + whenText_(r),
+      kicker: 'Recordatorio', title: title + ', ' + firstName_(r.clienta),
+      intro: 'Te esperamos el <b>' + esc_(whenText_(r)) + '</b>. Llega unos 10 minutos antes para empezar con calma.',
+      details: [
+        ['Servicio', esc_(r.servicios)],
+        ['Dirección', esc_(s.direccion || '') + (s.mapsUrl ? '<br><a href="' + esc_(s.mapsUrl) + '" style="color:#111111">Abrir en Google Maps</a>' : '')],
+        ['Al terminar', Number(r.saldoRD) > 0 ? 'RD$ ' + money_(r.saldoRD) + ' · efectivo, transferencia o PayPal' : 'Todo pagado'],
+        consent.needed ? ['Consentimiento', consent.signed ? 'Firmado ✓' : 'Pendiente: fírmalo antes de llegar'] : null,
+      ].filter(Boolean),
+      cta: consent.needed && !consent.signed ? { text: 'Firmar consentimiento', url: consent.url } : { text: 'Ver o cancelar mi cita', url: mailUrl_(s, '#citas') },
+      secondary: waUrl_(s) ? { text: 'Escribir por WhatsApp', url: waUrl_(s, 'Hola, es sobre mi cita del ' + whenText_(r) + '.') } : null,
+      note: 'Si no puedes venir, avísanos cuanto antes. Con al menos ' + num_(s.horasCancelacion, 24) + ' horas de aviso te devolvemos el depósito.',
+    }),
+  };
+}
+
+function mailReview_(r, s) {
+  return {
+    subject: '¿Cómo te fue en MAJOBELLA, ' + firstName_(r.clienta) + '?',
+    html: layout_(s, {
+      preheader: 'Tu opinión nos ayuda muchísimo.',
+      kicker: 'Gracias por tu visita', title: '¿Cómo te sentiste, ' + firstName_(r.clienta) + '?',
+      intro: 'Nos encantó atenderte. Si te gustó tu ' + esc_(String(r.servicios).toLowerCase()) + ', ¿nos dejarías una reseña en Google? Toma un minuto y ayuda a otras clientas a encontrarnos.',
+      cta: { text: 'Dejar mi reseña', url: s.googleResenaUrl || mailUrl_(s, '') },
+      secondary: { text: 'Reservar mi próxima cita', url: mailUrl_(s, '#reservar') },
+      note: 'Si algo no salió como esperabas, respóndenos a este correo o escríbenos por WhatsApp: queremos saberlo.',
+    }),
+  };
+}
+
+function mailRetouch_(r, s, svc, ideal) {
+  return {
+    subject: 'Es momento de tu retoque de ' + svc.name.toLowerCase() + ' · MAJOBELLA',
+    html: layout_(s, {
+      kicker: 'Tu retoque', title: 'Es momento de tu retoque',
+      intro: 'Hola, ' + firstName_(r.clienta) + '. Para que tu ' + esc_(svc.name.toLowerCase()) + ' quede perfecta y dure más, el retoque se hace alrededor del <b>' + esc_(longDate_(ideal)) + '</b>.',
+      details: [['Servicio', esc_(svc.name)], ['Tu sesión', esc_(longDate_(r.fecha))], ['Fecha ideal del retoque', esc_(longDate_(ideal))]],
+      cta: { text: 'Reservar mi retoque', url: mailUrl_(s, '?servicio=' + encodeURIComponent(svc.id) + '#reservar') },
+      secondary: waUrl_(s) ? { text: 'Preguntar por WhatsApp', url: waUrl_(s, 'Hola, quiero agendar mi retoque de ' + svc.name.toLowerCase() + '.') } : null,
+    }),
+  };
+}
+
+function mailBirthday_(name, s, code, pct, until) {
+  return {
+    subject: '¡Feliz cumpleaños, ' + firstName_(name) + '! Un regalo de MAJOBELLA',
+    html: layout_(s, {
+      preheader: 'Te regalamos un ' + pct + '% para celebrarte.',
+      kicker: 'Feliz cumpleaños', title: '¡Feliz cumpleaños, ' + firstName_(name) + '!',
+      intro: 'Para celebrarte, te regalamos un <b>' + pct + '% de descuento</b> en tu próxima cita. Escribe este código al reservar:',
+      body: codeBox_(code) + '<p style="margin:0">Válido hasta el ' + esc_(longDate_(until)) + ', en cualquier servicio, una vez.</p>',
+      cta: { text: 'Reservar con mi regalo', url: mailUrl_(s, '#reservar') },
+      note: 'Más yo, más bella. Que este año te veas y te sientas como quieres.',
+    }),
+  };
+}
+
+function mailWaitlist_(w, s, slots) {
+  const ids = safeJson_(w.serviciosJson, []).map(function (x) { return x.id; }).join(',');
+  return {
+    subject: 'Se liberó un horario el ' + longDate_(w.fecha) + ' · MAJOBELLA',
+    html: layout_(s, {
+      preheader: 'Hay horario disponible para ' + w.servicios + '.',
+      kicker: 'Lista de espera', title: 'Se liberó un horario',
+      intro: 'Hola, ' + firstName_(w.clienta) + '. El <b>' + esc_(longDate_(w.fecha)) + '</b> hay horario disponible para ' + esc_(w.servicios) + ':',
+      body: '<p style="margin:0 0 6px;font-size:18px">' + slots.slice(0, 6).map(time12_).join(' &nbsp;·&nbsp; ') + '</p>',
+      cta: { text: 'Reservar ahora', url: mailUrl_(s, '?servicio=' + encodeURIComponent(ids) + '&fecha=' + w.fecha + '#reservar') },
+      note: 'Avisamos a todas las personas en la lista de ese día: el horario es de quien reserve primero.',
+    }),
+  };
+}
+
+function mailBono_(b, s) {
+  const svc = servicesMap_()[b.servicio];
+  return {
+    subject: 'Tu paquete ' + b.nombre + ' · MAJOBELLA',
+    html: layout_(s, {
+      kicker: 'Paquete listo', title: '¡Gracias, ' + firstName_(b.clienta) + '!',
+      intro: 'Tu paquete está activo. Escribe este código al reservar cada sesión y se descuenta solo:',
+      body: codeBox_(b.codigo),
+      details: [['Paquete', esc_(b.nombre)], ['Servicio', esc_(svc ? svc.name : b.servicio)], ['Sesiones', esc_(b.sesiones)], b.vence ? ['Válido hasta', esc_(longDate_(b.vence))] : null].filter(Boolean),
+      cta: { text: 'Reservar mi sesión', url: mailUrl_(s, '?servicio=' + encodeURIComponent(b.servicio) + '#reservar') },
+    }),
+  };
+}
+
+function mailConsentCopy_(r, s) {
+  return {
+    subject: 'Tu consentimiento firmado · MAJOBELLA',
+    html: layout_(s, {
+      kicker: 'Consentimiento', title: 'Recibimos tu consentimiento',
+      intro: 'Gracias, ' + firstName_(r.clienta) + '. Te enviamos una copia en PDF del consentimiento que firmaste para tu cita del ' + esc_(whenText_(r)) + '.',
+      cta: { text: 'Ver mis citas', url: mailUrl_(s, '#citas') },
+    }),
+  };
+}
+
+/* ---- Envíos ---- */
 function notifyConfirmed_(r, s, byStudio) {
-  const when = whenText_(r);
-  const web = s.webUrl ? '<p><a href="' + s.webUrl + '#citas">Ver mis citas</a></p>' : '';
-  const maps = s.mapsUrl ? ' · <a href="' + s.mapsUrl + '">Cómo llegar</a>' : '';
-  const dep = Number(r.depositoRD) || 0;
-  const payLines = [
-    Number(r.descuentoRD) > 0 ? 'Descuento aplicado: RD$ ' + money_(r.descuentoRD) + '.' : '',
-    Number(r.giftRD) > 0 ? 'Tarjeta de regalo aplicada: RD$ ' + money_(r.giftRD) + '.' : '',
-    dep ? 'Depósito recibido: ' + depositText_(r) + '.' : '',
-    Number(r.saldoRD) > 0 ? 'Saldo al terminar: RD$ ' + money_(r.saldoRD) + ', en efectivo, transferencia o PayPal.' : 'Tu cita ya está pagada.',
-  ].filter(Boolean).join('<br>');
-  safeMail_(r.correo, 'Tu cita en MAJOBELLA está confirmada · ' + when, mailFrame_(
-    '<h2 style="font-weight:400">¡Te esperamos, ' + esc_(String(r.clienta).split(' ')[0]) + '!</h2>' +
-    '<p><b>' + esc_(r.servicios) + '</b><br>' + when + '</p>' +
-    '<p>' + payLines + '</p>' +
-    (dep && !byStudio ? '<p>Si cancelas con al menos ' + num_(s.horasCancelacion, 24) + ' horas de aviso te devolvemos el depósito.</p>' : '') +
-    '<p>' + esc_(s.direccion || '') + maps + '</p>' + (byStudio ? '' : web) +
-    '<p style="color:#666;font-size:13px">Código de reserva: ' + r.id + '</p>'));
-  if (!byStudio) {
-    safeMail_(adminTo_(s), 'Nueva reserva · ' + r.clienta + ' · ' + when,
-      '<pre style="font-family:inherit">' + esc_(describe_(r, s)) + '</pre>');
-  }
+  const m = mailConfirmed_(r, s, byStudio);
+  safeMail_(r.correo, m.subject, m.html, { tipo: 'confirmacion', ref: r.id });
+  if (!byStudio) { const a = mailAdminNew_(r, s); safeMail_(adminTo_(s), a.subject, a.html, { tipo: 'aviso', ref: r.id }); }
 }
-
 function notifyRescheduled_(r, s, before) {
-  const when = whenText_(r);
-  const maps = s.mapsUrl ? ' · <a href="' + s.mapsUrl + '">Cómo llegar</a>' : '';
-  safeMail_(r.correo, 'Tu cita en MAJOBELLA cambió de horario · ' + when, mailFrame_(
-    '<h2 style="font-weight:400">Tu cita tiene nuevo horario</h2>' +
-    '<p><b>' + esc_(r.servicios) + '</b><br>Antes: ' + before + '<br><b>Ahora: ' + when + '</b></p>' +
-    '<p>Tu depósito sigue aplicado a la cita. Si el nuevo horario no te funciona, escríbenos.</p>' +
-    '<p>' + esc_(s.direccion || '') + maps + '</p>' +
-    '<p style="color:#666;font-size:13px">Código de reserva: ' + r.id + '</p>'));
+  const m = mailRescheduled_(r, s, before);
+  safeMail_(r.correo, m.subject, m.html, { tipo: 'cambio', ref: r.id });
 }
-
 function notifyCancelled_(r, s, refunded, byStudio) {
-  const when = whenText_(r);
-  const dep = Number(r.depositoRD) || 0;
-  safeMail_(r.correo, 'Tu cita en MAJOBELLA fue cancelada · ' + when, mailFrame_(
-    '<p>' + (byStudio ? 'El estudio canceló tu cita' : 'Cancelaste tu cita') + ' de ' + esc_(r.servicios) + ' (' + when + ').</p>' +
-    (dep ? '<p>' + (refunded ? 'Te devolvimos el depósito en PayPal. Puede tardar unos días en reflejarse.' : (byStudio ? 'Te contactaremos para coordinar la devolución o una nueva cita.' : 'El depósito no es reembolsable para esta cancelación.')) + '</p>' : '') +
-    '<p style="color:#666;font-size:13px">Código de reserva: ' + r.id + '</p>'));
-  safeMail_(adminTo_(s), 'Cita cancelada · ' + r.clienta + ' · ' + when,
-    '<p>' + (byStudio ? 'Cancelada desde el dashboard.' : 'La clienta canceló.') + ' Reembolso: ' + esc_(r.reembolso || 'no') + '</p><pre style="font-family:inherit">' + esc_(describe_(r, s)) + '</pre>');
+  const m = mailCancelled_(r, s, refunded, byStudio);
+  safeMail_(r.correo, m.subject, m.html, { tipo: 'cancelacion', ref: r.id });
+  const a = mailAdminCancelled_(r, s, byStudio);
+  safeMail_(adminTo_(s), a.subject, a.html, { tipo: 'aviso', ref: r.id });
 }
 
-function safeMail_(to, subject, html) {
-  if (!to) return;
-  try { MailApp.sendEmail({ to: to, subject: subject, htmlBody: html, name: 'MAJOBELLA' }); } catch (err) { /* el correo no debe romper la reserva */ }
+/* Envía y anota en la pestaña Correos. meta = { tipo, ref, attachments } */
+function safeMail_(to, subject, html, meta) {
+  if (!to) return false;
+  meta = meta || {};
+  let ok = true;
+  try {
+    const opts = { to: to, subject: subject, htmlBody: html, name: 'MAJOBELLA', body: plainText_(html) };
+    if (meta.attachments) opts.attachments = meta.attachments;
+    MailApp.sendEmail(opts);
+  } catch (err) { ok = false; }
+  try { appendRow_('Correos', { fecha: new Date().toISOString(), tipo: meta.tipo || 'otro', para: to, asunto: subject, ref: meta.ref || '', estado: ok ? 'enviado' : 'error' }); } catch (e) { /* sin pestaña Correos todavía */ }
+  return ok;
+}
+function plainText_(html) {
+  return String(html).replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|h1|tr|div)>/gi, '\n').replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/[ \t]+/g, ' ').replace(/\n\s*\n\s*/g, '\n\n').trim();
 }
 
 function adminTo_(s) {
@@ -1580,9 +2553,20 @@ function whenText_(r) {
   const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const p = String(r.fecha).split('-').map(Number);
   const dow = new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay();
-  const t = String(r.hora || '00:00').split(':').map(Number);
-  const hh = t[0], mm = ('0' + t[1]).slice(-2);
-  return days[dow] + ' ' + p[2] + ' de ' + months[p[1] - 1] + ', ' + ((hh % 12) || 12) + ':' + mm + (hh < 12 ? ' a. m.' : ' p. m.');
+  return days[dow] + ' ' + p[2] + ' de ' + months[p[1] - 1] + ', ' + time12_(r.hora || '00:00');
+}
+function time12_(hhmm) {
+  const t = String(hhmm).split(':').map(Number);
+  return ((t[0] % 12) || 12) + ':' + ('0' + (t[1] || 0)).slice(-2) + (t[0] < 12 ? ' a. m.' : ' p. m.');
+}
+function longDate_(key) {
+  const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const p = String(key).split('-').map(Number);
+  return p[2] + ' de ' + months[p[1] - 1] + ' de ' + p[0];
+}
+function addDaysKey_(key, n) {
+  const p = String(key).split('-').map(Number);
+  return Utilities.formatDate(new Date(Date.UTC(p[0], p[1] - 1, p[2] + n)), 'UTC', 'yyyy-MM-dd');
 }
 
 /* =========================================================================
@@ -1604,6 +2588,8 @@ function publicRow_(r) {
       refund: /^reembolsado/.test(r.reembolso || '') ? 'reembolsado' : (r.reembolso ? 'no' : ''),
     },
     client: { name: r.clienta, email: r.correo },
+    consent: consentState_(r),
+    bono: r.bonoCodigo ? { code: r.bonoCodigo, amountRD: Number(r.bonoRD) || 0 } : null,
   };
 }
 
@@ -1630,6 +2616,12 @@ function adminRow_(r) {
   p.cancelledAt = r.canceladaEn;
   p.internalNote = r.notaInterna;
   p.holdUntil = r.estado === 'retenida' ? r.retenidaHasta : '';
+  p.reminderAt = r.recordatorio || '';
+  p.reviewAskedAt = r.resenaPedida || '';
+  p.retouchNoticeAt = r.retoqueAviso || '';
+  p.loyalty = r.fidelidad === 'si';
+  p.birthday = r.cumpleanos || '';
+  p.photoPermission = r.permisoFotos || '';
   return p;
 }
 

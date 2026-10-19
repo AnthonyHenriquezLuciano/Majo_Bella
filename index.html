@@ -60,7 +60,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261019g">
+<link rel="stylesheet" href="css/styles.css?v=20261019h">
 </head>
 <body>
 <!--MJB:BODY-START-->
@@ -103,6 +103,7 @@
       <li><a href="#sobre">Sobre MAJOBELLA</a></li>
       <li><a href="#majo">Conoce a Majo</a></li>
       <li><a href="#servicios">Servicios</a></li>
+      <li data-nav-for="paquetes" hidden><a href="#paquetes">Paquetes</a></li>
       <li data-nav-for="resultados" hidden><a href="#resultados">Resultados</a></li>
       <li data-nav-for="resenas" hidden><a href="#resenas">Reseñas</a></li>
       <li><a href="#reservar">Reservar</a></li>
@@ -229,6 +230,41 @@
     </div>
   </section>
 
+  <!-- PAQUETES -->
+  <section id="paquetes" class="section packages" hidden>
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="label">Paquetes</p>
+          <h2 class="display">Tus sesiones, a mejor precio</h2>
+        </div>
+        <div class="section-head-side">
+          <p>Compra varias sesiones de tu servicio y ahorra. Recibes un código por correo y lo escribes al reservar cada sesión.</p>
+        </div>
+      </div>
+      <div class="pk-grid" id="pk-grid"></div>
+      <form class="pk-buy" id="pk-buy" novalidate hidden>
+        <div class="pk-buy-head"><p class="label">Comprar</p><h3 id="pk-buy-title"></h3><p id="pk-buy-sub"></p></div>
+        <div class="fields">
+          <div class="field"><label for="pk-name">Nombre</label><input id="pk-name" autocomplete="name"><span class="field-error">Escribe tu nombre.</span></div>
+          <div class="field"><label for="pk-phone">Teléfono</label><input id="pk-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="809 000 0000"><span class="field-error">Escribe un teléfono de al menos 10 dígitos.</span></div>
+          <div class="field field-wide"><label for="pk-email">Correo</label><input id="pk-email" type="email" autocomplete="email"><span class="field-error">Revisa tu correo: ahí te llega el código.</span></div>
+        </div>
+        <label class="gf-terms"><input type="checkbox" id="pk-terms"><span>Acepto las <a href="cancelacion.html#paquetes" target="_blank">condiciones de los paquetes</a>.</span></label>
+        <div class="gf-pay" id="pk-pay"></div>
+        <p class="gf-msg" id="pk-msg" role="status" aria-live="polite"></p>
+        <button type="button" class="btn btn-quiet" id="pk-cancel">Cancelar</button>
+      </form>
+      <div class="gift-done pk-done" id="pk-done" hidden tabindex="-1">
+        <p class="label">Listo</p>
+        <h3>Tu paquete está activo</h3>
+        <p id="pk-done-text"></p>
+        <p class="gd-code" id="pk-done-code"></p>
+        <div class="gd-actions"><a class="btn btn-primary" id="pk-done-book" href="#reservar">Reservar mi primera sesión</a></div>
+      </div>
+    </div>
+  </section>
+
   <!-- RESULTADOS -->
   <section id="resultados" class="section results" hidden>
     <div class="container">
@@ -331,6 +367,20 @@
             <legend><span class="step-n">3</span>Hora</legend>
             <p class="slots-msg" id="bk-slots-msg" aria-live="polite"></p>
             <div class="slots" id="bk-slots"></div>
+            <div class="wait" id="bk-wait" hidden>
+              <button type="button" class="link-inline wait-open" id="bk-wait-open">¿No encuentras horario? Únete a la lista de espera</button>
+              <div class="wait-box" id="bk-wait-box" hidden>
+                <p class="wait-lead">Te avisamos por correo si se libera un horario ese día para los servicios que elegiste.</p>
+                <div class="fields">
+                  <div class="field"><label for="bk-wait-date">Día</label><input id="bk-wait-date" type="date"></div>
+                  <div class="field"><label for="bk-wait-franja">Horario</label>
+                    <select id="bk-wait-franja"><option value="cualquiera">Cualquier hora</option><option value="manana">Mañana</option><option value="tarde">Tarde</option></select></div>
+                </div>
+                <p class="wait-note" id="bk-wait-who"></p>
+                <button type="button" class="btn btn-line" id="bk-wait-join">Avisarme</button>
+                <p class="gf-msg" id="bk-wait-msg" role="status" aria-live="polite"></p>
+              </div>
+            </div>
           </fieldset>
 
           <fieldset class="step" id="step-datos">
@@ -369,6 +419,14 @@
                   <option>Otro</option>
                 </select>
               </div>
+              <div class="field field-wide">
+                <label for="bk-bday-d">Tu cumpleaños <span class="opt">(opcional · te enviamos un regalo ese día)</span></label>
+                <div class="bday">
+                  <select id="bk-bday-d" aria-label="Día de tu cumpleaños"><option value="">Día</option></select>
+                  <select id="bk-bday-m" aria-label="Mes de tu cumpleaños"><option value="">Mes</option></select>
+                </div>
+              </div>
+              <p class="loyal-note field-wide" id="bk-loyal" hidden></p>
               <label class="check field-wide"><input type="checkbox" id="bk-remember" checked><span>Recordar mis datos en este dispositivo para la próxima vez</span></label>
             </div>
           </fieldset>
@@ -383,7 +441,7 @@
             <div><dt>Duración</dt><dd id="sum-duration">—</dd></div>
             <div><dt>Precio</dt><dd id="sum-price">—</dd></div>
             <div class="sum-opt" id="sum-disc-row" hidden><dt>Descuento</dt><dd id="sum-discount">—</dd></div>
-            <div class="sum-opt" id="sum-gift-row" hidden><dt>Tarjeta de regalo</dt><dd id="sum-gift">—</dd></div>
+            <div class="sum-opt" id="sum-gift-row" hidden><dt id="sum-gift-label">Tarjeta de regalo</dt><dd id="sum-gift">—</dd></div>
             <div class="sum-pay" data-pay-only hidden><dt>Depósito hoy</dt><dd id="sum-deposit">—</dd></div>
             <div class="sum-pay" data-pay-only hidden><dt>Al terminar</dt><dd id="sum-balance">—</dd></div>
           </dl>
@@ -554,6 +612,7 @@
       <a href="#preguntas">Preguntas</a>
       <a href="#contacto">Contacto</a>
       <a href="#regalar" data-nav-for="regalar" hidden>Tarjetas de regalo</a>
+      <a href="#paquetes" data-nav-for="paquetes" hidden>Paquetes</a>
     </nav>
     <div class="footer-social">
       <a data-social="instagram">Instagram</a>
@@ -597,31 +656,32 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/config.js?v=20261019g"></script>
-<script src="js/data/services.js?v=20261019g"></script>
-<script src="js/data/faq.js?v=20261019g"></script>
-<script src="js/data/brows.js?v=20261019g"></script>
-<script src="js/core/utils.js?v=20261019g"></script>
-<script src="js/integrations/whatsapp.js?v=20261019g"></script>
-<script src="js/integrations/calendar.js?v=20261019g"></script>
-<script src="js/integrations/booking-api.js?v=20261019g"></script>
-<script src="js/integrations/paypal.js?v=20261019g"></script>
-<script src="js/integrations/google-auth.js?v=20261019g"></script>
-<script src="js/integrations/appointments.js?v=20261019g"></script>
-<script src="js/integrations/giftcard.js?v=20261019g"></script>
-<script src="js/components/nav.js?v=20261019g"></script>
-<script src="js/components/auth-modal.js?v=20261019g"></script>
-<script src="js/components/face.js?v=20261019g"></script>
-<script src="js/components/brows.js?v=20261019g"></script>
-<script src="js/components/hero.js?v=20261019g"></script>
-<script src="js/components/services.js?v=20261019g"></script>
-<script src="js/components/selection-bar.js?v=20261019g"></script>
-<script src="js/components/booking.js?v=20261019g"></script>
-<script src="js/components/citas.js?v=20261019g"></script>
-<script src="js/components/contact.js?v=20261019g"></script>
-<script src="js/components/site.js?v=20261019g"></script>
-<script src="js/components/giftshop.js?v=20261019g"></script>
-<script src="js/components/reveal.js?v=20261019g"></script>
-<script src="js/main.js?v=20261019g"></script>
+<script src="js/config.js?v=20261019h"></script>
+<script src="js/data/services.js?v=20261019h"></script>
+<script src="js/data/faq.js?v=20261019h"></script>
+<script src="js/data/brows.js?v=20261019h"></script>
+<script src="js/core/utils.js?v=20261019h"></script>
+<script src="js/integrations/whatsapp.js?v=20261019h"></script>
+<script src="js/integrations/calendar.js?v=20261019h"></script>
+<script src="js/integrations/booking-api.js?v=20261019h"></script>
+<script src="js/integrations/paypal.js?v=20261019h"></script>
+<script src="js/integrations/google-auth.js?v=20261019h"></script>
+<script src="js/integrations/appointments.js?v=20261019h"></script>
+<script src="js/integrations/giftcard.js?v=20261019h"></script>
+<script src="js/components/nav.js?v=20261019h"></script>
+<script src="js/components/auth-modal.js?v=20261019h"></script>
+<script src="js/components/face.js?v=20261019h"></script>
+<script src="js/components/brows.js?v=20261019h"></script>
+<script src="js/components/hero.js?v=20261019h"></script>
+<script src="js/components/services.js?v=20261019h"></script>
+<script src="js/components/selection-bar.js?v=20261019h"></script>
+<script src="js/components/booking.js?v=20261019h"></script>
+<script src="js/components/citas.js?v=20261019h"></script>
+<script src="js/components/contact.js?v=20261019h"></script>
+<script src="js/components/site.js?v=20261019h"></script>
+<script src="js/components/giftshop.js?v=20261019h"></script>
+<script src="js/components/packages.js?v=20261019h"></script>
+<script src="js/components/reveal.js?v=20261019h"></script>
+<script src="js/main.js?v=20261019h"></script>
 </body>
 </html>

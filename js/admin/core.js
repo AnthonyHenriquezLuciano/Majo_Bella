@@ -70,6 +70,7 @@
   A.setting = (k, def) => { const v = A.settingsMap()[k]; const n = Number(String(v || '').replace(',', '.')); return v === undefined || v === '' ? def : (Number.isFinite(n) ? n : v); };
   A.services = () => ((A.data && A.data.services) || []).filter((s) => !/^no$/i.test(String(s.activo))).map((s) => ({
     id: s.id, name: s.nombre, durationMinutes: Number(s.duracionMin) || 30, price: Number(s.precioRD) || 0, returnDays: Number(s.volverDias) || 0,
+    retoqueDias: Number(s.retoqueDias) || 0, consentimiento: s.consentimiento || 'no',
   }));
   A.serviceName = (id) => { const s = ((A.data && A.data.services) || []).find((x) => x.id === id); return s ? s.nombre : id; };
 

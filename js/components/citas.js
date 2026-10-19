@@ -63,6 +63,12 @@
       }
       return `<p class="cita-pay">${parts.join(' · ')}</p>`;
     }
+    function consentLine(a, past, cancelled) {
+      const c = a.consent;
+      if (!c || !c.needed || past || cancelled) return '';
+      if (c.signed) return '<p class="cita-consent is-ok">Consentimiento firmado ✓</p>';
+      return c.url ? `<p class="cita-consent"><a class="btn btn-primary btn-sm" href="${M.escapeHtml(c.url)}">Firmar consentimiento</a><span>Fírmalo antes de tu cita (2 minutos).</span></p>` : '';
+    }
 
     function item(a, past) {
       const { y, m, d } = M.parseKey(a.date);
@@ -102,6 +108,7 @@
             <p class="cita-what">${M.escapeHtml(names)}</p>
             <p class="cita-meta">${M.fmtDuration(a.durationMinutes)} · ${M.fmtPrice(a.totalPrice)}${a.id && !String(a.id).startsWith('web-') ? ` · ${M.escapeHtml(a.id)}` : ''}</p>
             ${paymentLine(a)}
+            ${consentLine(a, past, cancelled)}
             ${actions}
           </div>
           <span class="cita-status st-${st}">${label}</span>
@@ -151,6 +158,21 @@
         : (error ? `No pudimos leer la agenda (${error}). Se muestran las citas guardadas en este dispositivo.` : 'Se muestran las citas reservadas desde este dispositivo.');
       list._items = items;
       if (payingId) mountBalance(payingId);
+      renderLoyalty();
+    }
+
+    /* Tarjeta de fidelidad (con sesión de Google) */
+    function renderLoyalty() {
+      let box = document.getElementById('citas-loyalty');
+      const l = M.Auth.user ? M.myLoyalty : null;
+      if (!l || !l.enabled) { if (box) box.hidden = true; return; }
+      if (!box) { box = document.createElement('div'); box.id = 'citas-loyalty'; box.className = 'loyalty-card'; list.parentNode.insertBefore(box, list); }
+      box.hidden = false;
+      const prize = l.kind === 'monto' ? M.fmtPrice(l.value) : `${l.value}%`;
+      const dots = Array.from({ length: l.every }, (_, i) => `<span class="lc-dot${i < l.visits ? ' is-on' : ''}" aria-hidden="true"></span>`).join('');
+      box.innerHTML = `<p class="label">Tu tarjeta de fidelidad</p>
+        <div class="lc-dots">${dots}<span class="lc-prize${l.eligible ? ' is-on' : ''}" aria-hidden="true">${prize}</span></div>
+        <p class="lc-text">${l.eligible ? `<strong>¡Tienes tu premio!</strong> ${prize} de descuento en tu próxima cita: se aplica solo al reservar.` : `Llevas ${l.visits} de ${l.every} visitas. Al completar ${l.every}, tu siguiente cita tiene ${prize} de descuento.`}</p>`;
     }
 
     /* Pago del saldo con PayPal */

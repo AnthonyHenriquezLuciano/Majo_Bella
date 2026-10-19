@@ -142,6 +142,10 @@
     const chips = [];
     if (p.discountRD > 0) chips.push(`<span class="pchip">Descuento ${A.money(p.discountRD)}${a.code ? ` · ${esc(a.code)}` : ''}</span>`);
     if (p.giftRD > 0) chips.push(`<span class="pchip">Tarjeta de regalo ${A.money(p.giftRD)}</span>`);
+    if (a.bono) chips.push(`<span class="pchip is-ok">Paquete ${esc(a.bono.code)}</span>`);
+    if (a.loyalty) chips.push('<span class="pchip is-ok">Premio de fidelidad</span>');
+    if (a.consent && a.consent.needed && !['cancelada', 'expirada'].includes(a.status)) chips.push(a.consent.signed ? '<span class="pchip is-ok">Consentimiento ✓</span>' : '<span class="pchip is-due">Falta consentimiento</span>');
+    if (a.status === 'confirmada' && a.reminderAt) chips.push(`<span class="pchip">Recordatorio enviado ${A.shortDate(String(a.reminderAt).slice(0, 10))}</span>`);
     if (p.depositRD > 0 && p.depositPaid) chips.push(p.refund === 'reembolsado' ? `<span class="pchip">Depósito ${A.money(p.depositRD)} reembolsado</span>` : `<span class="pchip is-ok">Depósito ${A.money(p.depositRD)} ✓ ${esc(A.methodLower(p.depositMethod))}</span>`);
     else if (a.status === 'retenida') chips.push('<span class="pchip">Pagando el depósito…</span>');
     else if (a.status !== 'cancelada' && !(p.depositRD > 0)) chips.push('<span class="pchip">Sin depósito</span>');
@@ -154,6 +158,12 @@
     const act = (op, label, extra = '') => `<button type="button" class="act" data-op="${op}" data-id="${esc(a.id)}" ${extra}>${label}</button>`;
     if (['confirmada', 'completada'].includes(a.status) && p.balanceStatus !== 'pagado' && p.balanceRD > 0) { acts.push(act('saldoEfectivo', 'Saldo en efectivo')); acts.push(act('saldoTransferencia', 'Saldo por transferencia')); }
     if (p.balanceStatus === 'pagado' && ['efectivo', 'transferencia'].includes(p.balanceMethod)) acts.push(act('saldoPendiente', 'Deshacer cobro'));
+    if (a.status === 'confirmada') {
+      if (a.client.email) acts.push(act('remind', a.reminderAt ? 'Reenviar recordatorio' : 'Enviar recordatorio'));
+      const waR = A.waLink(a.client.phone, `Hola ${(a.client.name || '').split(' ')[0]}, te recordamos tu cita en MAJOBELLA el ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)}${a.consent && a.consent.needed && !a.consent.signed && a.consent.url ? `. Antes de venir, firma tu consentimiento aquí: ${a.consent.url}` : ''}. ¡Te esperamos!`);
+      if (waR) acts.push(`<a class="act" href="${waR}" target="_blank" rel="noopener">Recordar por WhatsApp</a>`);
+      if (a.consent && a.consent.needed && !a.consent.signed && a.consent.url) { acts.push(`<a class="act" href="${esc(a.consent.url)}" target="_blank" rel="noopener">Firmar aquí (tablet)</a>`); acts.push(act('consent-copy', 'Copiar enlace de consentimiento', `data-url="${esc(a.consent.url)}"`)); }
+    }
     if (a.status === 'confirmada') { acts.push(act('completar', 'Marcar realizada')); acts.push(act('move', 'Reprogramar')); acts.push(act('noAsistio', 'No asistió')); acts.push(act('cancelar-ask', 'Cancelar…')); }
     if (a.status === 'completada' || a.status === 'no-asistio') acts.push(act('reabrir', 'Reabrir'));
     const ask = st.openCancel === a.id ? `
@@ -247,6 +257,14 @@
     if (op === 'block-ask') { st.openBlock = `${id}|${b.dataset.date}`; render(); return; }
     if (op === 'block-ask-close') { st.openBlock = null; render(); return; }
     if (op === 'move') { openMove(id); return; }
+    if (op === 'consent-copy') { try { await navigator.clipboard.writeText(b.dataset.url); A.toast('Enlace copiado. Envíaselo a la clienta.'); } catch (err) { A.toast(b.dataset.url); } return; }
+    if (op === 'remind') {
+      await A.busy(b, async () => {
+        try { const res = await A.call('adminSendReminder', { id }); A.upsert('items', res.item); render(); A.toast('Recordatorio enviado por correo.'); }
+        catch (err) { A.toast(err.message); }
+      });
+      return;
+    }
     if (op === 'block-delete') {
       await A.busy(b, async () => {
         try {
@@ -408,8 +426,37 @@
   }
 
   /* ---------- Inicio ---------- */
+  /* ---------- Lista de espera ---------- */
+  const WL_STATE = { esperando: 'Esperando', avisada: 'Avisada', reservo: 'Reservó', vencida: 'Vencida', cancelada: 'Quitada' };
+  const waiting = () => (A.data.waitlist || []).filter((w) => w.fecha >= M.todayKey() && ['esperando', 'avisada'].includes(w.estado));
+  function updateWaitBtn() { const n = waiting().length; $('ag-wait').textContent = n ? `Lista de espera (${n})` : 'Lista de espera'; }
+  function renderWaitlist() {
+    const list = (A.data.waitlist || []).filter((w) => w.fecha >= A.addDays(M.todayKey(), -7)).sort((a, b) => a.fecha.localeCompare(b.fecha) || String(a.creada).localeCompare(String(b.creada)));
+    const FR = { manana: 'mañana', tarde: 'tarde', cualquiera: 'cualquier hora' };
+    $('wl-list').innerHTML = list.length ? list.map((w) => {
+      const wa = A.waLink(w.telefono, `Hola ${String(w.clienta).split(' ')[0]}, te escribimos de MAJOBELLA: se liberó un horario el ${M.weekdayName(w.fecha).toLowerCase()} ${M.dayMonth(w.fecha)} para ${String(w.servicios).toLowerCase()}. ¿Te lo apartamos?`);
+      return `<li class="wl-item">
+        <div><p class="t-name">${esc(w.clienta)} <span class="pill ${w.estado === 'esperando' ? 'st-retenida' : w.estado === 'avisada' ? 'st-confirmada' : 'st-cancelada'}">${WL_STATE[w.estado] || esc(w.estado)}</span></p>
+          <p class="t-sub">${esc(A.dayTitle(w.fecha))} · ${esc(FR[w.franja] || w.franja)} · ${esc(w.servicios)}</p>
+          <p class="t-sub">${esc(w.telefono)} · ${esc(w.correo)}${w.avisada ? ` · avisada ${A.shortDate(String(w.avisada).slice(0, 10))}` : ''}</p></div>
+        <div class="due-actions">${wa ? `<a class="act" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
+          <button type="button" class="act" data-book-wl="${esc(w.id)}">Agendar</button>
+          <button type="button" class="act act-ghost" data-wl="${esc(w.id)}" data-op="eliminar">Quitar</button></div></li>`;
+    }).join('') : '<li class="empty">Nadie en lista de espera.</li>';
+  }
+  function openWaitlist() { renderWaitlist(); A.open('dlg-wait'); }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-book-wl]');
+    if (!b) return;
+    const w = (A.data.waitlist || []).find((x) => x.id === b.dataset.bookWl);
+    if (!w) return;
+    A.close('dlg-wait');
+    openNew({ date: w.fecha, client: { name: w.clienta, phone: w.telefono, email: w.correo } });
+    try { JSON.parse(w.serviciosJson || '[]').forEach((sv) => { const i = $('nc-form').querySelector(`[name=svc][value="${CSS.escape(sv.id)}"]`); if (i) i.checked = true; }); updateNew(true); } catch (err) { /* sin servicios */ }
+  });
+
   A.sections.agenda = {
-    render,
+    render() { render(); updateWaitBtn(); },
     init() {
       document.querySelectorAll('#ag-seg [data-view]').forEach((b) => b.addEventListener('click', () => { st.view = b.dataset.view; render(); }));
       const shift = (dir) => {
@@ -423,6 +470,18 @@
       $('ag-filter').addEventListener('change', (e) => { st.filter = e.target.value; render(); });
       $('ag-new').addEventListener('click', () => openNew());
       $('ag-blocks').addEventListener('click', openBlocks);
+      $('ag-wait').addEventListener('click', openWaitlist);
+      $('wl-list').addEventListener('click', async (e) => {
+        const b = e.target.closest('[data-wl]');
+        if (!b) return;
+        await A.busy(b, async () => {
+          try {
+            const res = await A.call('adminWaitlist', { id: b.dataset.wl, op: b.dataset.op, estado: b.dataset.estado });
+            if (res.removed) A.remove('waitlist', b.dataset.wl); else A.upsert('waitlist', res.item);
+            renderWaitlist(); updateWaitBtn();
+          } catch (err) { A.toast(err.message); }
+        });
+      });
       document.addEventListener('click', onClick);
 
       // Nueva cita

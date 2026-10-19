@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Consentimiento · MAJOBELLA Beauty Studio</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="css/styles.css?v=20261019h">
+</head>
+<body class="legal-page">
+<header class="legal-header">
+  <div class="container legal-header-in">
+    <a class="brand" href="./" aria-label="MAJOBELLA, volver al inicio"><img src="assets/logo-majobella.png" alt="MAJOBELLA" width="900" height="351"></a>
+  </div>
+</header>
+<main class="container legal consent">
+  <p class="label">Antes de tu cita</p>
+  <h1 class="display">Consentimiento informado</h1>
+  <p class="cs-status" id="cs-status" aria-live="polite">Cargando tu cita…</p>
+
+  <form id="cs-form" novalidate hidden>
+    <div class="cs-appt" id="cs-appt"></div>
+
+    <section class="cs-block">
+      <h2>1. Tu salud</h2>
+      <p class="cs-help">Tus respuestas son confidenciales y solo las ve el estudio. Nos ayudan a cuidarte durante el servicio.</p>
+      <ol class="cs-questions" id="cs-questions"></ol>
+      <div class="field cs-extra">
+        <label for="cs-extra">¿Algo más que debamos saber? <span class="opt">(opcional)</span></label>
+        <input id="cs-extra" name="extra" maxlength="600" autocomplete="off">
+      </div>
+    </section>
+
+    <section class="cs-block">
+      <h2>2. Consentimiento</h2>
+      <div class="cs-text" id="cs-text"></div>
+      <fieldset class="cs-photos">
+        <legend>Fotos en la web y redes</legend>
+        <label class="cs-radio"><input type="radio" name="photos" value="si"><span>Sí, autorizo publicar mis fotos de antes y después, <b>sin mi nombre</b>.</span></label>
+        <label class="cs-radio"><input type="radio" name="photos" value="no" checked><span>No, solo para mi ficha privada.</span></label>
+      </fieldset>
+    </section>
+
+    <section class="cs-block">
+      <h2>3. Firma</h2>
+      <div class="field">
+        <label for="cs-name">Nombre completo</label>
+        <input id="cs-name" name="name" autocomplete="name" required>
+        <span class="field-error">Escribe tu nombre completo.</span>
+      </div>
+      <div class="cs-sign">
+        <div class="cs-sign-head"><span>Firma con el dedo o el ratón</span><button type="button" class="link-inline" id="cs-clear">Borrar</button></div>
+        <canvas id="cs-pad" aria-label="Recuadro para firmar"></canvas>
+      </div>
+      <label class="gf-terms cs-accept"><input type="checkbox" id="cs-accept"><span>Leí y acepto el consentimiento, y confirmo que mis respuestas son verdaderas.</span></label>
+      <button type="submit" class="btn btn-primary" id="cs-submit">Firmar consentimiento</button>
+      <p class="gf-msg" id="cs-msg" role="status" aria-live="polite"></p>
+    </section>
+  </form>
+
+  <div class="cs-done" id="cs-done" hidden tabindex="-1">
+    <p class="label">Listo</p>
+    <h2 id="cs-done-title">Gracias, firmaste tu consentimiento</h2>
+    <p id="cs-done-text">Te enviamos una copia en PDF a tu correo. Nos vemos en tu cita.</p>
+    <a class="btn btn-line" href="./#citas">Ver mis citas</a>
+  </div>
+</main>
+<footer class="legal-footer">
+  <div class="container">
+    <p><a href="./">Inicio</a> · <a href="privacidad.html">Privacidad</a> · <a href="cancelacion.html">Cancelación y reembolsos</a> · <a href="https://wa.me/18299784986" target="_blank" rel="noopener">WhatsApp 829-978-4986</a></p>
+  </div>
+</footer>
+<script src="js/config.js?v=20261019h"></script>
+<script src="js/consent.js?v=20261019h"></script>
+</body>
+</html>
