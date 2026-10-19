@@ -1,6 +1,6 @@
 /* MAJOBELLA · Dashboard: núcleo
    - Carga todos los datos del estudio con una sola consulta (adminData) y los guarda en A.data.
-   - Cada sección (agenda, clientas, dinero, promociones, ajustes) se registra en A.sections.
+   - Cada sección (agenda, clientas, dinero, promociones, web, ajustes) se registra en A.sections.
    - admin.html?demo usa datos de ejemplo generados en el navegador (js/admin/demo.js). */
 (function (M) {
   const A = (M.Admin = {});
@@ -107,11 +107,11 @@
 
   /* Cambios locales tras guardar (evita recargar todo) */
   A.upsert = (list, item, key = 'id') => {
-    const arr = A.data[list];
+    const arr = A.data[list] || (A.data[list] = []);
     const i = arr.findIndex((x) => x[key] === item[key]);
     if (i >= 0) arr[i] = item; else arr.push(item);
   };
-  A.remove = (list, id, key = 'id') => { A.data[list] = A.data[list].filter((x) => x[key] !== id); };
+  A.remove = (list, id, key = 'id') => { A.data[list] = (A.data[list] || []).filter((x) => x[key] !== id); };
 
   /* ---------- Navegación por secciones ---------- */
   A.current = 'agenda';

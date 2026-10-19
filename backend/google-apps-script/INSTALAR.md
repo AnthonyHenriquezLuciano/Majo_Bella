@@ -99,7 +99,8 @@ El dinero llega en dólares a tu PayPal. Desde PayPal puedes retirarlo a tu banc
 2. Elige la función **setup** y pulsa **Ejecutar**.
    - Crea las pestañas y columnas nuevas sin tocar tus datos.
    - La primera vez crea también la carpeta privada **MAJOBELLA · Fichas de clientas** en tu Drive.
-   - Google pedirá un permiso nuevo (Drive): acéptalo igual que antes.
+   - También crea la carpeta **MAJOBELLA · Web pública (galería)**. Ahí van solo las copias de las fotos que publicas en la web y tu foto de "Conoce a Majo", compartidas como "cualquier persona con el enlace puede ver". No muevas ni borres esa carpeta.
+   - Si Google pide un permiso nuevo, acéptalo igual que antes.
 3. **Implementar → Gestionar implementaciones → lápiz (editar) → Versión: Nueva versión → Implementar.**
 
    Así se mantiene la misma URL `/exec` y no hay que cambiar nada en la web.
@@ -111,6 +112,7 @@ El dinero llega en dólares a tu PayPal. Desde PayPal puedes retirarlo a tu banc
   - **Clientas:** lista con visitas, gasto, última visita y próxima cita; ficha con notas, fotos de antes y después y consentimiento (se guardan en tu Drive); **Por volver**; **De dónde vienen**; **Pagos sin completar**.
   - **Dinero:** cierre de caja del día, ganancia real del mes (ingresos − reembolsos − comisiones de PayPal − gastos), registro de gastos y **reporte PDF** mensual.
   - **Promociones:** descuentos automáticos por servicio (se anuncian en la web), códigos de descuento y tarjetas de regalo con imagen para enviar.
+  - **Web:** galería de antes y después (se publica desde la ficha de la clienta, con su permiso), reseñas de Google, "Conoce a Majo" con tu foto, la franja de anuncio de arriba, tu puntuación y enlaces de Google, y la venta de tarjetas de regalo en la web.
   - **Ajustes:** depósito, tasa, horario, días cerrados, correos, comisiones y servicios (precio, duración y cada cuántos días vuelve la clienta).
 - **Tasa del dólar, precios, horario y días cerrados**: desde **Ajustes** en el dashboard (o en las pestañas de la hoja). Se aplican a las reservas nuevas. Las descripciones de los servicios siguen en `js/data/services.js`.
 - **Saber de dónde llegan**: comparte la web con `?utm_source=instagram` (o `tiktok`, `google`…) al final del enlace, por ejemplo en la bio de Instagram. Además, la clienta puede elegir "¿Cómo nos conociste?" al reservar.
@@ -120,3 +122,20 @@ El dinero llega en dólares a tu PayPal. Desde PayPal puedes retirarlo a tu banc
   - desde el dashboard tú decides en cada caso.
 
 Si un reembolso falla (por ejemplo, saldo insuficiente en PayPal), queda anotado en la columna `reembolso` y puedes hacerlo a mano en PayPal.
+
+## La web en Google y en WhatsApp
+
+- **Vista previa en WhatsApp:** al compartir el enlace sale la imagen `assets/og-image.jpg` con el logo. WhatsApp guarda la vista previa un tiempo; si ves la antigua, comparte el enlace con `?v=2` al final.
+- **Google:**
+  1. Entra en https://search.google.com/search-console y añade la propiedad de tipo **Prefijo de URL** con `https://anthonyhenriquezluciano.github.io/Majo_Bella/`.
+  2. Verifica con el método **Etiqueta HTML**: copia la etiqueta que te dé y pásamela para ponerla en `index.html`.
+  3. En **Sitemaps** envía `sitemap.xml`.
+  4. Si tienes Perfil de Empresa de Google, pon esta web en el campo **Sitio web**. Es lo que más ayuda a aparecer en Maps.
+- **Reseñas:** Google no deja mostrar sus reseñas en otra web sin una cuenta de pago de su API. Por eso se copian a mano en el dashboard → **Web**. Copia solo reseñas reales, tal como aparecen.
+
+## Tarjetas de regalo en la web
+
+- Se pagan con PayPal en dólares, con la tasa de **Ajustes**.
+- Al pagar se genera el código. Le llega por correo a quien compra (y a quien la recibe, si escribió su correo), y a ti te llega un aviso.
+- Aparecen en el dashboard → **Promociones**, marcadas como "comprada en la web".
+- Para pausarlas: dashboard → **Web** → quita "Vender tarjetas de regalo con PayPal".

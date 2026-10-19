@@ -33,13 +33,14 @@
       return loading;
     },
 
-    /* Dibuja los botones en `el`. handlers: createOrder() → orderId, onApprove(orderId), onCancel(), onError(err) */
+    /* Dibuja los botones en `el`. handlers: onClick() → false para no abrir PayPal, createOrder() → orderId, onApprove(orderId), onCancel(), onError(err) */
     async render(el, handlers) {
       el.innerHTML = '<p class="pp-loading">Cargando PayPal…</p>';
       const paypal = await this.load();
       el.innerHTML = '';
       const buttons = paypal.Buttons({
         style: { layout: 'vertical', color: 'black', shape: 'pill', label: 'pay', height: 46, tagline: false },
+        onClick: (data, actions) => (handlers.onClick && handlers.onClick() === false ? actions.reject() : actions.resolve()),
         createOrder: () => handlers.createOrder(),
         onApprove: (data) => handlers.onApprove(data.orderID),
         onCancel: () => handlers.onCancel && handlers.onCancel(),

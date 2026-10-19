@@ -27,6 +27,8 @@
     ['horario_sabado', '10:00-17:00'], ['diasCerrados', '2026-12-25, 2027-01-01'], ['correoAvisos', ''], ['calendarioId', 'primary'], ['invitarClienta', 'si'],
     ['direccion', 'MAJOBELLA Beauty Studio, Santo Domingo'], ['mapsUrl', 'https://maps.app.goo.gl/d4uX28GuoKuyHuhf8'],
     ['webUrl', 'https://anthonyhenriquezluciano.github.io/Majo_Bella/'], ['comisionPaypalPct', '5.4'], ['comisionPaypalFijoUSD', '0.30'], ['conversionPct', '3.5'],
+    ['anuncioActivo', 'si'], ['anuncioTexto', ''], ['anuncioEnlace', ''], ['googleRating', '4.9'], ['googleResenas', '27'], ['googleUrl', ''], ['googleResenaUrl', ''],
+    ['majoTitulo', 'Conoce a Majo'], ['majoTexto', ''], ['majoCerts', ''], ['majoFotoUrl', ''], ['tarjetasEnLinea', 'si'], ['tarjetaMin', '500'], ['tarjetaMax', '30000'], ['tarjetaVenceDias', '365'],
   ].map(([key, value]) => ({ key, value, help: '' }));
 
   const people = ['Ana Pérez', 'Laura Martínez', 'Carolina Reyes', 'Paola Jiménez', 'Michelle Santos', 'Yarisa Gómez', 'Nicole Peña', 'Daniela Cruz',
@@ -43,6 +45,11 @@
     { id: 'TRG-1', codigo: 'MJB-ROSA-7K2P', montoRD: '3000', saldoRD: '500', comprador: 'Luis Almonte', para: 'Rosa Almonte', mensaje: '¡Feliz cumpleaños!', metodoPago: 'transferencia', vendida: A.addDays(today, -30), vence: A.addDays(today, 335), estado: 'activa', creada: `${A.addDays(today, -30)}T15:00:00Z` },
     { id: 'TRG-2', codigo: 'MJB-MAMA-Q8TT', montoRD: '5000', saldoRD: '5000', comprador: 'Pamela Ureña', para: 'Mamá', mensaje: '', metodoPago: 'efectivo', vendida: A.addDays(today, -3), vence: A.addDays(today, 362), estado: 'activa', creada: `${A.addDays(today, -3)}T15:00:00Z` },
   ];
+  const reviews = [
+    { id: 'RES-1', autora: 'Reseña de ejemplo 1', estrellas: '5', texto: 'Aquí va el texto tal como aparece en Google.', fecha: A.addDays(today, -12), visible: 'si', orden: '0', creada: nowIso() },
+    { id: 'RES-2', autora: 'Reseña de ejemplo 2', estrellas: '5', texto: 'Las reseñas de ejemplo solo existen en el modo demo.', fecha: A.addDays(today, -30), visible: 'si', orden: '0', creada: nowIso() },
+  ];
+  const gallery = [];
   const expenses = [];
   [[-62, 'Alquiler del local', 'Alquiler', 18000, 'transferencia'], [-31, 'Alquiler del local', 'Alquiler', 18000, 'transferencia'], [-1, 'Alquiler del local', 'Alquiler', 18000, 'transferencia'],
     [-45, 'Pigmentos y agujas', 'Insumos', 6200, 'efectivo'], [-12, 'Pestañas y pegamento', 'Insumos', 3400, 'efectivo'], [-8, 'Publicidad en Instagram', 'Publicidad', 2500, 'paypal'],
@@ -133,7 +140,7 @@
   const uploaded = {};
 
   const db = () => ({
-    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, services,
+    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, services, gallery, reviews,
     schedule: { hours: M.config.schedule.hours, blocked: ['2026-12-25', '2027-01-01'], minNotice: 3, maxDays: 60, step: 30 },
     paypalEnv: 'sandbox', sheetUrl: '',
   });
@@ -244,6 +251,34 @@
           return { ok: true, expense: clone(v) };
         }
         case 'adminDeleteExpense': { const i = expenses.findIndex((x) => x.id === d.id); if (i >= 0) expenses.splice(i, 1); return { ok: true }; }
+        case 'adminPublishGallery': {
+          if (!d.permiso) throw new Error('Confirma que la clienta dio permiso para publicar sus fotos.');
+          const url = (id) => { const f = files.find((x) => x.id === id); return `data:image/jpeg;base64,${uploaded[id] || demoImage(f && f.tipo === 'antes' ? 'Antes' : 'Después')}`; };
+          const v = { id: uid('GAL'), servicio: d.servicio, antesId: 'demo', despuesId: 'demo', antesUrl: url(d.antesId), despuesUrl: url(d.despuesId), texto: d.texto, orden: String(d.orden || 0), visible: 'si', creada: nowIso() };
+          gallery.push(v);
+          return { ok: true, item: clone(v) };
+        }
+        case 'adminSaveGallery': {
+          const r = gallery.find((x) => x.id === d.id);
+          ['servicio', 'texto', 'orden'].forEach((k) => { if (d[k] != null) r[k] = String(d[k]); });
+          if (d.visible != null) r.visible = d.visible ? 'si' : 'no';
+          return { ok: true, item: clone(r) };
+        }
+        case 'adminDeleteGallery': { const i = gallery.findIndex((x) => x.id === d.id); if (i >= 0) gallery.splice(i, 1); return { ok: true }; }
+        case 'adminSaveReview': {
+          const v = d.review;
+          if (!v.autora || !v.texto) throw new Error('Escribe el nombre y el texto de la reseña.');
+          const r = { id: v.id || uid('RES'), autora: v.autora, estrellas: String(v.estrellas), texto: v.texto, fecha: v.fecha || today, visible: v.visible === false ? 'no' : 'si', orden: String(Number(v.orden) || 0) };
+          const i = reviews.findIndex((x) => x.id === r.id);
+          if (i >= 0) Object.assign(reviews[i], r); else reviews.push(Object.assign(r, { creada: nowIso() }));
+          return { ok: true, review: clone(r) };
+        }
+        case 'adminDeleteReview': { const i = reviews.findIndex((x) => x.id === d.id); if (i >= 0) reviews.splice(i, 1); return { ok: true }; }
+        case 'adminUploadPublic': {
+          const url = `data:image/jpeg;base64,${d.data}`;
+          settings.find((x) => x.key === 'majoFotoUrl').value = url;
+          return { ok: true, url };
+        }
         default: throw new Error('Acción no disponible en el ejemplo.');
       }
     },

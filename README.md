@@ -18,8 +18,13 @@ js/integrations/booking-api.js  Agenda (horarios ocupados), reservas, pagos y ca
 js/integrations/paypal.js       Botones de PayPal para el depósito y el saldo
 js/integrations/google-auth.js  Inicio de sesión con Google
 js/integrations/appointments.js Registro de citas de la clienta (Citas)
+js/integrations/giftcard.js     Imagen PNG de la tarjeta de regalo (web y dashboard)
 js/components/*.js              Menú, rostro ilustrado, cejas, servicios, barra de suma, reservas, citas, contacto
-admin.html, js/admin/*.js       Dashboard privado: agenda, clientas, dinero, promociones y ajustes
+js/components/site.js           Franja de anuncio, Conoce a Majo, galería, reseñas y mapa (contenido del dashboard → Web)
+js/components/giftshop.js       Compra de tarjetas de regalo con PayPal
+privacidad.html, cancelacion.html  Políticas de privacidad y de cancelación/reembolsos/tarjetas
+sitemap.xml, assets/og-image.jpg   Google (sitemap) y vista previa al compartir en WhatsApp/redes
+admin.html, js/admin/*.js       Dashboard privado: agenda, clientas, dinero, promociones, web y ajustes
 backend/google-apps-script/     Backend gratuito: Google Sheets + PayPal + Google Calendar (ver INSTALAR.md)
 assets/                         Logos, monograma, favicon y fuentes
 ```
@@ -33,6 +38,8 @@ assets/                         Logos, monograma, favicon y fuentes
 5. **Horario**: igual al de Google Maps (lunes cerrado, martes a sábado 10:00–5:00, domingo 10:00–1:00). Se cambia en `schedule.hours`; días cerrados puntuales en `schedule.blockedDates`.
 6. **Fuente Mistrully**: copia el archivo en `assets/fonts/` (ver `LEEME.txt`).
 7. **Reservas con depósito y dashboard**: sigue `backend/google-apps-script/INSTALAR.md`.
+8. **Políticas**: `privacidad.html` y `cancelacion.html` describen cómo funciona el sistema (depósito por servicio, reembolso con 24 h de aviso, tarjetas válidas 12 meses y no canjeables por efectivo). Revísalas con un abogado antes de cobrar de verdad.
+9. **Google y WhatsApp**: título, descripción, imagen para compartir y ficha del negocio (JSON-LD) están en el `<head>` de `index.html`. Si cambias de dominio, actualiza esas URL y `sitemap.xml`.
 
 ## Cómo funcionan las reservas
 
@@ -76,12 +83,13 @@ PayPal no cobra en pesos dominicanos. Por eso el depósito se cobra en dólares 
 
 Implementado en `backend/google-apps-script/Code.gs`; otro backend podría responder igual:
 
-- `GET ?action=catalog` → `{ services, payments: { usdRate, depositPercent, holdMinutes, cancelHours, paypalEnv }, schedule }`
+- `GET ?action=catalog` → `{ services, payments: { usdRate, depositPercent, holdMinutes, cancelHours, paypalEnv }, schedule, promos, site: { announcement, google, majo }, gallery, reviews, giftShop }`
 - `GET ?action=busy&from=AAAA-MM-DD&to=AAAA-MM-DD` → `{ busy: [{ start, end }] }` (sin datos personales)
 - `POST { action: 'hold', services: [ids], date, time, client }` → `{ id, manageToken, orderId, depositUSD, … }`
 - `POST { action: 'capture', id, orderId }` → `{ appointment }`
 - `POST { action: 'release' | 'cancel' | 'balanceOrder' | 'balanceCapture', id, token | idToken, … }`
 - `POST { action: 'myAppointments', idToken }` · `{ action: 'lookup', items: [{ id, token }] }`
+- `POST { action: 'giftOrder', montoRD, correo, correoPara, de, para, mensaje }` → `{ id, orderId }` · `{ action: 'giftCapture', id, orderId }` → `{ gift: { codigo, … } }`
 - `POST { action: 'adminList' | 'adminUpdate' | 'adminBlock', idToken, … }` (solo administradoras)
 
 ## Experiencia de la clienta

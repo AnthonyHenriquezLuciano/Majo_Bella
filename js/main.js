@@ -21,6 +21,8 @@
     M.initSelectionBar();
     M.initBooking();
     M.initCitas();
+    M.initSite();
+    M.initGiftShop();
     M.initReveal();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

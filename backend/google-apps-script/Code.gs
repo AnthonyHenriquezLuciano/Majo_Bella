@@ -53,8 +53,10 @@ const TABLES = {
   Clientas: ['clave', 'nombre', 'telefono', 'correo', 'notas', 'cumpleanos', 'actualizada'],
   Archivos: ['id', 'clave', 'tipo', 'nombre', 'mime', 'driveId', 'citaId', 'fecha', 'nota', 'creada'],
   Promociones: ['id', 'nombre', 'tipo', 'codigo', 'servicios', 'descuentoTipo', 'valor', 'desde', 'hasta', 'usosMax', 'usos', 'activo', 'creada'],
-  Tarjetas: ['id', 'codigo', 'montoRD', 'saldoRD', 'comprador', 'para', 'mensaje', 'metodoPago', 'vendida', 'vence', 'estado', 'creada'],
+  Tarjetas: ['id', 'codigo', 'montoRD', 'saldoRD', 'comprador', 'para', 'mensaje', 'metodoPago', 'vendida', 'vence', 'estado', 'creada', 'correoComprador', 'correoPara', 'paypalOrden', 'paypalCaptura'],
   Gastos: ['id', 'fecha', 'concepto', 'categoria', 'montoRD', 'metodo', 'creada'],
+  Galeria: ['id', 'servicio', 'antesId', 'despuesId', 'antesUrl', 'despuesUrl', 'texto', 'orden', 'visible', 'creada'],
+  Resenas: ['id', 'autora', 'estrellas', 'texto', 'fecha', 'visible', 'orden', 'creada'],
 };
 
 // Estados que ocupan la agenda
@@ -85,7 +87,23 @@ const DEFAULT_SETTINGS = [
   ['comisionPaypalPct', '5.4', 'Comisión de PayPal por pago recibido (%). Para calcular la ganancia real.'],
   ['comisionPaypalFijoUSD', '0.30', 'Cargo fijo de PayPal por pago (US$).'],
   ['conversionPct', '3.5', 'Pérdida al convertir dólares a pesos al retirar de PayPal (%).'],
+  ['anuncioActivo', 'si', 'si/no: mostrar la franja de anuncio arriba de la web.'],
+  ['anuncioTexto', '', 'Texto de la franja. Vacío = se anuncia sola la promoción automática vigente.'],
+  ['anuncioEnlace', '', 'A dónde lleva la franja (vacío = a Reservar).'],
+  ['googleRating', '', 'Puntuación de tu perfil de Google, por ejemplo 4.9.'],
+  ['googleResenas', '', 'Cuántas reseñas tienes en Google.'],
+  ['googleUrl', '', 'Enlace a tu perfil de Google para ver todas las reseñas.'],
+  ['googleResenaUrl', '', 'Enlace para dejar una reseña (Perfil de Empresa de Google → Pedir reseñas).'],
+  ['majoTitulo', 'Conoce a Majo', 'Título de la sección.'],
+  ['majoTexto', '', 'Tu historia, en uno o varios párrafos.'],
+  ['majoCerts', '', 'Formación y certificaciones, una por línea.'],
+  ['majoFotoUrl', '', 'Se llena solo al subir la foto desde el dashboard.'],
+  ['tarjetasEnLinea', 'si', 'si/no: vender tarjetas de regalo en la web.'],
+  ['tarjetaMin', '500', 'Valor mínimo de una tarjeta de regalo en la web (RD$).'],
+  ['tarjetaMax', '30000', 'Valor máximo de una tarjeta de regalo en la web (RD$).'],
+  ['tarjetaVenceDias', '365', 'Días de validez de las tarjetas compradas en la web.'],
 ];
+const LONG_SETTINGS = ['majoTexto', 'majoCerts'];
 const SETTING_KEYS = DEFAULT_SETTINGS.map(function (x) { return x[0]; });
 
 // Igual que js/data/services.js. Desde el dashboard o la hoja "Servicios" se cambian precios y duraciones.
@@ -161,6 +179,11 @@ function setup() {
   let folder = null;
   if (folderId) { try { folder = DriveApp.getFolderById(folderId); } catch (e) { folder = null; } }
   if (!folder) { folder = DriveApp.createFolder('MAJOBELLA · Fichas de clientas'); props.setProperty('FILES_FOLDER_ID', folder.getId()); }
+  // Carpeta de archivos públicos de la web (galería y foto de "Conoce a Majo")
+  let pubId = props.getProperty('PUBLIC_FOLDER_ID');
+  let pub = null;
+  if (pubId) { try { pub = DriveApp.getFolderById(pubId); } catch (e) { pub = null; } }
+  if (!pub) { pub = DriveApp.createFolder('MAJOBELLA · Web pública (galería)'); props.setProperty('PUBLIC_FOLDER_ID', pub.getId()); }
 
   const blank = ss.getSheetByName('Hoja 1') || ss.getSheetByName('Sheet1');
   if (blank && ss.getSheets().length > Object.keys(TABLES).length) ss.deleteSheet(blank);
@@ -206,6 +229,8 @@ function doPost(e) {
     balanceCapture: L(balanceCapture_),
     myAppointments: N(myAppointments_),
     lookup: N(lookup_),
+    giftOrder: L(giftOrder_),
+    giftCapture: L(giftCapture_),
     // Dashboard
     adminData: N(adminData_),
     adminList: N(adminData_), // compatibilidad
@@ -224,6 +249,12 @@ function doPost(e) {
     adminSaveGift: L(adminSaveGift_),
     adminSaveExpense: L(adminSaveExpense_),
     adminDeleteExpense: L(adminDeleteExpense_),
+    adminPublishGallery: L(adminPublishGallery_),
+    adminSaveGallery: L(adminSaveGallery_),
+    adminDeleteGallery: L(adminDeleteGallery_),
+    adminSaveReview: L(adminSaveReview_),
+    adminDeleteReview: L(adminDeleteReview_),
+    adminUploadPublic: L(adminUploadPublic_),
   };
   const fn = actions[data.action];
   if (!fn) return json_({ ok: false, error: 'Acción no válida.' });
@@ -252,6 +283,17 @@ function catalog_() {
     schedule: {
       hours: sch.hours, blockedDates: sch.blocked,
       minNoticeHours: sch.minNotice, maxDaysAhead: sch.maxDays, slotStepMinutes: sch.step,
+    },
+    site: siteContent_(s),
+    gallery: readOpt_('Galeria').filter(function (g) { return !/^no$/i.test(g.visible); })
+      .sort(function (a, b) { return (Number(a.orden) || 0) - (Number(b.orden) || 0) || String(b.creada).localeCompare(String(a.creada)); })
+      .map(function (g) { return { id: g.id, service: g.servicio, before: g.antesUrl, after: g.despuesUrl, text: g.texto }; }),
+    reviews: readOpt_('Resenas').filter(function (r) { return !/^no$/i.test(r.visible); })
+      .sort(function (a, b) { return (Number(a.orden) || 0) - (Number(b.orden) || 0) || String(b.fecha).localeCompare(String(a.fecha)); })
+      .map(function (r) { return { id: r.id, author: r.autora, stars: Number(r.estrellas) || 5, text: r.texto, date: r.fecha }; }),
+    giftShop: {
+      enabled: /^s[ií]$/i.test(s.tarjetasEnLinea || 'si') && !!PropertiesService.getScriptProperties().getProperty('PAYPAL_CLIENT_ID'),
+      min: num_(s.tarjetaMin, 500), max: num_(s.tarjetaMax, 30000), validDays: num_(s.tarjetaVenceDias, 365),
     },
     // Solo las promociones automáticas (los códigos no se publican)
     promos: promos_(today).filter(function (p) { return p.tipo === 'auto'; }).map(function (p) {
@@ -317,7 +359,7 @@ function findGift_(code) {
 }
 
 function giftUsable_(g, today) {
-  if (!g || g.estado === 'anulada') return false;
+  if (!g || g.estado === 'anulada' || g.estado === 'pendiente') return false;
   if (g.vence && today > g.vence) return false;
   return (Number(g.saldoRD) || 0) > 0;
 }
@@ -659,8 +701,10 @@ function adminData_(d) {
     clients: readTable_('Clientas').map(strip_),
     files: readTable_('Archivos').map(strip_),
     promos: readTable_('Promociones').map(strip_),
-    gifts: readTable_('Tarjetas').map(strip_),
+    gifts: readTable_('Tarjetas').filter(function (g) { return g.estado !== 'pendiente'; }).map(strip_),
     expenses: readTable_('Gastos').map(strip_),
+    gallery: readOpt_('Galeria').map(strip_),
+    reviews: readOpt_('Resenas').map(strip_),
     settings: readTable_('Ajustes').map(function (r) { return { key: r.clave, value: r.valor, help: r['qué es'] || '' }; }),
     services: readTable_('Servicios').map(strip_),
     schedule: schedule_(s),
@@ -813,7 +857,7 @@ function adminSaveSettings_(d) {
     const rows = readTable_('Ajustes');
     Object.keys(d.settings).forEach(function (k) {
       if (SETTING_KEYS.indexOf(k) < 0) return;
-      const v = clean_(d.settings[k], 300);
+      const v = clean_(d.settings[k], LONG_SETTINGS.indexOf(k) >= 0 ? 4000 : 300);
       const r = rows.filter(function (x) { return x.clave === k; })[0];
       if (r) updateTable_('Ajustes', r._row, { valor: v });
       else appendRow_('Ajustes', { clave: k, valor: v, 'qué es': '' });
@@ -991,6 +1035,203 @@ function adminDeleteExpense_(d) {
 }
 
 /* =========================================================================
+   Contenido de la web: franja, Conoce a Majo, galería, reseñas
+   ========================================================================= */
+
+function siteContent_(s) {
+  return {
+    announcement: { active: !/^no$/i.test(s.anuncioActivo || 'si'), text: s.anuncioTexto || '', link: s.anuncioEnlace || '' },
+    google: { rating: Number(String(s.googleRating || '').replace(',', '.')) || 0, count: Number(s.googleResenas) || 0, url: s.googleUrl || '', reviewUrl: s.googleResenaUrl || '' },
+    majo: {
+      title: s.majoTitulo || 'Conoce a Majo', text: s.majoTexto || '',
+      certs: String(s.majoCerts || '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean),
+      photo: s.majoFotoUrl || '',
+    },
+  };
+}
+
+function publicFolder_() {
+  const id = PropertiesService.getScriptProperties().getProperty('PUBLIC_FOLDER_ID');
+  if (!id) throw new Error('Falta ejecutar setup() para crear la carpeta pública.');
+  return DriveApp.getFolderById(id);
+}
+function publicUrl_(fileId) { return 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1600'; }
+/* Copia un archivo privado a la carpeta pública y lo comparte "cualquiera con el enlace puede ver" */
+function publicCopy_(driveId, name) {
+  const f = DriveApp.getFileById(driveId).makeCopy(name, publicFolder_());
+  f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return f.getId();
+}
+function trashQuiet_(id) { try { if (id) DriveApp.getFileById(id).setTrashed(true); } catch (e) { /* ya no existe */ } }
+
+function adminPublishGallery_(d) {
+  needAdmin_(d);
+  if (!d.permiso) return { ok: false, error: 'Confirma que la clienta dio permiso para publicar sus fotos.' };
+  const files = readTable_('Archivos');
+  const a = files.filter(function (x) { return x.id === d.antesId; })[0];
+  const b = files.filter(function (x) { return x.id === d.despuesId; })[0];
+  if (!a || !b) return { ok: false, error: 'Elige una foto de antes y una de después.' };
+  if (a.mime === 'application/pdf' || b.mime === 'application/pdf') return { ok: false, error: 'La galería solo acepta fotos.' };
+  const servicio = clean_(d.servicio, 80);
+  const id = 'GAL-' + Utilities.getUuid().slice(0, 6).toUpperCase();
+  const antes = publicCopy_(a.driveId, id + ' · antes');
+  const despues = publicCopy_(b.driveId, id + ' · despues');
+  const row = {
+    id: id, servicio: servicio, antesId: antes, despuesId: despues, antesUrl: publicUrl_(antes), despuesUrl: publicUrl_(despues),
+    texto: clean_(d.texto, 200), orden: Number(d.orden) || 0, visible: 'si', creada: new Date().toISOString(),
+  };
+  appendRow_('Galeria', row);
+  return { ok: true, item: strip_(row) };
+}
+
+function adminSaveGallery_(d) {
+  needAdmin_(d);
+  const r = readTable_('Galeria').filter(function (x) { return x.id === d.id; })[0];
+  if (!r) return { ok: false, error: 'No encontramos esa foto de la galería.' };
+  const patch = {};
+  if (d.servicio != null) patch.servicio = clean_(d.servicio, 80);
+  if (d.texto != null) patch.texto = clean_(d.texto, 200);
+  if (d.orden != null) patch.orden = Number(d.orden) || 0;
+  if (d.visible != null) patch.visible = d.visible ? 'si' : 'no';
+  updateTable_('Galeria', r._row, patch);
+  Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
+  return { ok: true, item: strip_(r) };
+}
+
+function adminDeleteGallery_(d) {
+  needAdmin_(d);
+  const r = readTable_('Galeria').filter(function (x) { return x.id === d.id; })[0];
+  if (!r) return { ok: false, error: 'No encontramos esa foto de la galería.' };
+  trashQuiet_(r.antesId); trashQuiet_(r.despuesId);
+  deleteRow_('Galeria', r._row);
+  return { ok: true };
+}
+
+/* Reseñas reales copiadas de tu perfil de Google */
+function adminSaveReview_(d) {
+  needAdmin_(d);
+  const v = d.review || {};
+  const autora = clean_(v.autora, 60), texto = clean_(v.texto, 800);
+  if (!autora || !texto) return { ok: false, error: 'Escribe el nombre y el texto de la reseña.' };
+  const patch = {
+    id: v.id || ('RES-' + Utilities.getUuid().slice(0, 6).toUpperCase()), autora: autora, texto: texto,
+    estrellas: Math.max(1, Math.min(5, Math.round(Number(v.estrellas) || 5))), fecha: isDateKey_(v.fecha) ? v.fecha : todayKey_(),
+    visible: v.visible === false || /^no$/i.test(String(v.visible)) ? 'no' : 'si', orden: Number(v.orden) || 0,
+  };
+  const r = readTable_('Resenas').filter(function (x) { return x.id === patch.id; })[0];
+  if (r) updateTable_('Resenas', r._row, patch); else { patch.creada = new Date().toISOString(); appendRow_('Resenas', patch); }
+  return { ok: true, review: patch };
+}
+
+function adminDeleteReview_(d) {
+  needAdmin_(d);
+  const r = readTable_('Resenas').filter(function (x) { return x.id === d.id; })[0];
+  if (!r) return { ok: false, error: 'No encontramos esa reseña.' };
+  deleteRow_('Resenas', r._row);
+  return { ok: true };
+}
+
+/* Foto de "Conoce a Majo" */
+function adminUploadPublic_(d) {
+  needAdmin_(d);
+  const mime = String(d.mime || '');
+  if (['image/jpeg', 'image/png', 'image/webp'].indexOf(mime) < 0) return { ok: false, error: 'Usa una foto JPG, PNG o WEBP.' };
+  const bytes = Utilities.base64Decode(String(d.data || ''));
+  if (!bytes.length || bytes.length > MAX_FILE_BYTES) return { ok: false, error: 'La foto está vacía o pesa más de 12 MB.' };
+  const file = publicFolder_().createFile(Utilities.newBlob(bytes, mime, 'majo · ' + todayKey_()));
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  const url = publicUrl_(file.getId());
+  const rows = readTable_('Ajustes');
+  const old = rows.filter(function (x) { return x.clave === 'majoFotoUrl'; })[0];
+  if (old) {
+    const m = String(old.valor || '').match(/id=([\w-]+)/);
+    if (m) trashQuiet_(m[1]);
+    updateTable_('Ajustes', old._row, { valor: url });
+  } else appendRow_('Ajustes', { clave: 'majoFotoUrl', valor: url, 'qué es': '' });
+  return { ok: true, url: url };
+}
+
+/* =========================================================================
+   Tarjetas de regalo compradas en la web (PayPal)
+   ========================================================================= */
+
+function giftOrder_(d) {
+  const s = settings_();
+  if (/^no$/i.test(s.tarjetasEnLinea || 'si')) return { ok: false, error: 'La venta de tarjetas en la web está pausada.' };
+  const monto = Math.round(Number(d.montoRD) || 0);
+  const min = num_(s.tarjetaMin, 500), max = num_(s.tarjetaMax, 30000);
+  if (monto < min || monto > max) return { ok: false, error: 'El valor debe estar entre RD$ ' + money_(min) + ' y RD$ ' + money_(max) + '.' };
+  const correo = clean_(d.correo, 120).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { ok: false, error: 'Escribe tu correo para enviarte la tarjeta.' };
+  const correoPara = clean_(d.correoPara, 120).toLowerCase();
+  if (correoPara && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correoPara)) return { ok: false, error: 'Revisa el correo de quien recibe la tarjeta.' };
+  const rate = num_(s.tasaUSD, 63);
+  const usd = usd_(monto, rate);
+  const id = 'TRG-' + Utilities.getUuid().slice(0, 6).toUpperCase();
+  const order = paypal_('post', '/v2/checkout/orders', {
+    intent: 'CAPTURE',
+    purchase_units: [{
+      reference_id: id, custom_id: id, invoice_id: id,
+      description: 'Tarjeta de regalo MAJOBELLA · RD$ ' + money_(monto),
+      amount: { currency_code: 'USD', value: usd.toFixed(2) },
+    }],
+    application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+  }, id + '-order');
+  appendRow_('Tarjetas', {
+    id: id, codigo: '', montoRD: monto, saldoRD: 0, comprador: clean_(d.de, 80), para: clean_(d.para, 80), mensaje: clean_(d.mensaje, 160),
+    metodoPago: 'paypal', vendida: '', vence: '', estado: 'pendiente', creada: new Date().toISOString(),
+    correoComprador: correo, correoPara: correoPara, paypalOrden: order.id,
+  });
+  return { ok: true, id: id, orderId: order.id, montoRD: monto, montoUSD: usd.toFixed(2), usdRate: rate };
+}
+
+function giftCapture_(d) {
+  const g = readTable_('Tarjetas').filter(function (x) { return x.id === d.id; })[0];
+  if (!g || g.paypalOrden !== d.orderId) return { ok: false, error: 'No encontramos esa compra.' };
+  if (g.estado !== 'pendiente' && g.paypalCaptura) return { ok: true, gift: giftOut_(g) };
+  const cap = firstCapture_(paypal_('post', '/v2/checkout/orders/' + encodeURIComponent(d.orderId) + '/capture', {}, g.id + '-capture'));
+  if (!cap || cap.status !== 'COMPLETED') return { ok: false, error: 'PayPal no completó el pago. No se te cobró.' };
+  const s = settings_();
+  let codigo = '';
+  for (let i = 0; i < 6 && (!codigo || findGift_(codigo)); i++) codigo = 'MJB-' + randCode_(4) + '-' + randCode_(4);
+  const today = todayKey_();
+  const p = today.split('-').map(Number);
+  const vence = Utilities.formatDate(new Date(Date.UTC(p[0], p[1] - 1, p[2] + num_(s.tarjetaVenceDias, 365))), 'UTC', 'yyyy-MM-dd');
+  const patch = { codigo: codigo, saldoRD: g.montoRD, vendida: today, vence: vence, estado: 'activa', paypalCaptura: cap.id };
+  updateTable_('Tarjetas', g._row, patch);
+  Object.keys(patch).forEach(function (k) { g[k] = patch[k]; });
+  notifyGift_(g, s);
+  return { ok: true, gift: giftOut_(g) };
+}
+
+function giftOut_(g) {
+  return { codigo: g.codigo, montoRD: Number(g.montoRD) || 0, para: g.para, de: g.comprador, mensaje: g.mensaje, vence: g.vence };
+}
+
+function giftCardHtml_(g, s) {
+  const web = s.webUrl ? '<p style="margin:18px 0 0;font-size:13px;color:#666">Reserva en <a href="' + s.webUrl + '#reservar" style="color:#111">' + esc_(s.webUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')) + '</a> y escribe el código en el resumen de tu cita.</p>' : '';
+  return '<div style="font-family:Georgia,serif;color:#111;max-width:520px;border:2px solid #111;padding:28px;text-align:center">' +
+    '<p style="letter-spacing:.3em;font-size:12px;margin:0">MAJOBELLA</p>' +
+    '<p style="letter-spacing:.25em;font-size:11px;color:#666;margin:18px 0 6px">TARJETA DE REGALO</p>' +
+    '<p style="font-size:44px;margin:0">RD$ ' + money_(g.montoRD) + '</p>' +
+    (g.para ? '<p style="font-style:italic;font-size:18px;margin:10px 0 0">Para ' + esc_(g.para) + (g.comprador ? ' · de ' + esc_(g.comprador) : '') + '</p>' : '') +
+    (g.mensaje ? '<p style="color:#555;margin:12px 0 0">“' + esc_(g.mensaje) + '”</p>' : '') +
+    '<p style="margin:22px 0 0"><span style="display:inline-block;background:#111;color:#fff;padding:12px 22px;font-family:monospace;font-size:22px;letter-spacing:.12em">' + esc_(g.codigo) + '</span></p>' +
+    '<p style="font-size:13px;color:#666;margin:10px 0 0">Válida hasta el ' + esc_(g.vence) + '</p>' + web + '</div>';
+}
+
+function notifyGift_(g, s) {
+  safeMail_(g.correoComprador, 'Tu tarjeta de regalo MAJOBELLA · ' + g.codigo,
+    '<div style="font-family:Georgia,serif;color:#111"><p>¡Gracias por tu compra! Esta es la tarjeta de regalo:</p></div>' + giftCardHtml_(g, s));
+  if (g.correoPara) {
+    safeMail_(g.correoPara, (g.comprador ? g.comprador + ' te regaló' : 'Te regalaron') + ' una experiencia en MAJOBELLA',
+      '<div style="font-family:Georgia,serif;color:#111"><p>Tienes una tarjeta de regalo para usar en MAJOBELLA Beauty Studio.</p></div>' + giftCardHtml_(g, s));
+  }
+  safeMail_(adminTo_(s), 'Tarjeta de regalo vendida en la web · RD$ ' + money_(g.montoRD),
+    '<p>Código: ' + esc_(g.codigo) + '<br>De: ' + esc_(g.comprador || '—') + ' (' + esc_(g.correoComprador) + ')<br>Para: ' + esc_(g.para || '—') + '</p>');
+}
+
+/* =========================================================================
    Hoja de cálculo (las columnas se leen por su nombre)
    ========================================================================= */
 
@@ -1027,6 +1268,8 @@ function readTable_(name) {
     return o;
   }).filter(function (o) { return o[h[0]]; });
 }
+/* Igual que readTable_, pero devuelve [] si la pestaña aún no existe (antes de volver a ejecutar setup) */
+function readOpt_(name) { try { return readTable_(name); } catch (e) { return []; } }
 function appendRow_(name, obj) {
   const t = tab_(name);
   const h = headers_(t);
@@ -1455,7 +1698,7 @@ function money_(n) { return Math.round(Number(n) || 0).toLocaleString('en-US'); 
 function pad_(h) { return ('0' + h).slice(-2); }
 function toMin_(hhmm) { const p = hhmm.split(':').map(Number); return p[0] * 60 + p[1]; }
 function isDateKey_(k) { return /^\d{4}-\d{2}-\d{2}$/.test(String(k || '')); }
-function clean_(v, max) { return String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max); }
+function clean_(v, max) { return String(v == null ? '' : v).replace(/[\u0000-\u0009\u000b-\u001f]/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, max); }
 function esc_(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function safeJson_(t, def) { try { return JSON.parse(t); } catch (e) { return def; } }
 function msg_(err) { return String((err && err.message) || err); }

@@ -238,7 +238,7 @@
           <div class="cp-save"><button type="submit" class="btn-dark">Guardar notas</button></div>
         </div>
       </form>
-      <h3 class="cp-h">Fotos y consentimiento</h3>
+      <div class="cp-h-row"><h3 class="cp-h">Fotos y consentimiento</h3>${c.files.some((f) => f.tipo === 'antes') && c.files.some((f) => f.tipo === 'despues') ? '<button type="button" class="act" data-publish>Publicar en la galería</button>' : ''}</div>
       <p class="hint">Se guardan en una carpeta privada de tu Google Drive. Las fotos se reducen a buena calidad antes de subir.</p>
       <label class="cp-date">Fecha de las fotos <input type="date" id="cp-file-date" value="${M.todayKey()}"></label>
       <p class="cp-up-msg" id="cp-up-msg" aria-live="polite"></p>
@@ -268,6 +268,8 @@
     thumbs.set(id, url);
     return url;
   }
+
+  A.fileUrl = fileUrl;
 
   async function viewFile(id) {
     const f = A.data.files.find((x) => x.id === id);
@@ -356,6 +358,7 @@
         }
         const row = e.target.closest('[data-client]');
         if (row) { openProfile(row.dataset.client); return; }
+        if (e.target.closest('[data-publish]')) { A.openPublish(st.profile); return; }
         const v = e.target.closest('[data-view-file]');
         if (v) viewFile(v.dataset.viewFile);
       });

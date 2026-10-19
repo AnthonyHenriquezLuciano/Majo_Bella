@@ -3,18 +3,75 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MAJOBELLA Beauty Studio</title>
-<meta name="description" content="MAJOBELLA Beauty Studio: cejas, pestañas, faciales, micropigmentación y depilación. Más yo, más bella.">
+<title>MAJOBELLA Beauty Studio · Cejas, pestañas y micropigmentación en Santo Domingo</title>
+<meta name="description" content="Estudio de belleza en Santo Domingo: diseño de cejas, pestañas, faciales, micropigmentación y depilación. Reserva en línea y aparta tu cita al instante. Más yo, más bella.">
 <meta name="theme-color" content="#ffffff">
+<link rel="canonical" href="https://anthonyhenriquezluciano.github.io/Majo_Bella/">
 <link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+<!-- Vista previa al compartir (WhatsApp, Instagram, Facebook) -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_DO">
+<meta property="og:site_name" content="MAJOBELLA Beauty Studio">
+<meta property="og:title" content="MAJOBELLA Beauty Studio · Más yo, más bella">
+<meta property="og:description" content="Cejas, pestañas, faciales y micropigmentación en Santo Domingo. Reserva tu cita en línea.">
+<meta property="og:url" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/">
+<meta property="og:image" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de MAJOBELLA Beauty Studio con el lema Más yo, más bella">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MAJOBELLA Beauty Studio · Más yo, más bella">
+<meta name="twitter:description" content="Cejas, pestañas, faciales y micropigmentación en Santo Domingo. Reserva tu cita en línea.">
+<meta name="twitter:image" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg">
+
+<!-- Ficha del negocio para Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BeautySalon",
+  "name": "MAJOBELLA Beauty Studio",
+  "slogan": "Más yo, más bella.",
+  "url": "https://anthonyhenriquezluciano.github.io/Majo_Bella/",
+  "image": "https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg",
+  "logo": "https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/logo-majobella.png",
+  "telephone": "+1-829-978-4986",
+  "priceRange": "RD$",
+  "currenciesAccepted": "DOP, USD",
+  "paymentAccepted": "Efectivo, transferencia, PayPal",
+  "address": { "@type": "PostalAddress", "addressLocality": "Santo Domingo", "addressCountry": "DO" },
+  "geo": { "@type": "GeoCoordinates", "latitude": 18.465401, "longitude": -69.9737548 },
+  "hasMap": "https://maps.app.goo.gl/d4uX28GuoKuyHuhf8",
+  "openingHoursSpecification": [
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], "opens": "10:00", "closes": "17:00" },
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": "Sunday", "opens": "10:00", "closes": "13:00" }
+  ],
+  "makesOffer": [
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Diseño de cejas" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Pestañas" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Faciales" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Micropigmentación" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Depilación" } }
+  ],
+  "potentialAction": { "@type": "ReserveAction", "target": "https://anthonyhenriquezluciano.github.io/Majo_Bella/#reservar" }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261019f">
+<link rel="stylesheet" href="css/styles.css?v=20261019g">
 </head>
 <body>
 <!--MJB:BODY-START-->
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+<div class="announce" id="announce" hidden>
+  <div class="container announce-in">
+    <a class="announce-link" id="announce-link" href="#reservar"><span id="announce-text"></span><span class="announce-arrow" aria-hidden="true">→</span></a>
+    <button type="button" class="announce-x" id="announce-x" aria-label="Cerrar anuncio">×</button>
+  </div>
+</div>
 
 <header class="site-header">
   <div class="container header-inner">
@@ -23,11 +80,11 @@
     </a>
     <nav class="main-nav" aria-label="Principal">
       <ul>
-        <li><a href="#inicio">Inicio</a></li>
-        <li><a href="#sobre">Sobre MAJOBELLA</a></li>
+        <li><a href="#majo">Conoce a Majo</a></li>
         <li><a href="#servicios">Servicios</a></li>
-        <li><a href="#reservar">Reservar</a></li>
-        <li><a href="#citas">Citas</a></li>
+        <li data-nav-for="resultados" hidden><a href="#resultados">Resultados</a></li>
+        <li><a href="#citas">Mis citas</a></li>
+        <li data-nav-for="regalar" hidden><a href="#regalar">Regalar</a></li>
         <li><a href="#contacto">Contacto</a></li>
       </ul>
     </nav>
@@ -44,9 +101,13 @@
     <ul>
       <li><a href="#inicio">Inicio</a></li>
       <li><a href="#sobre">Sobre MAJOBELLA</a></li>
+      <li><a href="#majo">Conoce a Majo</a></li>
       <li><a href="#servicios">Servicios</a></li>
+      <li data-nav-for="resultados" hidden><a href="#resultados">Resultados</a></li>
+      <li data-nav-for="resenas" hidden><a href="#resenas">Reseñas</a></li>
       <li><a href="#reservar">Reservar</a></li>
       <li><a href="#citas">Citas</a></li>
+      <li data-nav-for="regalar" hidden><a href="#regalar">Tarjetas de regalo</a></li>
       <li><a href="#contacto">Contacto</a></li>
     </ul>
     <a class="btn btn-primary" href="#reservar">Agendar cita</a>
@@ -134,6 +195,28 @@
     <p class="slogan-band" data-reveal><span class="rule"></span><span data-slogan>MÁS YO, MÁS BELLA.</span><span class="rule"></span></p>
   </section>
 
+  <!-- CONOCE A MAJO -->
+  <section id="majo" class="section majo">
+    <div class="container majo-grid">
+      <figure class="majo-photo" data-reveal>
+        <img id="majo-img" src="assets/monograma.png" alt="Monograma de MAJOBELLA" width="400" height="332" class="is-mark">
+      </figure>
+      <div class="majo-copy">
+        <p class="label" data-reveal>La artista</p>
+        <h2 class="display" id="majo-title" data-reveal>Conoce a Majo</h2>
+        <div class="majo-text" id="majo-text" data-reveal>
+          <p>Soy Majo, la mano detrás de MAJOBELLA. Creé este estudio para que cada clienta se reconozca en el espejo: más definida, más fresca y siempre ella misma.</p>
+          <p>Trabajo una cita a la vez. Antes de empezar hablamos de lo que quieres resaltar, y después te acompaño con los cuidados para que el resultado dure.</p>
+        </div>
+        <div class="majo-certs" id="majo-certs" hidden>
+          <p class="label">Formación</p>
+          <ul id="majo-certs-list"></ul>
+        </div>
+        <p class="script majo-sign" data-reveal>Majo</p>
+      </div>
+    </div>
+  </section>
+
   <!-- SERVICIOS -->
   <section id="servicios" class="section services-section">
     <div class="container menu-wrap">
@@ -143,6 +226,45 @@
       </div>
       <div class="menu-tabs" id="menu-tabs" role="tablist" aria-label="Categorías de servicios"></div>
       <div class="menu-list" id="services-list"></div>
+    </div>
+  </section>
+
+  <!-- RESULTADOS -->
+  <section id="resultados" class="section results" hidden>
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="label">Antes y después</p>
+          <h2 class="display">Resultados reales</h2>
+        </div>
+        <div class="section-head-side">
+          <p>Fotos de clientas de MAJOBELLA, publicadas con su permiso. Desliza para comparar.</p>
+        </div>
+      </div>
+      <div class="res-filters" id="res-filters" role="group" aria-label="Filtrar por servicio" hidden></div>
+      <div class="res-grid" id="res-grid"></div>
+      <div class="res-more"><button type="button" class="btn btn-line" id="res-more" hidden>Ver más resultados</button></div>
+    </div>
+  </section>
+
+  <!-- RESEÑAS -->
+  <section id="resenas" class="section reviews" hidden>
+    <div class="container">
+      <div class="rv-head" data-reveal>
+        <div>
+          <p class="label">Reseñas de Google</p>
+          <h2 class="display">Lo que dicen nuestras clientas</h2>
+        </div>
+        <div class="rv-score" id="rv-score" hidden>
+          <p class="rv-num" id="rv-num"></p>
+          <div><p class="rv-stars" id="rv-stars" aria-hidden="true"></p><p class="rv-count" id="rv-count"></p></div>
+        </div>
+      </div>
+      <ul class="rv-list" id="rv-list"></ul>
+      <div class="rv-ctas">
+        <a class="btn btn-line" id="rv-all" target="_blank" rel="noopener" hidden>Ver todas en Google</a>
+        <a class="btn btn-quiet" id="rv-write" target="_blank" rel="noopener" hidden>Escribir una reseña</a>
+      </div>
     </div>
   </section>
 
@@ -316,6 +438,63 @@
     </div>
   </section>
 
+  <!-- TARJETAS DE REGALO -->
+  <section id="regalar" class="section gift" hidden>
+    <div class="container gift-grid">
+      <div class="gift-intro">
+        <p class="label" data-reveal>Tarjetas de regalo</p>
+        <h2 class="display" data-reveal>Regala un momento para ella</h2>
+        <p class="gift-lead" data-reveal>Elige el valor, escribe una dedicatoria y paga con PayPal. La tarjeta llega al instante por correo con un código para usar al reservar cualquier servicio.</p>
+        <div class="gc-preview" id="gc-preview" aria-live="polite">
+          <p class="gc-k">Tarjeta de regalo</p>
+          <p class="gc-amt" id="gc-amt">RD$ 2,500</p>
+          <p class="gc-who" id="gc-who"></p>
+          <p class="gc-msg" id="gc-msg"></p>
+          <p class="gc-code" id="gc-code">MJB-····-····</p>
+        </div>
+      </div>
+      <form class="gift-form" id="gift-form" novalidate>
+        <fieldset class="gf-amounts">
+          <legend>Valor</legend>
+          <div class="gf-chips" id="gf-chips">
+            <label class="gf-chip"><input type="radio" name="amt" value="1500"><span>RD$ 1,500</span></label>
+            <label class="gf-chip"><input type="radio" name="amt" value="2500" checked><span>RD$ 2,500</span></label>
+            <label class="gf-chip"><input type="radio" name="amt" value="5000"><span>RD$ 5,000</span></label>
+            <label class="gf-chip"><input type="radio" name="amt" value="otro"><span>Otro</span></label>
+          </div>
+          <div class="field" id="gf-other-wrap" hidden>
+            <label for="gf-other">Otro valor (RD$)</label>
+            <input id="gf-other" name="otro" type="number" inputmode="numeric" min="500" step="100">
+          </div>
+        </fieldset>
+        <div class="gf-row">
+          <div class="field"><label for="gf-para">Para</label><input id="gf-para" name="para" maxlength="60" autocomplete="off" placeholder="Nombre de quien la recibe"></div>
+          <div class="field"><label for="gf-de">De</label><input id="gf-de" name="de" maxlength="60" autocomplete="name" placeholder="Tu nombre"></div>
+        </div>
+        <div class="field"><label for="gf-mensaje">Dedicatoria <span class="opt">(opcional)</span></label><input id="gf-mensaje" name="mensaje" maxlength="140" placeholder="¡Feliz cumpleaños!"></div>
+        <div class="gf-row">
+          <div class="field"><label for="gf-correo">Tu correo</label><input id="gf-correo" name="correo" type="email" autocomplete="email" required><span class="field-error">Escribe tu correo para enviarte la tarjeta.</span></div>
+          <div class="field"><label for="gf-correo-para">Correo de quien la recibe <span class="opt">(opcional)</span></label><input id="gf-correo-para" name="correoPara" type="email" autocomplete="off"><span class="field-error">Revisa este correo.</span></div>
+        </div>
+        <p class="gf-note" id="gf-note"></p>
+        <label class="gf-terms"><input type="checkbox" name="terms" id="gf-terms"><span>Acepto las <a href="cancelacion.html#tarjetas" target="_blank">condiciones de las tarjetas de regalo</a>.</span></label>
+        <div class="gf-pay" id="gf-pay"></div>
+        <p class="gf-msg" id="gf-msg" role="status" aria-live="polite"></p>
+      </form>
+      <div class="gift-done" id="gift-done" hidden tabindex="-1">
+        <p class="label">Listo</p>
+        <h3>Tu tarjeta está lista</h3>
+        <p id="gd-text"></p>
+        <p class="gd-code" id="gd-code"></p>
+        <div class="gd-actions">
+          <button type="button" class="btn btn-primary" id="gd-download">Descargar tarjeta</button>
+          <a class="btn btn-line" id="gd-wa" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+          <button type="button" class="btn btn-quiet" id="gd-again">Comprar otra</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- PREGUNTAS -->
   <section id="preguntas" class="section faq-section">
     <div class="container faq-grid">
@@ -349,6 +528,14 @@
         <div><dt>Redes</dt><dd class="social"><a data-social="instagram">Instagram</a><a data-social="tiktok">TikTok</a><a data-wa href="#contacto">WhatsApp</a></dd></div>
       </dl>
     </div>
+    <div class="container">
+      <div class="map" id="map" data-reveal>
+        <button type="button" class="map-load" id="map-load">
+          <span class="map-pin" aria-hidden="true"></span>
+          <span>Ver el mapa</span>
+        </button>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -366,6 +553,7 @@
       <a href="#citas">Mis citas</a>
       <a href="#preguntas">Preguntas</a>
       <a href="#contacto">Contacto</a>
+      <a href="#regalar" data-nav-for="regalar" hidden>Tarjetas de regalo</a>
     </nav>
     <div class="footer-social">
       <a data-social="instagram">Instagram</a>
@@ -375,6 +563,7 @@
   </div>
   <div class="container footer-base">
     <p>© <span data-year>2026</span> MAJOBELLA — Todos los derechos reservados.</p>
+    <nav class="footer-legal" aria-label="Legal"><a href="privacidad.html">Privacidad</a><a href="cancelacion.html">Cancelación y reembolsos</a></nav>
   </div>
 </footer>
 
@@ -408,28 +597,31 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/config.js?v=20261019f"></script>
-<script src="js/data/services.js?v=20261019f"></script>
-<script src="js/data/faq.js?v=20261019f"></script>
-<script src="js/data/brows.js?v=20261019f"></script>
-<script src="js/core/utils.js?v=20261019f"></script>
-<script src="js/integrations/whatsapp.js?v=20261019f"></script>
-<script src="js/integrations/calendar.js?v=20261019f"></script>
-<script src="js/integrations/booking-api.js?v=20261019f"></script>
-<script src="js/integrations/paypal.js?v=20261019f"></script>
-<script src="js/integrations/google-auth.js?v=20261019f"></script>
-<script src="js/integrations/appointments.js?v=20261019f"></script>
-<script src="js/components/nav.js?v=20261019f"></script>
-<script src="js/components/auth-modal.js?v=20261019f"></script>
-<script src="js/components/face.js?v=20261019f"></script>
-<script src="js/components/brows.js?v=20261019f"></script>
-<script src="js/components/hero.js?v=20261019f"></script>
-<script src="js/components/services.js?v=20261019f"></script>
-<script src="js/components/selection-bar.js?v=20261019f"></script>
-<script src="js/components/booking.js?v=20261019f"></script>
-<script src="js/components/citas.js?v=20261019f"></script>
-<script src="js/components/contact.js?v=20261019f"></script>
-<script src="js/components/reveal.js?v=20261019f"></script>
-<script src="js/main.js?v=20261019f"></script>
+<script src="js/config.js?v=20261019g"></script>
+<script src="js/data/services.js?v=20261019g"></script>
+<script src="js/data/faq.js?v=20261019g"></script>
+<script src="js/data/brows.js?v=20261019g"></script>
+<script src="js/core/utils.js?v=20261019g"></script>
+<script src="js/integrations/whatsapp.js?v=20261019g"></script>
+<script src="js/integrations/calendar.js?v=20261019g"></script>
+<script src="js/integrations/booking-api.js?v=20261019g"></script>
+<script src="js/integrations/paypal.js?v=20261019g"></script>
+<script src="js/integrations/google-auth.js?v=20261019g"></script>
+<script src="js/integrations/appointments.js?v=20261019g"></script>
+<script src="js/integrations/giftcard.js?v=20261019g"></script>
+<script src="js/components/nav.js?v=20261019g"></script>
+<script src="js/components/auth-modal.js?v=20261019g"></script>
+<script src="js/components/face.js?v=20261019g"></script>
+<script src="js/components/brows.js?v=20261019g"></script>
+<script src="js/components/hero.js?v=20261019g"></script>
+<script src="js/components/services.js?v=20261019g"></script>
+<script src="js/components/selection-bar.js?v=20261019g"></script>
+<script src="js/components/booking.js?v=20261019g"></script>
+<script src="js/components/citas.js?v=20261019g"></script>
+<script src="js/components/contact.js?v=20261019g"></script>
+<script src="js/components/site.js?v=20261019g"></script>
+<script src="js/components/giftshop.js?v=20261019g"></script>
+<script src="js/components/reveal.js?v=20261019g"></script>
+<script src="js/main.js?v=20261019g"></script>
 </body>
 </html>

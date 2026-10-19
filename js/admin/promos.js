@@ -6,6 +6,7 @@
   const A = M.Admin;
   const { $, esc } = A;
   const METHOD = { efectivo: 'Efectivo', transferencia: 'Transferencia', paypal: 'PayPal', cortesia: 'Cortesía' };
+  const soldText = (g) => (g.paypalOrden ? 'PayPal · comprada en la web' : (METHOD[g.metodoPago] || g.metodoPago));
   let editing = null;
 
   const discText = (p) => (p.descuentoTipo === 'monto' ? `${A.money(p.valor)} de descuento` : `${Number(p.valor)}% de descuento`);
@@ -51,8 +52,8 @@
       return `<li class="promo">
         <div class="pr-main">
           <div class="pr-top"><p class="t-name"><code>${esc(g.codigo)}</code></p><span class="pill ${cls}">${esc(A.cap(g.estado))}</span></div>
-          <p class="t-sub">${g.para ? `Para ${esc(g.para)}` : ''}${g.para && g.comprador ? ' · ' : ''}${g.comprador ? `de ${esc(g.comprador)}` : ''}</p>
-          <p class="t-sub">Valor ${A.money(g.montoRD)} · saldo <strong>${A.money(g.saldoRD)}</strong> · ${esc(METHOD[g.metodoPago] || g.metodoPago)} · vendida ${A.shortDate(g.vendida)}${g.vence ? ` · vence ${A.shortDate(g.vence)}` : ''}${uses.length ? ` · ${A.plural(uses.length, 'uso')}` : ''}</p>
+          <p class="t-sub">${g.para ? `Para ${esc(g.para)}` : ''}${g.para && g.comprador ? ' · ' : ''}${g.comprador ? `de ${esc(g.comprador)}` : ''}${g.correoComprador ? ` · ${esc(g.correoComprador)}` : ''}</p>
+          <p class="t-sub">Valor ${A.money(g.montoRD)} · saldo <strong>${A.money(g.saldoRD)}</strong> · ${esc(soldText(g))} · vendida ${A.shortDate(g.vendida)}${g.vence ? ` · vence ${A.shortDate(g.vence)}` : ''}${uses.length ? ` · ${A.plural(uses.length, 'uso')}` : ''}</p>
         </div>
         <div class="due-actions">
           <button type="button" class="act" data-gift-img="${esc(g.id)}">Descargar tarjeta</button>
@@ -141,59 +142,8 @@
     });
   }
 
-  /* Imagen de la tarjeta para enviar por WhatsApp o imprimir */
-  function giftImage(g) {
-    const logo = new Image();
-    logo.onload = draw; logo.onerror = draw;
-    logo.src = 'assets/logo-majobella.png';
-    function draw() {
-      const W = 1200, H = 720;
-      const c = document.createElement('canvas');
-      c.width = W; c.height = H;
-      const x = c.getContext('2d');
-      x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
-      x.strokeStyle = '#111111'; x.lineWidth = 2; x.strokeRect(36, 36, W - 72, H - 72);
-      x.lineWidth = 0.8; x.strokeRect(50, 50, W - 100, H - 100);
-      if (logo.naturalWidth) { const h = 92, w = (logo.naturalWidth / logo.naturalHeight) * h; x.drawImage(logo, (W - w) / 2, 96, w, h); }
-      x.fillStyle = '#575757'; x.textAlign = 'center';
-      x.font = '600 20px Georgia, serif';
-      spaced(x, 'TARJETA DE REGALO', W / 2, 250, 6);
-      x.fillStyle = '#000'; x.font = '400 96px Georgia, serif';
-      x.fillText(A.money(g.montoRD), W / 2, 360);
-      x.font = 'italic 30px Georgia, serif'; x.fillStyle = '#111';
-      const who = [g.para ? `Para ${g.para}` : '', g.comprador ? `de ${g.comprador}` : ''].filter(Boolean).join(' · ');
-      if (who) x.fillText(who, W / 2, 420);
-      if (g.mensaje) { x.font = '24px Georgia, serif'; x.fillStyle = '#575757'; wrap(x, `“${g.mensaje}”`, W / 2, 468, 860, 32); }
-      x.fillStyle = '#111'; x.fillRect(W / 2 - 230, 540, 460, 74);
-      x.fillStyle = '#fff'; x.font = '600 34px ui-monospace, Menlo, monospace';
-      spaced(x, g.codigo, W / 2, 589, 4);
-      x.fillStyle = '#575757'; x.font = '19px Georgia, serif';
-      const web = (A.settingsMap().webUrl || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
-      x.fillText(`Escribe el código al reservar${web ? ` en ${web}` : ''}${g.vence ? ` · válida hasta ${A.shortDate(g.vence)}` : ''}`, W / 2, 648);
-      const a = document.createElement('a');
-      a.href = c.toDataURL('image/png');
-      a.download = `MAJOBELLA-tarjeta-${g.codigo}.png`;
-      document.body.appendChild(a); a.click(); a.remove();
-    }
-    function spaced(ctx, text, cx, y, gap) {
-      const chars = [...text];
-      const widths = chars.map((ch) => ctx.measureText(ch).width);
-      const total = widths.reduce((t, w) => t + w, 0) + gap * (chars.length - 1);
-      let px = cx - total / 2;
-      ctx.textAlign = 'left';
-      chars.forEach((ch, i) => { ctx.fillText(ch, px, y); px += widths[i] + gap; });
-      ctx.textAlign = 'center';
-    }
-    function wrap(ctx, text, cx, y, max, lh) {
-      const words = text.split(' ');
-      let line = '';
-      words.forEach((w) => {
-        const t = line ? `${line} ${w}` : w;
-        if (ctx.measureText(t).width > max) { ctx.fillText(line, cx, y); y += lh; line = w; } else line = t;
-      });
-      if (line) ctx.fillText(line, cx, y);
-    }
-  }
+  /* Imagen de la tarjeta para enviar por WhatsApp o imprimir (js/integrations/giftcard.js) */
+  const giftImage = (g) => M.GiftCard.download(g, { webUrl: A.settingsMap().webUrl });
 
   /* ---------- Inicio ---------- */
   A.sections.promos = {

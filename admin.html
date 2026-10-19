@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/admin.css?v=20261019f">
+<link rel="stylesheet" href="css/admin.css?v=20261019g">
 </head>
 <body>
 <!--MJB:BODY-START-->
@@ -26,6 +26,7 @@
     <button type="button" data-sec="clientas">Clientas</button>
     <button type="button" data-sec="dinero">Dinero</button>
     <button type="button" data-sec="promos">Promociones</button>
+    <button type="button" data-sec="web">Web</button>
     <button type="button" data-sec="ajustes">Ajustes</button>
   </div>
   <div class="ad-tabs-tools">
@@ -229,6 +230,71 @@
     </div>
   </section>
 
+  <!-- WEB -->
+  <section data-section="web" id="sec-web" hidden>
+    <div class="ad-cols">
+      <section class="ad-panel">
+        <div class="panel-head"><h2>Galería de resultados</h2><a class="chip-btn" id="wb-view" target="_blank" rel="noopener" href="./#resultados">Ver en la web</a></div>
+        <p class="panel-note">Para publicar, abre la ficha de una clienta → <strong>Publicar en la galería</strong>. Solo con su permiso. Se publica una copia: las fotos originales siguen privadas.</p>
+        <ul class="gal-list" id="wb-gallery"></ul>
+      </section>
+      <section class="ad-panel">
+        <div class="panel-head"><h2>Reseñas de Google</h2><button type="button" class="btn-dark sm" id="wb-rev-new">+ Añadir reseña</button></div>
+        <p class="panel-note">Copia aquí tus reseñas reales de Google (nombre como aparece, estrellas y texto). La web muestra estas y enlaza a tu perfil para ver todas.</p>
+        <ul class="due-list" id="wb-reviews"></ul>
+      </section>
+    </div>
+    <form id="wb-form" novalidate>
+      <div class="ad-cols">
+        <section class="ad-panel">
+          <div class="panel-head"><h2>Conoce a Majo</h2></div>
+          <div class="majo-photo">
+            <div class="mp-img" id="wb-majo-img"></div>
+            <div>
+              <label class="act act-file">Subir foto<input type="file" id="wb-majo-file" accept="image/*" hidden></label>
+              <p class="hint">Vertical, buena luz. Se publica en la web.</p>
+              <p class="hint" id="wb-majo-msg" aria-live="polite"></p>
+            </div>
+          </div>
+          <label class="set-b">Título<input name="majoTitulo" maxlength="80"></label>
+          <label class="set-b">Tu historia <span class="opt">(deja una línea en blanco para separar párrafos)</span><textarea name="majoTexto" rows="7" maxlength="4000"></textarea></label>
+          <label class="set-b">Formación y certificaciones <span class="opt">(una por línea)</span><textarea name="majoCerts" rows="4" maxlength="2000"></textarea></label>
+          <p class="hint">Si dejas la historia vacía, la web muestra un texto general sobre el estudio.</p>
+        </section>
+        <div>
+          <section class="ad-panel">
+            <div class="panel-head"><h2>Franja de anuncio</h2></div>
+            <label class="chk"><input type="checkbox" name="anuncioActivo"><span>Mostrar la franja arriba de la web</span></label>
+            <label class="set-b">Texto <span class="opt">(vacío = anuncia sola tu promoción automática vigente)</span><input name="anuncioTexto" maxlength="140" placeholder="Ej.: Octubre de cejas: 15% de descuento"></label>
+            <label class="set-b">Enlace <span class="opt">(vacío = lleva a Reservar)</span><input name="anuncioEnlace" maxlength="300" placeholder="#reservar"></label>
+            <p class="panel-note" id="wb-ann-preview"></p>
+          </section>
+          <section class="ad-panel">
+            <div class="panel-head"><h2>Perfil de Google</h2></div>
+            <div class="row2">
+              <label class="set-b">Puntuación<input name="googleRating" inputmode="decimal" placeholder="4.9"></label>
+              <label class="set-b">Nº de reseñas<input name="googleResenas" type="number" min="0" step="1"></label>
+            </div>
+            <label class="set-b">Enlace a tu perfil (ver reseñas)<input name="googleUrl" type="url" placeholder="https://maps.app.goo.gl/…"></label>
+            <label class="set-b">Enlace para dejar reseña<input name="googleResenaUrl" type="url" placeholder="https://g.page/r/…/review"></label>
+            <p class="hint">Lo encuentras en tu Perfil de Empresa de Google → <em>Pedir reseñas</em>.</p>
+          </section>
+          <section class="ad-panel">
+            <div class="panel-head"><h2>Tarjetas de regalo en la web</h2></div>
+            <label class="chk"><input type="checkbox" name="tarjetasEnLinea"><span>Vender tarjetas de regalo con PayPal</span></label>
+            <div class="row3">
+              <label class="set-b">Mínimo (RD$)<input name="tarjetaMin" type="number" min="0" step="100"></label>
+              <label class="set-b">Máximo (RD$)<input name="tarjetaMax" type="number" min="0" step="100"></label>
+              <label class="set-b">Válida (días)<input name="tarjetaVenceDias" type="number" min="1" step="1"></label>
+            </div>
+            <p class="hint">Al pagar, la clienta recibe el código por correo y puede descargar la tarjeta. Te llega un aviso y aparece en Promociones.</p>
+          </section>
+        </div>
+      </div>
+      <div class="savebar"><span>Los cambios se ven en la web al guardar.</span><button type="submit" class="btn-dark" id="wb-save">Guardar</button></div>
+    </form>
+  </section>
+
   <!-- AJUSTES -->
   <section data-section="ajustes" id="sec-ajustes" hidden>
     <div class="ad-cols">
@@ -259,6 +325,50 @@
     <div class="savebar"><span>Los cambios se aplican en la web al guardar.</span><button type="button" class="btn-dark" id="aj-save">Guardar ajustes</button></div>
   </section>
 </main>
+
+<!-- Reseña -->
+<dialog class="ad-dialog" id="dlg-review" aria-labelledby="rv-h">
+  <form id="rv-form" novalidate>
+    <div class="dlg-head"><h2 id="rv-h">Reseña de Google</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <p>Cópiala tal cual de tu perfil de Google.</p>
+    <div class="row2">
+      <label>Nombre<input name="autora" maxlength="60" required placeholder="Carla M."></label>
+      <label>Estrellas<select name="estrellas"><option value="5">★★★★★ 5</option><option value="4">★★★★ 4</option><option value="3">★★★ 3</option><option value="2">★★ 2</option><option value="1">★ 1</option></select></label>
+    </div>
+    <label>Texto<textarea name="texto" rows="5" maxlength="800" required></textarea></label>
+    <div class="row2">
+      <label>Fecha<input name="fecha" type="date"></label>
+      <label>Orden <span class="opt">(menor = primero)</span><input name="orden" type="number" step="1" value="0"></label>
+    </div>
+    <label class="chk"><input type="checkbox" name="visible" checked><span>Mostrar en la web</span></label>
+    <p class="dlg-msg" id="rv-msg" aria-live="polite"></p>
+    <div class="dlg-actions">
+      <button type="button" class="chip-btn" data-close>Cerrar</button>
+      <button type="submit" class="btn-dark" id="rv-save">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Publicar en la galería -->
+<dialog class="ad-dialog wide" id="dlg-pub" aria-labelledby="pb-h">
+  <form id="pb-form" novalidate>
+    <div class="dlg-head"><h2 id="pb-h">Publicar en la galería</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
+    <p>Elige una foto de antes y una de después. En la web se verán juntas con un deslizador.</p>
+    <fieldset class="fs"><legend>Antes</legend><div class="pick-grid" id="pb-antes"></div></fieldset>
+    <fieldset class="fs"><legend>Después</legend><div class="pick-grid" id="pb-despues"></div></fieldset>
+    <div class="row2">
+      <label>Servicio<select name="servicio" id="pb-servicio"></select></label>
+      <label>Descripción <span class="opt">(opcional)</span><input name="texto" maxlength="200" placeholder="Microblading · 1 sesión"></label>
+    </div>
+    <label class="chk"><input type="checkbox" name="permiso"><span>La clienta me dio permiso para publicar estas fotos</span></label>
+    <p class="hint">No se publica su nombre. Las fotos originales siguen privadas en tu Drive.</p>
+    <p class="dlg-msg" id="pb-msg" aria-live="polite"></p>
+    <div class="dlg-actions">
+      <button type="button" class="chip-btn" data-close>Cerrar</button>
+      <button type="submit" class="btn-dark" id="pb-save">Publicar</button>
+    </div>
+  </form>
+</dialog>
 
 <!-- Nueva cita -->
 <dialog class="ad-dialog wide" id="dlg-new" aria-labelledby="nc-h">
@@ -433,18 +543,20 @@
 <div class="ad-toast" id="ad-toast" role="status" hidden></div>
 <!--MJB:BODY-END-->
 
-<script src="js/config.js?v=20261019f"></script>
-<script src="js/data/services.js?v=20261019f"></script>
-<script src="js/core/utils.js?v=20261019f"></script>
-<script src="js/integrations/booking-api.js?v=20261019f"></script>
-<script src="js/integrations/google-auth.js?v=20261019f"></script>
-<script src="js/admin/core.js?v=20261019f"></script>
-<script src="js/admin/demo.js?v=20261019f"></script>
-<script src="js/admin/agenda.js?v=20261019f"></script>
-<script src="js/admin/clientes.js?v=20261019f"></script>
-<script src="js/admin/dinero.js?v=20261019f"></script>
-<script src="js/admin/promos.js?v=20261019f"></script>
-<script src="js/admin/ajustes.js?v=20261019f"></script>
+<script src="js/config.js?v=20261019g"></script>
+<script src="js/data/services.js?v=20261019g"></script>
+<script src="js/core/utils.js?v=20261019g"></script>
+<script src="js/integrations/booking-api.js?v=20261019g"></script>
+<script src="js/integrations/google-auth.js?v=20261019g"></script>
+<script src="js/admin/core.js?v=20261019g"></script>
+<script src="js/admin/demo.js?v=20261019g"></script>
+<script src="js/admin/agenda.js?v=20261019g"></script>
+<script src="js/admin/clientes.js?v=20261019g"></script>
+<script src="js/admin/dinero.js?v=20261019g"></script>
+<script src="js/integrations/giftcard.js?v=20261019g"></script>
+<script src="js/admin/promos.js?v=20261019g"></script>
+<script src="js/admin/web.js?v=20261019g"></script>
+<script src="js/admin/ajustes.js?v=20261019g"></script>
 <script>window.MJB.Admin.start();</script>
 </body>
 </html>

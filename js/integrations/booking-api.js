@@ -108,6 +108,9 @@
         M.services.push(s); M.serviceById[s.id] = s;
       });
       M.promos = data.promos || [];
+      M.site = Object.assign(M.site || {}, data.site || {}, {
+        gallery: data.gallery || [], reviews: data.reviews || [], giftShop: data.giftShop || null, loaded: true,
+      });
       return true;
     },
 
@@ -172,6 +175,8 @@
     checkCode(serviceIds, code, giftCode) {
       return this.post({ action: 'checkCode', services: serviceIds, code: code || '', giftCode: giftCode || '' }, 'No se pudo revisar el código.');
     },
+    giftOrder(d) { return this.post(Object.assign({ action: 'giftOrder' }, d), 'No se pudo preparar el pago de la tarjeta.'); },
+    giftCapture(id, orderId) { return this.post({ action: 'giftCapture', id, orderId }, 'No se pudo confirmar el pago de la tarjeta.'); },
     capture(id, orderId) { return this.post({ action: 'capture', id, orderId }, 'No se pudo confirmar el pago.'); },
     release(id, token) { return this.post({ action: 'release', id, token }, '').catch(() => null); },
 

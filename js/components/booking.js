@@ -54,13 +54,14 @@
       const items = M.totals().items;
       const label = items.length ? M.depositPctLabel(items) : null;
       const none = items.length && M.depositRatio(items) === 0;
-      policy.textContent = [
+      const text = [
         mode === 'pay' && none ? 'Este servicio no requiere depósito: tu cita se confirma al instante y pagas al terminar.' : '',
         mode === 'pay' && !none ? `Apartas tu cita con ${label ? `el ${label}` : 'un depósito según cada servicio'} y pagas el resto al terminar, en efectivo, transferencia o PayPal.` : '',
         mode === 'pay' && !none && P.changeHours ? `Si cancelas con ${P.changeHours} horas o más de aviso, te devolvemos el depósito.` : '',
         mode !== 'pay' && P.changeHours ? `Puedes cambiar o cancelar hasta ${P.changeHours} horas antes.` : '',
         P.arriveEarlyMinutes ? `Te recomendamos llegar ${P.arriveEarlyMinutes} minutos antes.` : '',
       ].filter(Boolean).join(' ');
+      policy.innerHTML = `${M.escapeHtml(text)} <a href="cancelacion.html" target="_blank">Política de cancelación</a> · <a href="privacidad.html" target="_blank">Privacidad</a>`;
     }
     renderPolicy();
 
