@@ -1,0 +1,27 @@
+# MAJOBELLA · Configuración del proyecto de Supabase (la usa la CLI: supabase link / db push / functions deploy)
+project_id = "majobella"
+
+[api]
+schemas = ["public"]
+max_rows = 1000
+
+[db]
+major_version = 15
+
+[storage]
+file_size_limit = "15MiB"
+
+[auth]
+site_url = "https://anthonyhenriquezluciano.github.io/Majo_Bella/"
+additional_redirect_urls = ["majobella://auth", "majobella-estudio://auth", "https://anthonyhenriquezluciano.github.io/Majo_Bella/"]
+enable_signup = true
+
+[auth.external.google]
+enabled = true
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
+skip_nonce_check = true
+
+# La API valida cada acción por su cuenta (sesión, cuentas del estudio, claves): sin JWT obligatorio de Supabase
+[functions.api]
+verify_jwt = false

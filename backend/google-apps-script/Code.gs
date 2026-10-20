@@ -3471,3 +3471,69 @@ function adminResolveErrors_(d) {
   });
   return { ok: true, errors: readOpt_('Errores').slice(-150).reverse().map(function (x) { const o = strip_(x); o.row = x._row; return o; }) };
 }
+
+/* =========================================================================
+   Pasar todo a la nueva base de datos (Supabase)
+   1. En Propiedades del script añade NUEVA_API_URL (https://<proyecto>.supabase.co/functions/v1/api)
+      e IMPORT_KEY (la misma clave que guardaste en los secretos de Supabase).
+   2. Ejecuta migrarABaseDeDatos(): copia todas las pestañas. Se puede repetir sin duplicar.
+   3. Ejecuta migrarArchivos(): copia fotos, consentimientos y comprobantes de Drive.
+      Si tarda más de 5 minutos se detiene sola: vuelve a ejecutarla hasta que diga "Archivos listos".
+   ========================================================================= */
+function migrarABaseDeDatos() {
+  const props = PropertiesService.getScriptProperties();
+  const url = props.getProperty('NUEVA_API_URL'), key = props.getProperty('IMPORT_KEY');
+  if (!url || !key) throw new Error('Falta NUEVA_API_URL o IMPORT_KEY en Propiedades del script.');
+  resetDb_();
+  const order = ['Ajustes', 'Servicios', 'Cuentas', 'Bloqueos', 'Promociones', 'Paquetes', 'Clientas', 'Tarjetas', 'Bonos', 'Gastos', 'Galeria', 'Resenas', 'Archivos', 'Espera', 'Reservas', 'Correos', 'Errores'];
+  const report = {};
+  order.forEach(function (name) {
+    const rows = readOpt_(name).map(function (r) { const o = Object.assign({}, r); delete o._row; return o; });
+    for (let i = 0; i < rows.length; i += 400) {
+      const tables = {}; tables[name] = rows.slice(i, i + 400);
+      const res = migrationPost_(url, { action: 'adminImport', key: key, tables: tables });
+      const r = (res.result || {})[name] || { nuevas: 0, actualizadas: 0 };
+      report[name] = { nuevas: ((report[name] || {}).nuevas || 0) + r.nuevas, actualizadas: ((report[name] || {}).actualizadas || 0) + r.actualizadas };
+    }
+  });
+  props.deleteProperty('MIGRACION_ARCHIVOS');
+  Logger.log('Datos copiados: ' + JSON.stringify(report));
+  return report;
+}
+
+function migrarArchivos() {
+  const props = PropertiesService.getScriptProperties();
+  const url = props.getProperty('NUEVA_API_URL'), key = props.getProperty('IMPORT_KEY');
+  if (!url || !key) throw new Error('Falta NUEVA_API_URL o IMPORT_KEY en Propiedades del script.');
+  resetDb_();
+  const jobs = [];
+  readOpt_('Archivos').forEach(function (f) { if (f.driveId) jobs.push({ tipo: 'archivo', id: f.id, driveId: f.driveId, mime: f.mime }); });
+  readOpt_('Galeria').forEach(function (g) {
+    if (g.antesId) jobs.push({ tipo: 'galeria', id: g.id, lado: 'antes', driveId: g.antesId });
+    if (g.despuesId) jobs.push({ tipo: 'galeria', id: g.id, lado: 'despues', driveId: g.despuesId });
+  });
+  const majo = String(settings_().majoFotoUrl || '').match(/id=([\w-]+)/);
+  if (majo) jobs.push({ tipo: 'majo', id: 'majo', driveId: majo[1] });
+  const start = Number(props.getProperty('MIGRACION_ARCHIVOS') || 0);
+  const t0 = Date.now();
+  let i = start, fallos = 0;
+  for (; i < jobs.length; i++) {
+    if (Date.now() - t0 > 5 * 60000) { props.setProperty('MIGRACION_ARCHIVOS', String(i)); Logger.log('Van ' + i + ' de ' + jobs.length + '. Ejecuta migrarArchivos() otra vez para seguir.'); return { faltan: jobs.length - i }; }
+    const j = jobs[i];
+    try {
+      const blob = DriveApp.getFileById(j.driveId).getBlob();
+      if (blob.getBytes().length > 12 * 1024 * 1024) { fallos++; continue; }
+      migrationPost_(url, { action: 'adminImport', key: key, file: { tipo: j.tipo, id: j.id, lado: j.lado, mime: j.mime || blob.getContentType(), data: Utilities.base64Encode(blob.getBytes()) } });
+    } catch (e) { fallos++; Logger.log('No se pudo copiar ' + j.tipo + ' ' + j.id + ': ' + msg_(e)); }
+  }
+  props.deleteProperty('MIGRACION_ARCHIVOS');
+  Logger.log('Archivos listos: ' + jobs.length + (fallos ? ' (' + fallos + ' con problemas, revisa el registro)' : ''));
+  return { total: jobs.length, fallos: fallos };
+}
+
+function migrationPost_(url, body) {
+  const res = UrlFetchApp.fetch(url, { method: 'post', contentType: 'application/json', payload: JSON.stringify(body), muteHttpExceptions: true });
+  const data = safeJson_(res.getContentText(), null);
+  if (!data || !data.ok) throw new Error('La nueva base respondió: ' + (data ? data.error : res.getResponseCode() + ' ' + res.getContentText().slice(0, 200)));
+  return data;
+}
