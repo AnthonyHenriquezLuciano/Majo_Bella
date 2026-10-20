@@ -2,13 +2,13 @@
    - Páginas: primero la red (siempre lo más nuevo) y, sin conexión, la copia guardada.
    - Archivos con ?v= (CSS, JS): se guardan y se sirven al instante; cambian de nombre al actualizar.
    - No toca nada de otros dominios (Google, PayPal, reservas). */
-const VERSION = 'mjb-20261020c';
+const VERSION = 'mjb-20261020d';
 const SHELL = [
-  './app/', './app/app.css?v=20261020c', './app/app.js?v=20261020c',
-  './js/config.js?v=20261020c', './js/data/services.js?v=20261020c', './js/core/utils.js?v=20261020c', './js/core/validate.js?v=20261020c',
-  './js/integrations/whatsapp.js?v=20261020c', './js/integrations/calendar.js?v=20261020c', './js/integrations/booking-api.js?v=20261020c',
-  './js/integrations/paypal.js?v=20261020c', './js/integrations/google-auth.js?v=20261020c', './js/integrations/appointments.js?v=20261020c',
-  './js/integrations/giftcard.js?v=20261020c', './js/integrations/install.js?v=20261020c', './js/integrations/captcha.js?v=20261020c', './js/integrations/manage.js?v=20261020c',
+  './app/', './app/app.css?v=20261020d', './app/app.js?v=20261020d',
+  './js/config.js?v=20261020d', './js/data/services.js?v=20261020d', './js/core/utils.js?v=20261020d', './js/core/validate.js?v=20261020d',
+  './js/integrations/whatsapp.js?v=20261020d', './js/integrations/calendar.js?v=20261020d', './js/integrations/booking-api.js?v=20261020d',
+  './js/integrations/paypal.js?v=20261020d', './js/integrations/google-auth.js?v=20261020d', './js/integrations/appointments.js?v=20261020d',
+  './js/integrations/giftcard.js?v=20261020d', './js/integrations/install.js?v=20261020d', './js/integrations/captcha.js?v=20261020d', './js/integrations/manage.js?v=20261020d',
   './assets/logo-majobella.png', './assets/monograma.png', './assets/icon-192.png', './assets/favicon.png',
 ];
 

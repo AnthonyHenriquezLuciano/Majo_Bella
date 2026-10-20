@@ -105,9 +105,9 @@ window.MAJOBELLA_CONFIG = {
      iosUrl: enlace de App Store o de TestFlight. Vacío = en iPhone se ofrece la versión web (si iosWebApp es true).
      iosWebApp: mientras la app no esté en App Store, en iPhone se usa la versión web de la app (carpeta app/). */
   app: {
-    androidUrl: '',
+    androidUrl: 'https://github.com/AnthonyHenriquezLuciano/Majo_Bella/releases/download/app/majobella.apk',
     iosUrl: '',
     iosWebApp: true,
-    studioAndroidUrl: '',   // app del estudio (solo se muestra en el dashboard, no en la web pública)
+    studioAndroidUrl: 'https://github.com/AnthonyHenriquezLuciano/Majo_Bella/releases/download/app/majobella-estudio.apk',   // app del estudio (solo se muestra en el dashboard, no en la web pública)
   },
 };
