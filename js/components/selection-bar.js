@@ -8,13 +8,15 @@
     const price = document.getElementById('sb-price');
     const go = document.getElementById('sb-book');
     const clear = document.getElementById('sb-clear');
+    if (!bar) return;
     const booking = document.getElementById('reservar');
     let inBooking = false, visible = false, shown = 0;
 
-    go.addEventListener('click', () => M.scrollTo('#reservar'));
+    // En la página de reservas baja al formulario; en las demás, lleva a Reservar con lo elegido
+    go.addEventListener('click', () => M.goBook(M.state.selected, '', 'bar'));
     clear.addEventListener('click', () => M.selectOnly([], 'bar'));
 
-    if ('IntersectionObserver' in window) {
+    if (booking && 'IntersectionObserver' in window) {
       new IntersectionObserver(([e]) => { inBooking = e.isIntersecting; update(); }, { threshold: 0.12 }).observe(booking);
     }
 

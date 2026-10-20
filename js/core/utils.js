@@ -23,6 +23,21 @@ window.MJB = window.MJB || {};
     M.set({ selected: sel, time: null }, source);
   };
   M.selectOnly = (ids, source) => M.set({ selected: [...ids], time: null }, source);
+  /* Ir a reservar con estos servicios (y un código): en la página de reservas baja al formulario;
+     en las demás páginas abre reservar.html?servicio=…&codigo=… */
+  M.goBook = (ids, code, source) => {
+    const list = (ids || []).filter((id) => M.serviceById[id]);
+    if (document.getElementById('reservar') && M.applyBookingCode) {
+      M.selectOnly(list, source);
+      if (code) setTimeout(() => M.applyBookingCode(code), 50);
+      M.scrollTo('#reservar');
+      return;
+    }
+    const q = new URLSearchParams();
+    if (list.length) q.set('servicio', list.join(','));
+    if (code) q.set('codigo', code);
+    location.href = 'reservar.html' + (String(q) ? '?' + q : '');
+  };
 
   M.totals = (ids = M.state.selected) => {
     const items = ids.map((id) => M.serviceById[id]).filter(Boolean);

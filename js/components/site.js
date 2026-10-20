@@ -30,7 +30,7 @@
     const a = site.announcement || {};
     const hide = () => { $('announce').hidden = true; store.set('mjb.announce.last', ''); };
     if (a.active === false) { hide(); return; }
-    let text = a.text, link = a.link || '#reservar';
+    let text = a.text, link = a.link || 'reservar.html';
     if (!text && (M.promos || []).length) { text = promoText(M.promos[0]); link = a.link || '#servicios'; }
     if (!text) { hide(); return; }
     const key = `mjb.announce.${text}`;
@@ -85,7 +85,6 @@
   function initGallery(items) {
     if (!items.length) return;
     $('resultados').hidden = false;
-    showNav('resultados', true);
     const services = [...new Set(items.map((x) => x.service).filter(Boolean))];
     let filter = '', shown = PAGE;
     const filters = $('res-filters');
@@ -128,7 +127,6 @@
   function initReviews(list, g) {
     if (!list.length && !g.rating) return;
     $('resenas').hidden = false;
-    showNav('resenas', true);
     if (g.rating) {
       $('rv-score').hidden = false;
       $('rv-num').textContent = g.rating.toLocaleString('es', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -165,12 +163,24 @@
     }
   }
 
+  /* Apartados del menú que dependen de lo que el estudio publicó (en todas las páginas) */
+  function refreshSiteNav() {
+    const s = M.site;
+    if (!s || !s.loaded) return;   // sin datos del estudio todavía: se deja lo de la última visita
+    const pay = M.BookingAPI.enabled() && M.PayPal.configured();
+    showNav('resultados', (s.gallery || []).length > 0);
+    showNav('resenas', (s.reviews || []).length > 0 || !!(s.google && s.google.rating));
+    showNav('regalos', pay && (!!(s.giftShop && s.giftShop.enabled) || (s.packages || []).some((k) => M.serviceById[k.service])));
+  }
+  M.refreshSiteNav = refreshSiteNav;
+
   M.initSite = function () {
     const site = M.site || {};
-    initAnnounce(site);
-    initMajo(site);
-    initGallery(site.gallery || []);
-    initReviews(site.reviews || [], site.google || {});
+    if ($('announce')) initAnnounce(site);
+    refreshSiteNav();
+    if ($('majo')) initMajo(site);
+    if ($('resultados')) initGallery(site.gallery || []);
+    if ($('resenas')) initReviews(site.reviews || [], site.google || {});
     initMap();
   };
 })(window.MJB);

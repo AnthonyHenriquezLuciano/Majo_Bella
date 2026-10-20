@@ -73,12 +73,12 @@ export function notifyGift_(g, s) {
   const how = 'Se usa escribiendo el código al reservar en la web, en el resumen de la cita.';
   safeMail_(g.correoComprador, 'Tu tarjeta de regalo MAJOBELLA · ' + g.codigo, layout_(s, {
     kicker: 'Tarjeta de regalo', title: '¡Gracias por tu compra!', intro: 'Esta es la tarjeta de regalo. Puedes reenviar este correo o compartir el código.',
-    body: card + '<p style="margin:0">' + how + '</p>', cta: { text: 'Ir a la web', url: mailUrl_(s, '#reservar') },
+    body: card + '<p style="margin:0">' + how + '</p>', cta: { text: 'Ir a la web', url: mailUrl_(s, 'reservar.html') },
   }), { tipo: 'tarjeta', ref: g.id });
   if (g.correoPara) {
     safeMail_(g.correoPara, (g.comprador ? g.comprador + ' te regaló' : 'Te regalaron') + ' una experiencia en MAJOBELLA', layout_(s, {
       kicker: 'Un regalo para ti', title: (g.para ? g.para + ', tienes' : 'Tienes') + ' un regalo', intro: (g.comprador ? esc_(g.comprador) + ' te regaló' : 'Te regalaron') + ' una tarjeta para usar en MAJOBELLA Beauty Studio.',
-      body: card + '<p style="margin:0">' + how + '</p>', cta: { text: 'Reservar mi cita', url: mailUrl_(s, '#reservar') },
+      body: card + '<p style="margin:0">' + how + '</p>', cta: { text: 'Reservar mi cita', url: mailUrl_(s, 'reservar.html') },
     }), { tipo: 'tarjeta', ref: g.id });
   }
   safeMail_(adminTo_(s), 'Tarjeta de regalo vendida en la web · RD$ ' + money_(g.montoRD), layout_(s, {

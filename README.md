@@ -2,10 +2,28 @@
 
 Web estática (HTML, CSS y JavaScript sin compilación). Se puede publicar tal cual en Netlify, Vercel, GitHub Pages, Hostinger o cualquier hosting.
 
+**Páginas**
+
+- `index.html`: presentación. Incluye Sobre MAJOBELLA, Conoce a Majo, servicios, resultados, opiniones, por qué elegirnos, la app, preguntas y contacto.
+- `reservar.html`: reservas.
+- `citas.html`: mis citas.
+- `regalos.html`: tarjetas de regalo y paquetes.
+- `aplicacion.html`: presentación y descarga de la app.
+- `admin.html`: panel, aparte.
+
+Las cinco primeras se arman con `node tools/build-web.mjs` a partir de `web/pages/` (el contenido de cada página) y `web/partials/` (cabecera, menú, pie y scripts compartidos). Para cambiar el menú o el pie se edita el partial y se vuelve a ejecutar el comando.
+
+Los enlaces antiguos siguen funcionando. Por ejemplo, `index.html#reservar` (de correos ya enviados) lleva a `reservar.html`.
+
+**Backend**: base de datos PostgreSQL en Supabase y API en `supabase/`. La guía está en `supabase/INSTALAR.md`. La versión anterior con Google Sheets sigue en `backend/google-apps-script/` hasta terminar la migración.
+
 ## Estructura
 
 ```
-index.html                      Página (secciones y textos)
+index.html, reservar.html, citas.html, regalos.html, aplicacion.html   Páginas (generadas: no editar a mano)
+web/pages/, web/partials/       Contenido de cada página y partes compartidas → node tools/build-web.mjs
+js/components/appinfo.js        Página Aplicación: botones de descarga (js/config.js → app) e instrucciones
+supabase/                       Base de datos (migraciones), API (Edge Function), pruebas y guía de instalación
 css/styles.css                  Estilos, colores y tipografías
 js/config.js                    WhatsApp, redes, contacto, horario y conexión de reservas
 js/data/services.js             Servicios: nombre, precio, duración y detalle (para quién, qué incluye, preparación, cuidados)

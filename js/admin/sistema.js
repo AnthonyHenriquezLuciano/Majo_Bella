@@ -76,14 +76,15 @@
     const s = A.settingsMap();
     const ts = sec.turnstile || {};
     const tsState = ts.siteKey && ts.secret ? ['', 'Activa: las reservas, compras y la lista de espera piden la verificación (casi siempre invisible).']
-      : ts.siteKey ? ['is-warn', 'Falta la clave secreta: en Apps Script → Configuración → Propiedades del script, añade TURNSTILE_SECRET.']
-        : ['is-off', 'Desactivada. Pega aquí la clave del sitio de Cloudflare Turnstile (gratis) y la secreta en Apps Script.'];
+      : ts.siteKey ? ['is-warn', `Falta la clave secreta: añade TURNSTILE_SECRET en ${sec.database ? 'los secretos de Supabase' : 'Apps Script → Propiedades del script'}.`]
+        : ['is-off', `Desactivada. Pega aquí la clave del sitio de Cloudflare Turnstile (gratis) y la secreta en ${sec.database ? 'los secretos de Supabase' : 'Apps Script'}.`];
     const acc = (sec.accesses || []).slice(0, 8);
     $('aj-security').innerHTML = `<ul class="sec-list">
-      <li class="sec-item"><span class="sec-dot"></span><div><p class="sec-t">Acceso al dashboard</p><p class="sec-s">Solo pueden entrar estas cuentas de Google: <b>${(sec.admins || []).map(esc).join(', ') || '—'}</b>. Se cambian en Apps Script → Propiedades del script → ADMIN_EMAILS.</p></div></li>
-      ${shareLine('Hoja de cálculo', sec.sheet, 'las citas y los datos de tus clientas')}
-      ${shareLine('Carpeta de fichas en Drive', sec.folder, 'fotos, consentimientos y comprobantes')}
-      <li class="sec-item"><span class="sec-dot${sec.paypalEnv === 'live' ? '' : ' is-warn'}"></span><div><p class="sec-t">PayPal</p><p class="sec-s">${sec.paypalEnv === 'live' ? 'Cobrando de verdad (modo en vivo).' : 'En modo de prueba: no se cobra dinero real. Cámbialo a «live» cuando quieras cobrar.'} La clave secreta vive solo en Apps Script.</p></div></li>
+      <li class="sec-item"><span class="sec-dot"></span><div><p class="sec-t">Acceso al dashboard</p><p class="sec-s">Solo pueden entrar estas cuentas de Google: <b>${(sec.admins || []).map(esc).join(', ') || '—'}</b>. Se cambian en ${sec.database ? 'Supabase → Edge Functions → Secrets' : 'Apps Script → Propiedades del script'} → ADMIN_EMAILS.</p></div></li>
+      ${sec.database ? `<li class="sec-item"><span class="sec-dot"></span><div><p class="sec-t">Base de datos</p><p class="sec-s">PostgreSQL en Supabase, privada: nadie la lee desde el navegador ni desde las apps, todo pasa por la API. Guarda las citas y los datos de tus clientas.</p></div></li>`
+        : shareLine('Hoja de cálculo', sec.sheet, 'las citas y los datos de tus clientas')}
+      ${shareLine(sec.database ? 'Archivos (carpeta privada)' : 'Carpeta de fichas en Drive', sec.folder, 'fotos, consentimientos y comprobantes')}
+      <li class="sec-item"><span class="sec-dot${sec.paypalEnv === 'live' ? '' : ' is-warn'}"></span><div><p class="sec-t">PayPal</p><p class="sec-s">${sec.paypalEnv === 'live' ? 'Cobrando de verdad (modo en vivo).' : 'En modo de prueba: no se cobra dinero real. Cámbialo a «live» cuando quieras cobrar.'} La clave secreta vive solo en ${sec.database ? 'los secretos de Supabase' : 'Apps Script'}.</p></div></li>
       <li class="sec-item"><span class="sec-dot ${tsState[0]}"></span><div><p class="sec-t">Protección contra robots</p><p class="sec-s">${tsState[1]}</p>
         <label class="set"><span class="set-l">Clave del sitio (Turnstile)</span><span class="set-i"><input name="turnstileSiteKey" data-set value="${esc(s.turnstileSiteKey || '')}" placeholder="0x4AAAA…" autocomplete="off"></span></label></div></li>
       <li class="sec-item"><span class="sec-dot"></span><div><p class="sec-t">Cerrar sesión por inactividad</p>

@@ -1,0 +1,28 @@
+{
+  "@context": "https://schema.org",
+  "@type": "BeautySalon",
+  "name": "MAJOBELLA Beauty Studio",
+  "slogan": "Más yo, más bella.",
+  "url": "https://anthonyhenriquezluciano.github.io/Majo_Bella/",
+  "image": "https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg",
+  "logo": "https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/logo-majobella.png",
+  "telephone": "+1-829-978-4986",
+  "priceRange": "RD$",
+  "currenciesAccepted": "DOP, USD",
+  "paymentAccepted": "Efectivo, transferencia, PayPal",
+  "address": { "@type": "PostalAddress", "addressLocality": "Santo Domingo", "addressCountry": "DO" },
+  "geo": { "@type": "GeoCoordinates", "latitude": 18.465401, "longitude": -69.9737548 },
+  "hasMap": "https://maps.app.goo.gl/d4uX28GuoKuyHuhf8",
+  "openingHoursSpecification": [
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], "opens": "10:00", "closes": "17:00" },
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": "Sunday", "opens": "10:00", "closes": "13:00" }
+  ],
+  "makesOffer": [
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Diseño de cejas" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Pestañas" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Faciales" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Micropigmentación" } },
+    { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Depilación" } }
+  ],
+  "potentialAction": { "@type": "ReserveAction", "target": "https://anthonyhenriquezluciano.github.io/Majo_Bella/reservar.html" }
+}

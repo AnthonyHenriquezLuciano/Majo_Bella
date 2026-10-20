@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mis citas · MAJOBELLA Beauty Studio</title>
+<meta name="description" content="Consulta tus citas en MAJOBELLA, añádelas a tu calendario, cambia la fecha, sube tu comprobante o paga el saldo.">
+<meta name="theme-color" content="#ffffff">
+<link rel="canonical" href="https://anthonyhenriquezluciano.github.io/Majo_Bella/citas.html">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MAJOBELLA">
+
+<!-- Vista previa al compartir (WhatsApp, Instagram, Facebook) -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_DO">
+<meta property="og:site_name" content="MAJOBELLA Beauty Studio">
+<meta property="og:title" content="Mis citas · MAJOBELLA">
+<meta property="og:description" content="Consulta y gestiona tus citas en MAJOBELLA.">
+<meta property="og:url" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/citas.html">
+<meta property="og:image" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de MAJOBELLA Beauty Studio con el lema Más yo, más bella">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Mis citas · MAJOBELLA">
+<meta name="twitter:description" content="Consulta y gestiona tus citas en MAJOBELLA.">
+<meta name="twitter:image" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="css/styles.css?v=20261020b">
+</head>
+<body data-page="citas">
+<!--MJB:BODY-START-->
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+<div class="announce" id="announce" hidden>
+  <div class="container announce-in">
+    <a class="announce-link" id="announce-link" href="reservar.html"><span id="announce-text"></span><span class="announce-arrow" aria-hidden="true">→</span></a>
+    <button type="button" class="announce-x" id="announce-x" aria-label="Cerrar anuncio">×</button>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="./#inicio" aria-label="MAJOBELLA, ir al inicio">
+      <img src="assets/logo-majobella.png" alt="MAJOBELLA" width="900" height="351">
+    </a>
+    <nav class="main-nav" aria-label="Principal">
+      <ul>
+        <li><a href="./#majo">Conoce a Majo</a></li>
+        <li><a href="./#servicios">Servicios</a></li>
+        <li data-nav-for="resenas" hidden><a href="./#resenas">Opiniones</a></li>
+        <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos">Regalos</a></li>
+        <li><a href="citas.html" data-nav="citas" aria-current="page">Mis citas</a></li>
+        <li><a href="aplicacion.html" class="nav-app" data-nav="aplicacion">Aplicación</a></li>
+      </ul>
+    </nav>
+    <div class="header-account" id="header-account"><button type="button" class="header-login" data-open-auth>Iniciar sesión</button></div>
+    <a class="btn btn-primary btn-sm header-cta" href="reservar.html" data-nav="reservar">Agendar cita</a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú">
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+<script>
+/* Antes de pintar: muestra el anuncio y los apartados del menú que ya se vieron la última vez (evita saltos de la página) */
+(function () {
+  try {
+    var nav = JSON.parse(localStorage.getItem('mjb.nav.v1') || '[]');
+    nav.forEach(function (id) { document.querySelectorAll('[data-nav-for="' + id + '"]').forEach(function (e) { e.hidden = false; }); });
+    var a = localStorage.getItem('mjb.announce.last');
+    if (a && localStorage.getItem('mjb.announce.closed') !== 'mjb.announce.' + a) {
+      document.getElementById('announce-text').textContent = a;
+      document.getElementById('announce').hidden = false;
+    }
+  } catch (e) { /* sin almacenamiento */ }
+})();
+</script>
+
+<div class="mobile-menu" id="mobile-menu" hidden>
+  <nav aria-label="Menú móvil">
+    <a class="mobile-app" href="aplicacion.html"><span class="mobile-app-ic" aria-hidden="true"><img src="assets/icon-192.png" alt=""></span><span><b>La app MAJOBELLA</b><small>Reserva y lleva tus citas en tu celular</small></span></a>
+    <ul>
+      <li><a href="./#inicio">Inicio</a></li>
+      <li><a href="./#sobre">Sobre MAJOBELLA</a></li>
+      <li><a href="./#majo">Conoce a Majo</a></li>
+      <li><a href="./#servicios">Servicios</a></li>
+      <li data-nav-for="resultados" hidden><a href="./#resultados">Resultados</a></li>
+      <li data-nav-for="resenas" hidden><a href="./#resenas">Opiniones</a></li>
+      <li><a href="reservar.html" data-nav="reservar">Reservar</a></li>
+      <li><a href="citas.html" data-nav="citas" aria-current="page">Mis citas</a></li>
+      <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos">Regalos y paquetes</a></li>
+      <li><a href="./#contacto">Contacto</a></li>
+      <li><a href="aplicacion.html" data-nav="aplicacion">Aplicación <span class="mm-tag">Para tu celular</span></a></li>
+    </ul>
+    <a class="btn btn-primary" href="reservar.html">Agendar cita</a>
+    <button type="button" class="mobile-login" data-open-auth>Iniciar sesión</button>
+    <p class="mobile-slogan" data-slogan>MÁS YO, MÁS BELLA.</p>
+  </nav>
+</div>
+
+<main id="contenido" class="page-main">
+
+  <!-- CITAS -->
+  <section id="citas" class="section citas-section">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="label">Mis citas</p>
+          <h2 class="display">Tus citas</h2>
+        </div>
+        <div class="section-head-side"><p>Consulta tus citas y tus pagos, añádelas a tu calendario, paga el saldo al terminar o cancela si lo necesitas.</p><a class="link-app" href="aplicacion.html">Tus citas también en la app <span aria-hidden="true">→</span></a></div>
+      </div>
+      <div class="citas-grid">
+        <div class="account" id="account" aria-live="polite"></div>
+        <div class="citas-panel">
+          <div class="citas-tabs" role="tablist" aria-label="Filtrar citas">
+            <button type="button" class="citas-tab is-active" role="tab" aria-selected="true" data-view="proximas">Próximas <span class="n">0</span></button>
+            <button type="button" class="citas-tab" role="tab" aria-selected="false" data-view="anteriores">Anteriores <span class="n">0</span></button>
+          </div>
+          <ul class="citas-list" id="citas-list" aria-live="polite"></ul>
+          <p class="citas-source" id="citas-source"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section page-links">
+    <div class="container page-links-in">
+      <a class="page-link" href="reservar.html"><b>Reservar otra cita</b><span>Elige servicio, día y hora</span></a>
+      <a class="page-link" href="aplicacion.html"><b>La app MAJOBELLA</b><span>Recibe tus citas y recordatorios en el celular</span></a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <img src="assets/logo-majobella.png" alt="MAJOBELLA" width="900" height="351">
+      <p data-slogan>MÁS YO, MÁS BELLA.</p>
+      <p class="footer-address" data-address></p>
+    </div>
+    <nav class="footer-links" aria-label="Pie de página">
+      <a href="./#inicio">Inicio</a>
+      <a href="./#servicios">Servicios</a>
+      <a href="reservar.html">Reservar</a>
+      <a href="citas.html">Mis citas</a>
+      <a href="regalos.html" data-nav-for="regalos" hidden>Regalos y paquetes</a>
+      <a href="./#preguntas">Preguntas</a>
+      <a href="./#contacto">Contacto</a>
+      <a href="aplicacion.html">La app MAJOBELLA</a>
+    </nav>
+    <div class="footer-social">
+      <a data-social="instagram">Instagram</a>
+      <a data-social="tiktok">TikTok</a>
+      <a data-wa href="./#contacto">WhatsApp</a>
+    </div>
+  </div>
+  <div class="container footer-base">
+    <p>© <span data-year>2026</span> MAJOBELLA — Todos los derechos reservados.</p>
+    <nav class="footer-legal" aria-label="Legal"><a href="privacidad.html">Privacidad</a><a href="cancelacion.html">Cancelación y reembolsos</a><a href="terminos.html">Términos y condiciones</a></nav>
+  </div>
+</footer>
+
+
+<div class="app-ribbon" id="app-ribbon" hidden role="region" aria-label="La app MAJOBELLA">
+  <img src="assets/icon-192.png" alt="" width="40" height="40">
+  <p><b>La app MAJOBELLA</b><span>Tus citas a un toque.</span></p>
+  <button type="button" class="btn btn-primary btn-sm" data-ribbon-install>Ver app</button>
+  <button type="button" class="app-ribbon-x" aria-label="Cerrar" data-ribbon-x>×</button>
+</div>
+
+<div class="get-app" id="get-app" hidden tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="ga-title"></div>
+
+<div class="auth-modal" id="auth-modal" hidden>
+  <div class="am-backdrop"></div>
+  <div class="am-panel" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <button type="button" class="am-close" aria-label="Cerrar">×</button>
+    <img class="am-logo" src="assets/monograma.png" alt="" width="400" height="332">
+    <div id="auth-body"></div>
+  </div>
+</div>
+<p class="toast" id="toast" role="status" hidden></p>
+
+<div class="selection-bar" id="selection-bar" hidden role="region" aria-label="Servicios añadidos">
+  <div class="sb-inner">
+    <div class="sb-text">
+      <p class="sb-names" id="sb-names"></p>
+      <p class="sb-meta" id="sb-meta"></p>
+    </div>
+    <p class="sb-price" id="sb-price" aria-live="polite"></p>
+    <button type="button" class="sb-clear" id="sb-clear" aria-label="Quitar todos los servicios">Vaciar</button>
+    <button type="button" class="btn btn-primary" id="sb-book">Agendar estos servicios</button>
+  </div>
+</div>
+
+<a class="wa-float" data-wa href="./#contacto" aria-label="¿Dudas? Escribir a MAJOBELLA por WhatsApp">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2c-4.9 0-8.8 3.7-8.8 8.3 0 1.7.5 3.2 1.4 4.5L3.6 20.6l4.7-1.3c1.1.6 2.4.9 3.7.9 4.9 0 8.8-3.7 8.8-8.3S16.9 3.2 12 3.2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9.2 8.6c.2-.4.4-.4.6-.4h.4c.2 0 .3.1.4.3l.6 1.4c.1.2 0 .4-.1.5l-.4.5c-.1.1-.1.3 0 .4.6 1 1.4 1.7 2.4 2.2.2.1.3.1.4-.1l.5-.6c.1-.2.3-.2.5-.1l1.4.7c.2.1.3.2.3.4 0 .5-.2 1.1-.7 1.4-.5.3-1.2.4-2.1.1-1.6-.5-3-1.7-3.9-3.1-.6-.9-.9-1.8-.7-2.6.1-.4.2-.7.4-.9z" fill="currentColor"/></svg>
+  <span>¿Dudas?</span>
+</a>
+<!--MJB:BODY-END-->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/config.js?v=20261020b"></script>
+<script src="js/data/services.js?v=20261020b"></script>
+<script src="js/data/faq.js?v=20261020b"></script>
+<script src="js/data/brows.js?v=20261020b"></script>
+<script src="js/core/utils.js?v=20261020b"></script>
+<script src="js/core/validate.js?v=20261020b"></script>
+<script src="js/integrations/whatsapp.js?v=20261020b"></script>
+<script src="js/integrations/calendar.js?v=20261020b"></script>
+<script src="js/integrations/booking-api.js?v=20261020b"></script>
+<script src="js/integrations/paypal.js?v=20261020b"></script>
+<script src="js/integrations/google-auth.js?v=20261020b"></script>
+<script src="js/integrations/appointments.js?v=20261020b"></script>
+<script src="js/integrations/giftcard.js?v=20261020b"></script>
+<script src="js/integrations/captcha.js?v=20261020b"></script>
+<script src="js/integrations/manage.js?v=20261020b"></script>
+<script src="js/components/nav.js?v=20261020b"></script>
+<script src="js/components/auth-modal.js?v=20261020b"></script>
+<script src="js/components/face.js?v=20261020b"></script>
+<script src="js/components/brows.js?v=20261020b"></script>
+<script src="js/components/hero.js?v=20261020b"></script>
+<script src="js/components/services.js?v=20261020b"></script>
+<script src="js/components/selection-bar.js?v=20261020b"></script>
+<script src="js/components/booking.js?v=20261020b"></script>
+<script src="js/components/citas.js?v=20261020b"></script>
+<script src="js/components/contact.js?v=20261020b"></script>
+<script src="js/components/site.js?v=20261020b"></script>
+<script src="js/components/giftshop.js?v=20261020b"></script>
+<script src="js/components/packages.js?v=20261020b"></script>
+<script src="js/integrations/install.js?v=20261020b"></script>
+<script src="js/components/getapp.js?v=20261020b"></script>
+<script src="js/components/appinfo.js?v=20261020b"></script>
+<script src="js/components/reveal.js?v=20261020b"></script>
+<script src="js/main.js?v=20261020b"></script>
+</body>
+</html>

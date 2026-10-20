@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reservar cita · MAJOBELLA Beauty Studio</title>
+<meta name="description" content="Elige tus servicios, el día y la hora disponibles y aparta tu cita en MAJOBELLA con un depósito por PayPal o transferencia.">
+<meta name="theme-color" content="#ffffff">
+<link rel="canonical" href="https://anthonyhenriquezluciano.github.io/Majo_Bella/reservar.html">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MAJOBELLA">
+
+<!-- Vista previa al compartir (WhatsApp, Instagram, Facebook) -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_DO">
+<meta property="og:site_name" content="MAJOBELLA Beauty Studio">
+<meta property="og:title" content="Reserva tu cita en MAJOBELLA">
+<meta property="og:description" content="Elige servicio, día y hora. Solo verás horarios disponibles.">
+<meta property="og:url" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/reservar.html">
+<meta property="og:image" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de MAJOBELLA Beauty Studio con el lema Más yo, más bella">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reserva tu cita en MAJOBELLA">
+<meta name="twitter:description" content="Elige servicio, día y hora. Solo verás horarios disponibles.">
+<meta name="twitter:image" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="css/styles.css?v=20261020b">
+</head>
+<body data-page="reservar">
+<!--MJB:BODY-START-->
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+<div class="announce" id="announce" hidden>
+  <div class="container announce-in">
+    <a class="announce-link" id="announce-link" href="reservar.html"><span id="announce-text"></span><span class="announce-arrow" aria-hidden="true">→</span></a>
+    <button type="button" class="announce-x" id="announce-x" aria-label="Cerrar anuncio">×</button>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="./#inicio" aria-label="MAJOBELLA, ir al inicio">
+      <img src="assets/logo-majobella.png" alt="MAJOBELLA" width="900" height="351">
+    </a>
+    <nav class="main-nav" aria-label="Principal">
+      <ul>
+        <li><a href="./#majo">Conoce a Majo</a></li>
+        <li><a href="./#servicios">Servicios</a></li>
+        <li data-nav-for="resenas" hidden><a href="./#resenas">Opiniones</a></li>
+        <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos">Regalos</a></li>
+        <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
+        <li><a href="aplicacion.html" class="nav-app" data-nav="aplicacion">Aplicación</a></li>
+      </ul>
+    </nav>
+    <div class="header-account" id="header-account"><button type="button" class="header-login" data-open-auth>Iniciar sesión</button></div>
+    <a class="btn btn-primary btn-sm header-cta" href="reservar.html" data-nav="reservar" aria-current="page">Agendar cita</a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú">
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+<script>
+/* Antes de pintar: muestra el anuncio y los apartados del menú que ya se vieron la última vez (evita saltos de la página) */
+(function () {
+  try {
+    var nav = JSON.parse(localStorage.getItem('mjb.nav.v1') || '[]');
+    nav.forEach(function (id) { document.querySelectorAll('[data-nav-for="' + id + '"]').forEach(function (e) { e.hidden = false; }); });
+    var a = localStorage.getItem('mjb.announce.last');
+    if (a && localStorage.getItem('mjb.announce.closed') !== 'mjb.announce.' + a) {
+      document.getElementById('announce-text').textContent = a;
+      document.getElementById('announce').hidden = false;
+    }
+  } catch (e) { /* sin almacenamiento */ }
+})();
+</script>
+
+<div class="mobile-menu" id="mobile-menu" hidden>
+  <nav aria-label="Menú móvil">
+    <a class="mobile-app" href="aplicacion.html"><span class="mobile-app-ic" aria-hidden="true"><img src="assets/icon-192.png" alt=""></span><span><b>La app MAJOBELLA</b><small>Reserva y lleva tus citas en tu celular</small></span></a>
+    <ul>
+      <li><a href="./#inicio">Inicio</a></li>
+      <li><a href="./#sobre">Sobre MAJOBELLA</a></li>
+      <li><a href="./#majo">Conoce a Majo</a></li>
+      <li><a href="./#servicios">Servicios</a></li>
+      <li data-nav-for="resultados" hidden><a href="./#resultados">Resultados</a></li>
+      <li data-nav-for="resenas" hidden><a href="./#resenas">Opiniones</a></li>
+      <li><a href="reservar.html" data-nav="reservar" aria-current="page">Reservar</a></li>
+      <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
+      <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos">Regalos y paquetes</a></li>
+      <li><a href="./#contacto">Contacto</a></li>
+      <li><a href="aplicacion.html" data-nav="aplicacion">Aplicación <span class="mm-tag">Para tu celular</span></a></li>
+    </ul>
+    <a class="btn btn-primary" href="reservar.html">Agendar cita</a>
+    <button type="button" class="mobile-login" data-open-auth>Iniciar sesión</button>
+    <p class="mobile-slogan" data-slogan>MÁS YO, MÁS BELLA.</p>
+  </nav>
+</div>
+
+<main id="contenido" class="page-main">
+
+  <!-- RESERVAR -->
+  <section id="reservar" class="section booking-section">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="label">Reservas</p>
+          <h2 class="display">Agenda tu cita</h2>
+        </div>
+        <div class="section-head-side"><p>Elige servicio, día y hora. Solo verás horarios disponibles.</p></div>
+      </div>
+
+      <div class="booking">
+        <form class="booking-flow" id="bk-form" novalidate>
+          <fieldset class="step" id="step-servicio">
+            <legend><span class="step-n">1</span>Servicio</legend>
+            <div class="chips" id="bk-services"></div>
+          </fieldset>
+
+          <fieldset class="step" id="step-fecha">
+            <legend><span class="step-n">2</span>Día</legend>
+            <div class="fastest" id="bk-fastest" hidden>
+              <div><p class="fastest-k">Primer horario disponible</p><p class="fastest-v" id="bk-fastest-label">Buscando…</p></div>
+              <button type="button" class="btn btn-primary btn-sm" id="bk-fastest-btn" disabled>Elegir este horario</button>
+            </div>
+            <div class="quick-days" id="bk-quickdays"></div>
+            <button type="button" class="cal-toggle" id="bk-cal-toggle" aria-expanded="false" aria-controls="bk-calendar">Ver más fechas</button>
+            <div class="calendar" id="bk-calendar" hidden>
+              <div class="cal-head">
+                <button type="button" class="cal-nav" id="bk-prev" aria-label="Mes anterior">‹</button>
+                <p class="cal-title" id="bk-month" aria-live="polite"></p>
+                <button type="button" class="cal-nav" id="bk-next" aria-label="Mes siguiente">›</button>
+              </div>
+              <div class="cal-grid" id="bk-grid"></div>
+            </div>
+            <p class="cal-picked" id="bk-date-label" aria-live="polite"></p>
+          </fieldset>
+
+          <fieldset class="step" id="step-hora">
+            <legend><span class="step-n">3</span>Hora</legend>
+            <p class="slots-msg" id="bk-slots-msg" aria-live="polite"></p>
+            <div class="slots" id="bk-slots"></div>
+            <div class="wait" id="bk-wait" hidden>
+              <button type="button" class="link-inline wait-open" id="bk-wait-open">¿No encuentras horario? Únete a la lista de espera</button>
+              <div class="wait-box" id="bk-wait-box" hidden>
+                <p class="wait-lead">Te avisamos por correo si se libera un horario ese día para los servicios que elegiste.</p>
+                <div class="fields">
+                  <div class="field"><label for="bk-wait-date">Día</label><input id="bk-wait-date" type="date"></div>
+                  <div class="field"><label for="bk-wait-franja">Horario</label>
+                    <select id="bk-wait-franja"><option value="cualquiera">Cualquier hora</option><option value="manana">Mañana</option><option value="tarde">Tarde</option></select></div>
+                </div>
+                <p class="wait-note" id="bk-wait-who"></p>
+                <button type="button" class="btn btn-line" id="bk-wait-join">Avisarme</button>
+                <p class="gf-msg" id="bk-wait-msg" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="step" id="step-datos">
+            <legend><span class="step-n">4</span>Tus datos</legend>
+            <div class="signin-hint" id="bk-signin-hint"></div>
+            <p class="saved-note" id="bk-saved-note" hidden>Completamos tus datos de tu última reserva. <button type="button" class="link-inline" id="bk-forget">Borrar mis datos</button></p>
+            <div class="fields">
+              <div class="field">
+                <label for="bk-first">Nombre</label>
+                <input id="bk-first" name="nombre" autocomplete="given-name" required>
+                <span class="field-error">Escribe tu nombre (solo letras).</span>
+              </div>
+              <div class="field">
+                <label for="bk-last">Apellido</label>
+                <input id="bk-last" name="apellido" autocomplete="family-name" required>
+                <span class="field-error">Escribe tu apellido (solo letras).</span>
+              </div>
+              <div class="field">
+                <label for="bk-phone">Teléfono</label>
+                <input id="bk-phone" name="telefono" type="tel" autocomplete="tel" inputmode="tel" placeholder="809-555-1234" required>
+                <span class="field-error">10 dígitos, por ejemplo 809-555-1234.</span>
+              </div>
+              <div class="field">
+                <label for="bk-email">Correo electrónico</label>
+                <input id="bk-email" name="correo" type="email" autocomplete="email" required>
+                <span class="field-error">Revisa el formato del correo, por ejemplo nombre@correo.com.</span>
+              </div>
+              <div class="field field-wide">
+                <label for="bk-notes">Nota para el estudio <span class="opt">(opcional)</span></label>
+                <input id="bk-notes" name="nota" autocomplete="off" placeholder="Alergias, dudas o algo que debamos saber">
+              </div>
+              <div class="field field-wide">
+                <label for="bk-origen">¿Cómo nos conociste? <span class="opt">(opcional)</span></label>
+                <select id="bk-origen" name="origen">
+                  <option value="">Elige una opción</option>
+                  <option>Instagram</option>
+                  <option>TikTok</option>
+                  <option>Google</option>
+                  <option>Recomendación de una amiga</option>
+                  <option>Pasé por el estudio</option>
+                  <option>Otro</option>
+                </select>
+              </div>
+              <div class="field field-wide">
+                <label for="bk-bday-d">Tu cumpleaños <span class="opt">(opcional · te enviamos un regalo ese día)</span></label>
+                <div class="bday">
+                  <select id="bk-bday-d" aria-label="Día de tu cumpleaños"><option value="">Día</option></select>
+                  <select id="bk-bday-m" aria-label="Mes de tu cumpleaños"><option value="">Mes</option></select>
+                </div>
+              </div>
+              <p class="loyal-note field-wide" id="bk-loyal" hidden></p>
+              <label class="check field-wide"><input type="checkbox" id="bk-remember" checked><span>Recordar mis datos en este dispositivo para la próxima vez</span></label>
+            </div>
+          </fieldset>
+        </form>
+
+        <aside class="booking-summary" aria-labelledby="sum-title">
+          <p class="summary-title" id="sum-title"><span class="step-n">5</span>Tu cita</p>
+          <dl class="sum-list">
+            <div><dt>Servicio</dt><dd id="sum-service">—</dd></div>
+            <div><dt>Fecha</dt><dd id="sum-date">—</dd></div>
+            <div><dt>Horario</dt><dd id="sum-time">—</dd></div>
+            <div><dt>Duración</dt><dd id="sum-duration">—</dd></div>
+            <div><dt>Precio</dt><dd id="sum-price">—</dd></div>
+            <div class="sum-opt" id="sum-disc-row" hidden><dt>Descuento</dt><dd id="sum-discount">—</dd></div>
+            <div class="sum-opt" id="sum-gift-row" hidden><dt id="sum-gift-label">Tarjeta de regalo</dt><dd id="sum-gift">—</dd></div>
+            <div class="sum-pay" data-pay-only hidden><dt>Depósito hoy</dt><dd id="sum-deposit">—</dd></div>
+            <div class="sum-pay" data-pay-only hidden><dt>Al terminar</dt><dd id="sum-balance">—</dd></div>
+          </dl>
+          <details class="promo-box" id="bk-promo" data-pay-only hidden>
+            <summary>¿Tienes un código de descuento o una tarjeta de regalo?</summary>
+            <div class="promo-row">
+              <input id="bk-code" autocomplete="off" autocapitalize="characters" placeholder="Escribe el código" aria-label="Código de descuento o tarjeta de regalo">
+              <button type="button" class="btn btn-line btn-sm" id="bk-code-apply">Aplicar</button>
+            </div>
+            <p class="promo-msg" id="bk-code-msg" aria-live="polite"></p>
+            <div class="promo-tags" id="bk-code-tags"></div>
+          </details>
+          <button type="button" class="btn btn-primary btn-block" id="bk-confirm" disabled>Confirmar cita</button>
+          <div class="pay-panel" id="bk-pay" hidden>
+            <p class="pay-title">Aparta tu cita con el depósito</p>
+            <div class="pay-methods" id="bk-pay-methods" role="tablist" aria-label="Forma de pago" hidden>
+              <button type="button" class="pay-method is-on" role="tab" aria-selected="true" data-method="paypal">PayPal o tarjeta</button>
+              <button type="button" class="pay-method" role="tab" aria-selected="false" data-method="transferencia">Transferencia</button>
+            </div>
+            <div class="pay-pp" id="bk-pp">
+              <p class="pay-info" id="bk-pay-info"></p>
+              <p class="pay-timer" id="bk-pay-timer" aria-live="polite" hidden></p>
+              <div class="pay-buttons" id="bk-paypal"></div>
+            </div>
+            <div class="tf-panel" id="bk-tf" hidden></div>
+            <p class="pay-msg" id="bk-pay-msg" aria-live="assertive"></p>
+            <button type="button" class="link-inline pay-back" id="bk-pay-back">Cambiar algo de la cita</button>
+          </div>
+          <p class="sum-missing" id="bk-missing" aria-live="polite"></p>
+          <p class="sum-policy" id="bk-policy"></p>
+          <p class="sum-mode" id="bk-mode"></p>
+          <div class="sum-result" id="bk-result" hidden aria-live="polite"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="section page-links">
+    <div class="container page-links-in">
+      <a class="page-link" href="citas.html"><b>¿Ya tienes cita?</b><span>Consúltala, cámbiala o paga el saldo en Mis citas</span></a>
+      <a class="page-link" href="regalos.html" data-nav-for="regalos" hidden><b>Paquetes y tarjetas de regalo</b><span>Ahorra con paquetes de sesiones o regala una experiencia</span></a>
+      <a class="page-link" href="aplicacion.html"><b>La app MAJOBELLA</b><span>Reserva desde tu celular en segundos</span></a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <img src="assets/logo-majobella.png" alt="MAJOBELLA" width="900" height="351">
+      <p data-slogan>MÁS YO, MÁS BELLA.</p>
+      <p class="footer-address" data-address></p>
+    </div>
+    <nav class="footer-links" aria-label="Pie de página">
+      <a href="./#inicio">Inicio</a>
+      <a href="./#servicios">Servicios</a>
+      <a href="reservar.html">Reservar</a>
+      <a href="citas.html">Mis citas</a>
+      <a href="regalos.html" data-nav-for="regalos" hidden>Regalos y paquetes</a>
+      <a href="./#preguntas">Preguntas</a>
+      <a href="./#contacto">Contacto</a>
+      <a href="aplicacion.html">La app MAJOBELLA</a>
+    </nav>
+    <div class="footer-social">
+      <a data-social="instagram">Instagram</a>
+      <a data-social="tiktok">TikTok</a>
+      <a data-wa href="./#contacto">WhatsApp</a>
+    </div>
+  </div>
+  <div class="container footer-base">
+    <p>© <span data-year>2026</span> MAJOBELLA — Todos los derechos reservados.</p>
+    <nav class="footer-legal" aria-label="Legal"><a href="privacidad.html">Privacidad</a><a href="cancelacion.html">Cancelación y reembolsos</a><a href="terminos.html">Términos y condiciones</a></nav>
+  </div>
+</footer>
+
+
+<div class="app-ribbon" id="app-ribbon" hidden role="region" aria-label="La app MAJOBELLA">
+  <img src="assets/icon-192.png" alt="" width="40" height="40">
+  <p><b>La app MAJOBELLA</b><span>Tus citas a un toque.</span></p>
+  <button type="button" class="btn btn-primary btn-sm" data-ribbon-install>Ver app</button>
+  <button type="button" class="app-ribbon-x" aria-label="Cerrar" data-ribbon-x>×</button>
+</div>
+
+<div class="get-app" id="get-app" hidden tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="ga-title"></div>
+
+<div class="auth-modal" id="auth-modal" hidden>
+  <div class="am-backdrop"></div>
+  <div class="am-panel" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <button type="button" class="am-close" aria-label="Cerrar">×</button>
+    <img class="am-logo" src="assets/monograma.png" alt="" width="400" height="332">
+    <div id="auth-body"></div>
+  </div>
+</div>
+<p class="toast" id="toast" role="status" hidden></p>
+
+<div class="selection-bar" id="selection-bar" hidden role="region" aria-label="Servicios añadidos">
+  <div class="sb-inner">
+    <div class="sb-text">
+      <p class="sb-names" id="sb-names"></p>
+      <p class="sb-meta" id="sb-meta"></p>
+    </div>
+    <p class="sb-price" id="sb-price" aria-live="polite"></p>
+    <button type="button" class="sb-clear" id="sb-clear" aria-label="Quitar todos los servicios">Vaciar</button>
+    <button type="button" class="btn btn-primary" id="sb-book">Agendar estos servicios</button>
+  </div>
+</div>
+
+<a class="wa-float" data-wa href="./#contacto" aria-label="¿Dudas? Escribir a MAJOBELLA por WhatsApp">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2c-4.9 0-8.8 3.7-8.8 8.3 0 1.7.5 3.2 1.4 4.5L3.6 20.6l4.7-1.3c1.1.6 2.4.9 3.7.9 4.9 0 8.8-3.7 8.8-8.3S16.9 3.2 12 3.2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9.2 8.6c.2-.4.4-.4.6-.4h.4c.2 0 .3.1.4.3l.6 1.4c.1.2 0 .4-.1.5l-.4.5c-.1.1-.1.3 0 .4.6 1 1.4 1.7 2.4 2.2.2.1.3.1.4-.1l.5-.6c.1-.2.3-.2.5-.1l1.4.7c.2.1.3.2.3.4 0 .5-.2 1.1-.7 1.4-.5.3-1.2.4-2.1.1-1.6-.5-3-1.7-3.9-3.1-.6-.9-.9-1.8-.7-2.6.1-.4.2-.7.4-.9z" fill="currentColor"/></svg>
+  <span>¿Dudas?</span>
+</a>
+<!--MJB:BODY-END-->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/config.js?v=20261020b"></script>
+<script src="js/data/services.js?v=20261020b"></script>
+<script src="js/data/faq.js?v=20261020b"></script>
+<script src="js/data/brows.js?v=20261020b"></script>
+<script src="js/core/utils.js?v=20261020b"></script>
+<script src="js/core/validate.js?v=20261020b"></script>
+<script src="js/integrations/whatsapp.js?v=20261020b"></script>
+<script src="js/integrations/calendar.js?v=20261020b"></script>
+<script src="js/integrations/booking-api.js?v=20261020b"></script>
+<script src="js/integrations/paypal.js?v=20261020b"></script>
+<script src="js/integrations/google-auth.js?v=20261020b"></script>
+<script src="js/integrations/appointments.js?v=20261020b"></script>
+<script src="js/integrations/giftcard.js?v=20261020b"></script>
+<script src="js/integrations/captcha.js?v=20261020b"></script>
+<script src="js/integrations/manage.js?v=20261020b"></script>
+<script src="js/components/nav.js?v=20261020b"></script>
+<script src="js/components/auth-modal.js?v=20261020b"></script>
+<script src="js/components/face.js?v=20261020b"></script>
+<script src="js/components/brows.js?v=20261020b"></script>
+<script src="js/components/hero.js?v=20261020b"></script>
+<script src="js/components/services.js?v=20261020b"></script>
+<script src="js/components/selection-bar.js?v=20261020b"></script>
+<script src="js/components/booking.js?v=20261020b"></script>
+<script src="js/components/citas.js?v=20261020b"></script>
+<script src="js/components/contact.js?v=20261020b"></script>
+<script src="js/components/site.js?v=20261020b"></script>
+<script src="js/components/giftshop.js?v=20261020b"></script>
+<script src="js/components/packages.js?v=20261020b"></script>
+<script src="js/integrations/install.js?v=20261020b"></script>
+<script src="js/components/getapp.js?v=20261020b"></script>
+<script src="js/components/appinfo.js?v=20261020b"></script>
+<script src="js/components/reveal.js?v=20261020b"></script>
+<script src="js/main.js?v=20261020b"></script>
+</body>
+</html>

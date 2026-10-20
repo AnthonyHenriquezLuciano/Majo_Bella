@@ -196,7 +196,7 @@
       const rows = view === 'proximas' ? upcoming : past;
       list.innerHTML = rows.length
         ? rows.map((a) => item(a, view === 'anteriores')).join('')
-        : `<li class="citas-empty"><p>${view === 'proximas' ? 'No tienes citas próximas.' : 'Aún no hay citas anteriores.'}</p>${view === 'proximas' ? '<a class="btn btn-primary" href="#reservar">Agendar cita</a>' : ''}</li>`;
+        : `<li class="citas-empty"><p>${view === 'proximas' ? 'No tienes citas próximas.' : 'Aún no hay citas anteriores.'}</p>${view === 'proximas' ? '<a class="btn btn-primary" href="reservar.html">Agendar cita</a>' : ''}</li>`;
       source.textContent = src === 'agenda'
         ? 'Actualizadas con la agenda de MAJOBELLA.'
         : (error ? `No pudimos leer la agenda (${error}). Se muestran las citas guardadas en este dispositivo.` : 'Se muestran las citas reservadas desde este dispositivo.');
@@ -321,7 +321,7 @@
         return;
       }
       const again = e.target.closest('[data-again]');
-      if (again) { M.selectOnly(again.dataset.again.split(','), 'citas'); M.scrollTo('#reservar'); return; }
+      if (again) { M.goBook(again.dataset.again.split(','), '', 'citas'); return; }
       const bal = e.target.closest('[data-balance]');
       if (bal) { payingId = bal.dataset.balance; paint(); return; }
       if (e.target.closest('[data-balance-close]')) { payingId = null; paint(); return; }

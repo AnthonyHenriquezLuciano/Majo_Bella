@@ -17,8 +17,8 @@
             <div><p class="acct-name">${M.escapeHtml(u.name || u.firstName)}</p><p class="acct-mail">${M.escapeHtml(u.email)}</p></div>
           </div>
           <div class="am-actions">
-            <a class="btn btn-primary btn-block" href="#citas" data-close-auth>Ver mis citas</a>
-            <a class="btn btn-ghost btn-block" href="#reservar" data-close-auth>Agendar cita</a>
+            <a class="btn btn-primary btn-block" href="citas.html" data-close-auth>Ver mis citas</a>
+            <a class="btn btn-ghost btn-block" href="reservar.html" data-close-auth>Agendar cita</a>
             <button type="button" class="link-btn" id="am-out">Cerrar sesión</button>
           </div>`;
         body.querySelector('#am-out').addEventListener('click', () => { M.Auth.signOut(); close(); });

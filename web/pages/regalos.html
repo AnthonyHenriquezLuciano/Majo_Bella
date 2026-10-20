@@ -1,0 +1,105 @@
+<!--page {"key":"regalos","file":"regalos.html","path":"regalos.html","title":"Tarjetas de regalo y paquetes · MAJOBELLA Beauty Studio","description":"Regala una experiencia en MAJOBELLA con una tarjeta de regalo o ahorra con paquetes de sesiones. Pago seguro con PayPal y código al instante por correo.","ogTitle":"Regala MAJOBELLA","ogDescription":"Tarjetas de regalo y paquetes de sesiones, al instante por correo."}-->
+<main id="contenido" class="page-main">
+
+  <!-- TARJETAS DE REGALO -->
+  <section id="regalar" class="section gift" hidden>
+    <div class="container gift-grid">
+      <div class="gift-intro">
+        <p class="label" data-reveal>Tarjetas de regalo</p>
+        <h2 class="display" data-reveal>Regala un momento para ella</h2>
+        <p class="gift-lead" data-reveal>Elige el valor, escribe una dedicatoria y paga con PayPal. La tarjeta llega al instante por correo con un código para usar al reservar cualquier servicio.</p>
+        <div class="gc-preview" id="gc-preview" aria-live="polite">
+          <p class="gc-k">Tarjeta de regalo</p>
+          <p class="gc-amt" id="gc-amt">RD$ 2,500</p>
+          <p class="gc-who" id="gc-who"></p>
+          <p class="gc-msg" id="gc-msg"></p>
+          <p class="gc-code" id="gc-code">MJB-····-····</p>
+        </div>
+      </div>
+      <form class="gift-form" id="gift-form" novalidate>
+        <fieldset class="gf-amounts">
+          <legend>Valor</legend>
+          <div class="gf-chips" id="gf-chips">
+            <label class="gf-chip"><input type="radio" name="amt" value="1500"><span>RD$ 1,500</span></label>
+            <label class="gf-chip"><input type="radio" name="amt" value="2500" checked><span>RD$ 2,500</span></label>
+            <label class="gf-chip"><input type="radio" name="amt" value="5000"><span>RD$ 5,000</span></label>
+            <label class="gf-chip"><input type="radio" name="amt" value="otro"><span>Otro</span></label>
+          </div>
+          <div class="field" id="gf-other-wrap" hidden>
+            <label for="gf-other">Otro valor (RD$)</label>
+            <input id="gf-other" name="otro" type="number" inputmode="numeric" min="500" step="100">
+          </div>
+        </fieldset>
+        <div class="gf-row">
+          <div class="field"><label for="gf-para">Para</label><input id="gf-para" name="para" maxlength="60" autocomplete="off" placeholder="Nombre de quien la recibe"></div>
+          <div class="field"><label for="gf-de">De</label><input id="gf-de" name="de" maxlength="60" autocomplete="name" placeholder="Tu nombre"></div>
+        </div>
+        <div class="field"><label for="gf-mensaje">Dedicatoria <span class="opt">(opcional)</span></label><input id="gf-mensaje" name="mensaje" maxlength="140" placeholder="¡Feliz cumpleaños!"></div>
+        <div class="gf-row">
+          <div class="field"><label for="gf-correo">Tu correo</label><input id="gf-correo" name="correo" type="email" autocomplete="email" required><span class="field-error">Escribe tu correo para enviarte la tarjeta.</span></div>
+          <div class="field"><label for="gf-correo-para">Correo de quien la recibe <span class="opt">(opcional)</span></label><input id="gf-correo-para" name="correoPara" type="email" autocomplete="off"><span class="field-error">Revisa este correo.</span></div>
+        </div>
+        <p class="gf-note" id="gf-note"></p>
+        <label class="gf-terms"><input type="checkbox" name="terms" id="gf-terms"><span>Acepto las <a href="cancelacion.html#tarjetas" target="_blank">condiciones de las tarjetas de regalo</a>.</span></label>
+        <div class="gf-pay" id="gf-pay"></div>
+        <p class="gf-msg" id="gf-msg" role="status" aria-live="polite"></p>
+      </form>
+      <div class="gift-done" id="gift-done" hidden tabindex="-1">
+        <p class="label">Listo</p>
+        <h3>Tu tarjeta está lista</h3>
+        <p id="gd-text"></p>
+        <p class="gd-code" id="gd-code"></p>
+        <div class="gd-actions">
+          <button type="button" class="btn btn-primary" id="gd-download">Descargar tarjeta</button>
+          <a class="btn btn-line" id="gd-wa" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+          <button type="button" class="btn btn-quiet" id="gd-again">Comprar otra</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAQUETES -->
+  <section id="paquetes" class="section packages" hidden>
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="label">Paquetes</p>
+          <h2 class="display">Tus sesiones, a mejor precio</h2>
+        </div>
+        <div class="section-head-side">
+          <p>Compra varias sesiones de tu servicio y ahorra. Recibes un código por correo y lo escribes al reservar cada sesión.</p>
+        </div>
+      </div>
+      <div class="pk-grid" id="pk-grid"></div>
+      <form class="pk-buy" id="pk-buy" novalidate hidden>
+        <div class="pk-buy-head"><p class="label">Comprar</p><h3 id="pk-buy-title"></h3><p id="pk-buy-sub"></p></div>
+        <div class="fields">
+          <div class="field"><label for="pk-first">Nombre</label><input id="pk-first" autocomplete="given-name"><span class="field-error">Escribe tu nombre (solo letras).</span></div>
+          <div class="field"><label for="pk-last">Apellido</label><input id="pk-last" autocomplete="family-name"><span class="field-error">Escribe tu apellido (solo letras).</span></div>
+          <div class="field"><label for="pk-phone">Teléfono</label><input id="pk-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="809-555-1234"><span class="field-error">10 dígitos, por ejemplo 809-555-1234.</span></div>
+          <div class="field"><label for="pk-email">Correo</label><input id="pk-email" type="email" autocomplete="email"><span class="field-error">Revisa tu correo: ahí te llega el código.</span></div>
+        </div>
+        <label class="gf-terms"><input type="checkbox" id="pk-terms"><span>Acepto las <a href="cancelacion.html#paquetes" target="_blank">condiciones de los paquetes</a>.</span></label>
+        <div class="gf-pay" id="pk-pay"></div>
+        <p class="gf-msg" id="pk-msg" role="status" aria-live="polite"></p>
+        <button type="button" class="btn btn-quiet" id="pk-cancel">Cancelar</button>
+      </form>
+      <div class="gift-done pk-done" id="pk-done" hidden tabindex="-1">
+        <p class="label">Listo</p>
+        <h3>Tu paquete está activo</h3>
+        <p id="pk-done-text"></p>
+        <p class="gd-code" id="pk-done-code"></p>
+        <div class="gd-actions"><a class="btn btn-primary" id="pk-done-book" href="#reservar">Reservar mi primera sesión</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section regalos-empty" id="regalos-empty" hidden>
+    <div class="container">
+      <p class="label">Regalos y paquetes</p>
+      <h2 class="display">Muy pronto</h2>
+      <p>Pronto podrás comprar aquí tarjetas de regalo y paquetes de sesiones. Mientras tanto, escríbenos por WhatsApp y te ayudamos.</p>
+      <a class="btn btn-primary" data-wa href="./#contacto">Escribir por WhatsApp</a>
+    </div>
+  </section>
+</main>

@@ -112,7 +112,7 @@
         A.data = res;
         A.loadedAt = Date.now();
         applySchedule();
-        if (res.sheetUrl) ['ad-sheet', 'ad-sheet-m'].forEach((id) => { const a = $(id); if (a) { a.href = res.sheetUrl; a.hidden = false; } });
+        if (res.sheetUrl) ['ad-sheet', 'ad-sheet-m'].forEach((id) => { const a = $(id); if (a) { a.href = res.sheetUrl; a.hidden = false; a.textContent = /supabase/.test(res.sheetUrl) ? 'Abrir base de datos' : 'Abrir hoja'; } });
         A.render();
       } catch (err) {
         if (!$('ad-main').hidden && !silent) A.toast(err.message);

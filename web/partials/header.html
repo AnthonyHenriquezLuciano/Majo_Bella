@@ -1,0 +1,67 @@
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+<div class="announce" id="announce" hidden>
+  <div class="container announce-in">
+    <a class="announce-link" id="announce-link" href="reservar.html"><span id="announce-text"></span><span class="announce-arrow" aria-hidden="true">→</span></a>
+    <button type="button" class="announce-x" id="announce-x" aria-label="Cerrar anuncio">×</button>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="{{H}}#inicio" aria-label="MAJOBELLA, ir al inicio">
+      <img src="assets/logo-majobella.png" alt="MAJOBELLA" width="900" height="351">
+    </a>
+    <nav class="main-nav" aria-label="Principal">
+      <ul>
+        <li><a href="{{H}}#majo">Conoce a Majo</a></li>
+        <li><a href="{{H}}#servicios">Servicios</a></li>
+        <li data-nav-for="resenas" hidden><a href="{{H}}#resenas">Opiniones</a></li>
+        <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos">Regalos</a></li>
+        <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
+        <li><a href="aplicacion.html" class="nav-app" data-nav="aplicacion">Aplicación</a></li>
+      </ul>
+    </nav>
+    <div class="header-account" id="header-account"><button type="button" class="header-login" data-open-auth>Iniciar sesión</button></div>
+    <a class="btn btn-primary btn-sm header-cta" href="reservar.html" data-nav="reservar">Agendar cita</a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú">
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+<script>
+/* Antes de pintar: muestra el anuncio y los apartados del menú que ya se vieron la última vez (evita saltos de la página) */
+(function () {
+  try {
+    var nav = JSON.parse(localStorage.getItem('mjb.nav.v1') || '[]');
+    nav.forEach(function (id) { document.querySelectorAll('[data-nav-for="' + id + '"]').forEach(function (e) { e.hidden = false; }); });
+    var a = localStorage.getItem('mjb.announce.last');
+    if (a && localStorage.getItem('mjb.announce.closed') !== 'mjb.announce.' + a) {
+      document.getElementById('announce-text').textContent = a;
+      document.getElementById('announce').hidden = false;
+    }
+  } catch (e) { /* sin almacenamiento */ }
+})();
+</script>
+
+<div class="mobile-menu" id="mobile-menu" hidden>
+  <nav aria-label="Menú móvil">
+    <a class="mobile-app" href="aplicacion.html"><span class="mobile-app-ic" aria-hidden="true"><img src="assets/icon-192.png" alt=""></span><span><b>La app MAJOBELLA</b><small>Reserva y lleva tus citas en tu celular</small></span></a>
+    <ul>
+      <li><a href="{{H}}#inicio">Inicio</a></li>
+      <li><a href="{{H}}#sobre">Sobre MAJOBELLA</a></li>
+      <li><a href="{{H}}#majo">Conoce a Majo</a></li>
+      <li><a href="{{H}}#servicios">Servicios</a></li>
+      <li data-nav-for="resultados" hidden><a href="{{H}}#resultados">Resultados</a></li>
+      <li data-nav-for="resenas" hidden><a href="{{H}}#resenas">Opiniones</a></li>
+      <li><a href="reservar.html" data-nav="reservar">Reservar</a></li>
+      <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
+      <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos">Regalos y paquetes</a></li>
+      <li><a href="{{H}}#contacto">Contacto</a></li>
+      <li><a href="aplicacion.html" data-nav="aplicacion">Aplicación <span class="mm-tag">Para tu celular</span></a></li>
+    </ul>
+    <a class="btn btn-primary" href="reservar.html">Agendar cita</a>
+    <button type="button" class="mobile-login" data-open-auth>Iniciar sesión</button>
+    <p class="mobile-slogan" data-slogan>MÁS YO, MÁS BELLA.</p>
+  </nav>
+</div>

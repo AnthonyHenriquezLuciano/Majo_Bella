@@ -1,0 +1,169 @@
+<!--page {"key":"reservar","file":"reservar.html","path":"reservar.html","title":"Reservar cita · MAJOBELLA Beauty Studio","description":"Elige tus servicios, el día y la hora disponibles y aparta tu cita en MAJOBELLA con un depósito por PayPal o transferencia.","ogTitle":"Reserva tu cita en MAJOBELLA","ogDescription":"Elige servicio, día y hora. Solo verás horarios disponibles."}-->
+<main id="contenido" class="page-main">
+
+  <!-- RESERVAR -->
+  <section id="reservar" class="section booking-section">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="label">Reservas</p>
+          <h2 class="display">Agenda tu cita</h2>
+        </div>
+        <div class="section-head-side"><p>Elige servicio, día y hora. Solo verás horarios disponibles.</p></div>
+      </div>
+
+      <div class="booking">
+        <form class="booking-flow" id="bk-form" novalidate>
+          <fieldset class="step" id="step-servicio">
+            <legend><span class="step-n">1</span>Servicio</legend>
+            <div class="chips" id="bk-services"></div>
+          </fieldset>
+
+          <fieldset class="step" id="step-fecha">
+            <legend><span class="step-n">2</span>Día</legend>
+            <div class="fastest" id="bk-fastest" hidden>
+              <div><p class="fastest-k">Primer horario disponible</p><p class="fastest-v" id="bk-fastest-label">Buscando…</p></div>
+              <button type="button" class="btn btn-primary btn-sm" id="bk-fastest-btn" disabled>Elegir este horario</button>
+            </div>
+            <div class="quick-days" id="bk-quickdays"></div>
+            <button type="button" class="cal-toggle" id="bk-cal-toggle" aria-expanded="false" aria-controls="bk-calendar">Ver más fechas</button>
+            <div class="calendar" id="bk-calendar" hidden>
+              <div class="cal-head">
+                <button type="button" class="cal-nav" id="bk-prev" aria-label="Mes anterior">‹</button>
+                <p class="cal-title" id="bk-month" aria-live="polite"></p>
+                <button type="button" class="cal-nav" id="bk-next" aria-label="Mes siguiente">›</button>
+              </div>
+              <div class="cal-grid" id="bk-grid"></div>
+            </div>
+            <p class="cal-picked" id="bk-date-label" aria-live="polite"></p>
+          </fieldset>
+
+          <fieldset class="step" id="step-hora">
+            <legend><span class="step-n">3</span>Hora</legend>
+            <p class="slots-msg" id="bk-slots-msg" aria-live="polite"></p>
+            <div class="slots" id="bk-slots"></div>
+            <div class="wait" id="bk-wait" hidden>
+              <button type="button" class="link-inline wait-open" id="bk-wait-open">¿No encuentras horario? Únete a la lista de espera</button>
+              <div class="wait-box" id="bk-wait-box" hidden>
+                <p class="wait-lead">Te avisamos por correo si se libera un horario ese día para los servicios que elegiste.</p>
+                <div class="fields">
+                  <div class="field"><label for="bk-wait-date">Día</label><input id="bk-wait-date" type="date"></div>
+                  <div class="field"><label for="bk-wait-franja">Horario</label>
+                    <select id="bk-wait-franja"><option value="cualquiera">Cualquier hora</option><option value="manana">Mañana</option><option value="tarde">Tarde</option></select></div>
+                </div>
+                <p class="wait-note" id="bk-wait-who"></p>
+                <button type="button" class="btn btn-line" id="bk-wait-join">Avisarme</button>
+                <p class="gf-msg" id="bk-wait-msg" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="step" id="step-datos">
+            <legend><span class="step-n">4</span>Tus datos</legend>
+            <div class="signin-hint" id="bk-signin-hint"></div>
+            <p class="saved-note" id="bk-saved-note" hidden>Completamos tus datos de tu última reserva. <button type="button" class="link-inline" id="bk-forget">Borrar mis datos</button></p>
+            <div class="fields">
+              <div class="field">
+                <label for="bk-first">Nombre</label>
+                <input id="bk-first" name="nombre" autocomplete="given-name" required>
+                <span class="field-error">Escribe tu nombre (solo letras).</span>
+              </div>
+              <div class="field">
+                <label for="bk-last">Apellido</label>
+                <input id="bk-last" name="apellido" autocomplete="family-name" required>
+                <span class="field-error">Escribe tu apellido (solo letras).</span>
+              </div>
+              <div class="field">
+                <label for="bk-phone">Teléfono</label>
+                <input id="bk-phone" name="telefono" type="tel" autocomplete="tel" inputmode="tel" placeholder="809-555-1234" required>
+                <span class="field-error">10 dígitos, por ejemplo 809-555-1234.</span>
+              </div>
+              <div class="field">
+                <label for="bk-email">Correo electrónico</label>
+                <input id="bk-email" name="correo" type="email" autocomplete="email" required>
+                <span class="field-error">Revisa el formato del correo, por ejemplo nombre@correo.com.</span>
+              </div>
+              <div class="field field-wide">
+                <label for="bk-notes">Nota para el estudio <span class="opt">(opcional)</span></label>
+                <input id="bk-notes" name="nota" autocomplete="off" placeholder="Alergias, dudas o algo que debamos saber">
+              </div>
+              <div class="field field-wide">
+                <label for="bk-origen">¿Cómo nos conociste? <span class="opt">(opcional)</span></label>
+                <select id="bk-origen" name="origen">
+                  <option value="">Elige una opción</option>
+                  <option>Instagram</option>
+                  <option>TikTok</option>
+                  <option>Google</option>
+                  <option>Recomendación de una amiga</option>
+                  <option>Pasé por el estudio</option>
+                  <option>Otro</option>
+                </select>
+              </div>
+              <div class="field field-wide">
+                <label for="bk-bday-d">Tu cumpleaños <span class="opt">(opcional · te enviamos un regalo ese día)</span></label>
+                <div class="bday">
+                  <select id="bk-bday-d" aria-label="Día de tu cumpleaños"><option value="">Día</option></select>
+                  <select id="bk-bday-m" aria-label="Mes de tu cumpleaños"><option value="">Mes</option></select>
+                </div>
+              </div>
+              <p class="loyal-note field-wide" id="bk-loyal" hidden></p>
+              <label class="check field-wide"><input type="checkbox" id="bk-remember" checked><span>Recordar mis datos en este dispositivo para la próxima vez</span></label>
+            </div>
+          </fieldset>
+        </form>
+
+        <aside class="booking-summary" aria-labelledby="sum-title">
+          <p class="summary-title" id="sum-title"><span class="step-n">5</span>Tu cita</p>
+          <dl class="sum-list">
+            <div><dt>Servicio</dt><dd id="sum-service">—</dd></div>
+            <div><dt>Fecha</dt><dd id="sum-date">—</dd></div>
+            <div><dt>Horario</dt><dd id="sum-time">—</dd></div>
+            <div><dt>Duración</dt><dd id="sum-duration">—</dd></div>
+            <div><dt>Precio</dt><dd id="sum-price">—</dd></div>
+            <div class="sum-opt" id="sum-disc-row" hidden><dt>Descuento</dt><dd id="sum-discount">—</dd></div>
+            <div class="sum-opt" id="sum-gift-row" hidden><dt id="sum-gift-label">Tarjeta de regalo</dt><dd id="sum-gift">—</dd></div>
+            <div class="sum-pay" data-pay-only hidden><dt>Depósito hoy</dt><dd id="sum-deposit">—</dd></div>
+            <div class="sum-pay" data-pay-only hidden><dt>Al terminar</dt><dd id="sum-balance">—</dd></div>
+          </dl>
+          <details class="promo-box" id="bk-promo" data-pay-only hidden>
+            <summary>¿Tienes un código de descuento o una tarjeta de regalo?</summary>
+            <div class="promo-row">
+              <input id="bk-code" autocomplete="off" autocapitalize="characters" placeholder="Escribe el código" aria-label="Código de descuento o tarjeta de regalo">
+              <button type="button" class="btn btn-line btn-sm" id="bk-code-apply">Aplicar</button>
+            </div>
+            <p class="promo-msg" id="bk-code-msg" aria-live="polite"></p>
+            <div class="promo-tags" id="bk-code-tags"></div>
+          </details>
+          <button type="button" class="btn btn-primary btn-block" id="bk-confirm" disabled>Confirmar cita</button>
+          <div class="pay-panel" id="bk-pay" hidden>
+            <p class="pay-title">Aparta tu cita con el depósito</p>
+            <div class="pay-methods" id="bk-pay-methods" role="tablist" aria-label="Forma de pago" hidden>
+              <button type="button" class="pay-method is-on" role="tab" aria-selected="true" data-method="paypal">PayPal o tarjeta</button>
+              <button type="button" class="pay-method" role="tab" aria-selected="false" data-method="transferencia">Transferencia</button>
+            </div>
+            <div class="pay-pp" id="bk-pp">
+              <p class="pay-info" id="bk-pay-info"></p>
+              <p class="pay-timer" id="bk-pay-timer" aria-live="polite" hidden></p>
+              <div class="pay-buttons" id="bk-paypal"></div>
+            </div>
+            <div class="tf-panel" id="bk-tf" hidden></div>
+            <p class="pay-msg" id="bk-pay-msg" aria-live="assertive"></p>
+            <button type="button" class="link-inline pay-back" id="bk-pay-back">Cambiar algo de la cita</button>
+          </div>
+          <p class="sum-missing" id="bk-missing" aria-live="polite"></p>
+          <p class="sum-policy" id="bk-policy"></p>
+          <p class="sum-mode" id="bk-mode"></p>
+          <div class="sum-result" id="bk-result" hidden aria-live="polite"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="section page-links">
+    <div class="container page-links-in">
+      <a class="page-link" href="citas.html"><b>¿Ya tienes cita?</b><span>Consúltala, cámbiala o paga el saldo en Mis citas</span></a>
+      <a class="page-link" href="regalos.html" data-nav-for="regalos" hidden><b>Paquetes y tarjetas de regalo</b><span>Ahorra con paquetes de sesiones o regala una experiencia</span></a>
+      <a class="page-link" href="aplicacion.html"><b>La app MAJOBELLA</b><span>Reserva desde tu celular en segundos</span></a>
+    </div>
+  </section>
+</main>

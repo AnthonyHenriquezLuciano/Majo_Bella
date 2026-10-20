@@ -99,4 +99,14 @@ window.MAJOBELLA_CONFIG = {
     usdRate: 63,              // RD$ por 1 US$ (ejemplo: actualízala en la hoja "Ajustes")
     holdMinutes: 15,          // minutos que se aparta el horario mientras la clienta paga
   },
+
+  /* La app MAJOBELLA (nativa, Android y iPhone) ------------------------------
+     androidUrl: enlace del archivo .apk de la app (o de Google Play cuando se publique). Vacío = «Muy pronto».
+     iosUrl: enlace de App Store o de TestFlight. Vacío = en iPhone se ofrece la versión web (si iosWebApp es true).
+     iosWebApp: mientras la app no esté en App Store, en iPhone se usa la versión web de la app (carpeta app/). */
+  app: {
+    androidUrl: '',
+    iosUrl: '',
+    iosWebApp: true,
+  },
 };

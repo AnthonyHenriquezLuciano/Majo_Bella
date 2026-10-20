@@ -1,0 +1,34 @@
+<!--page {"key":"citas","file":"citas.html","path":"citas.html","title":"Mis citas · MAJOBELLA Beauty Studio","description":"Consulta tus citas en MAJOBELLA, añádelas a tu calendario, cambia la fecha, sube tu comprobante o paga el saldo.","ogTitle":"Mis citas · MAJOBELLA","ogDescription":"Consulta y gestiona tus citas en MAJOBELLA."}-->
+<main id="contenido" class="page-main">
+
+  <!-- CITAS -->
+  <section id="citas" class="section citas-section">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="label">Mis citas</p>
+          <h2 class="display">Tus citas</h2>
+        </div>
+        <div class="section-head-side"><p>Consulta tus citas y tus pagos, añádelas a tu calendario, paga el saldo al terminar o cancela si lo necesitas.</p><a class="link-app" href="aplicacion.html">Tus citas también en la app <span aria-hidden="true">→</span></a></div>
+      </div>
+      <div class="citas-grid">
+        <div class="account" id="account" aria-live="polite"></div>
+        <div class="citas-panel">
+          <div class="citas-tabs" role="tablist" aria-label="Filtrar citas">
+            <button type="button" class="citas-tab is-active" role="tab" aria-selected="true" data-view="proximas">Próximas <span class="n">0</span></button>
+            <button type="button" class="citas-tab" role="tab" aria-selected="false" data-view="anteriores">Anteriores <span class="n">0</span></button>
+          </div>
+          <ul class="citas-list" id="citas-list" aria-live="polite"></ul>
+          <p class="citas-source" id="citas-source"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section page-links">
+    <div class="container page-links-in">
+      <a class="page-link" href="reservar.html"><b>Reservar otra cita</b><span>Elige servicio, día y hora</span></a>
+      <a class="page-link" href="aplicacion.html"><b>La app MAJOBELLA</b><span>Recibe tus citas y recordatorios en el celular</span></a>
+    </div>
+  </section>
+</main>

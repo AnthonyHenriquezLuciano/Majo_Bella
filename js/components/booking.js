@@ -15,6 +15,32 @@
   const saveClient = (c) => { try { localStorage.setItem(CLIENT_KEY, JSON.stringify(c)); } catch (e) { /* sin almacenamiento */ } };
   const forgetClient = () => { try { localStorage.removeItem(CLIENT_KEY); } catch (e) { /* sin almacenamiento */ } };
 
+  /* Preparación y evento de calendario de una cita (también los usa Mis citas, en otra página) */
+  M.prepFor = (ids) => {
+    const seen = new Set();
+    return ids.map((id) => M.serviceById[id]).filter(Boolean)
+      .flatMap((s) => (s.prep || []).map((p) => ({ s: s.name, p })))
+      .filter(({ p }) => (seen.has(p) ? false : seen.add(p)));
+  };
+
+  M.calendarEvent = function (a, pending) {
+    const names = a.services.map((s) => s.name).join(' + ');
+    const prep = M.prepFor(a.services.map((s) => s.id)).map(({ p }) => `- ${p}`);
+    const payLine = a.payment ? `Depósito pagado: ${M.fmtPrice(a.payment.depositRD)}. Saldo al terminar: ${M.fmtPrice(a.payment.balanceRD)}.` : '';
+    return {
+      title: `Cita en MAJOBELLA · ${names}`,
+      start: new Date(a.start), end: new Date(a.end),
+      description: [
+        `Servicio: ${names}`, `Duración: ${M.fmtDuration(a.durationMinutes)}`, `Precio: ${M.fmtPrice(a.totalPrice)}`,
+        pending ? 'Estado: solicitud enviada, pendiente de confirmación.' : 'Estado: confirmada.',
+        payLine,
+        a.id && !String(a.id).startsWith('web-') ? `Código de reserva: ${a.id}` : '',
+        prep.length ? `\nAntes de tu cita:\n${prep.join('\n')}` : '',
+      ].filter(Boolean).join('\n'),
+      location: M.config.contact.address || 'MAJOBELLA Beauty Studio',
+    };
+  };
+
   M.initBooking = function () {
     const $ = (id) => document.getElementById(id);
     const svcBox = $('bk-services'), calTitle = $('bk-month'), calGrid = $('bk-grid');
@@ -326,31 +352,6 @@
       };
     }
 
-    M.prepFor = (ids) => {
-      const seen = new Set();
-      return ids.map((id) => M.serviceById[id]).filter(Boolean)
-        .flatMap((s) => (s.prep || []).map((p) => ({ s: s.name, p })))
-        .filter(({ p }) => (seen.has(p) ? false : seen.add(p)));
-    };
-
-    M.calendarEvent = function (a, pending) {
-      const names = a.services.map((s) => s.name).join(' + ');
-      const prep = M.prepFor(a.services.map((s) => s.id)).map(({ p }) => `- ${p}`);
-      const payLine = a.payment ? `Depósito pagado: ${M.fmtPrice(a.payment.depositRD)}. Saldo al terminar: ${M.fmtPrice(a.payment.balanceRD)}.` : '';
-      return {
-        title: `Cita en MAJOBELLA · ${names}`,
-        start: new Date(a.start), end: new Date(a.end),
-        description: [
-          `Servicio: ${names}`, `Duración: ${M.fmtDuration(a.durationMinutes)}`, `Precio: ${M.fmtPrice(a.totalPrice)}`,
-          pending ? 'Estado: solicitud enviada, pendiente de confirmación.' : 'Estado: confirmada.',
-          payLine,
-          a.id && !String(a.id).startsWith('web-') ? `Código de reserva: ${a.id}` : '',
-          prep.length ? `\nAntes de tu cita:\n${prep.join('\n')}` : '',
-        ].filter(Boolean).join('\n'),
-        location: M.config.contact.address || 'MAJOBELLA Beauty Studio',
-      };
-    };
-
     function showResult(a, kind, waLink) {
       const evt = M.calendarEvent(a, kind === 'request');
       const g = M.CalendarLinks.googleUrl(evt);
@@ -370,7 +371,7 @@
           <a class="btn btn-line" href="${g}" target="_blank" rel="noopener">Google Calendar</a>
           <button type="button" class="btn btn-line" id="bk-ics">Apple / Outlook (.ics)</button>
           ${waLink ? `<a class="btn btn-quiet" href="${waLink}" target="_blank" rel="noopener">Abrir WhatsApp otra vez</a>` : ''}
-          <a class="btn btn-quiet" href="#citas">Ver mis citas</a>
+          <a class="btn btn-quiet" href="citas.html">Ver mis citas</a>
           ${M.config.contact.mapsUrl ? `<a class="btn btn-quiet" href="${M.escapeHtml(M.config.contact.mapsUrl)}" target="_blank" rel="noopener">Cómo llegar</a>` : ''}
         </div>`;
       $('bk-ics').addEventListener('click', () => M.CalendarLinks.downloadICS(evt));
@@ -549,7 +550,7 @@
           <img class="tf-preview" id="bk-tf-prev" alt="" hidden>
           <label class="field tf-ref"><span>Número de referencia <em>(opcional)</em></span><input id="bk-tf-ref" maxlength="60" inputmode="text" autocomplete="off"></label>
           <button type="button" class="btn btn-primary" id="bk-tf-send" disabled>Enviar comprobante</button>
-          <p class="tf-later">¿Aún no transfieres? Puedes subirlo después desde <a href="#citas">Mis citas</a> antes de que termine el tiempo.</p>
+          <p class="tf-later">¿Aún no transfieres? Puedes subirlo después desde <a href="citas.html">Mis citas</a> antes de que termine el tiempo.</p>
         </div>`;
       let file = null;
       $('bk-tf-file').addEventListener('change', async (e) => {

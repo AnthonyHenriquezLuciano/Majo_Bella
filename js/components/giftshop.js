@@ -54,7 +54,7 @@
     $('gd-code').textContent = gift.codigo;
     $('gd-text').textContent = `Te enviamos la tarjeta de ${M.fmtPrice(gift.montoRD)} a tu correo${order && order.correoPara ? ' y a quien la recibe' : ''}. Se usa escribiendo el código al reservar.${gift.vence ? ` Válida hasta el ${new Intl.DateTimeFormat('es', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${gift.vence}T12:00:00Z`))}.` : ''}`;
     const web = location.origin + location.pathname;
-    const text = `${gift.para ? `${gift.para}, ` : ''}te regalo una experiencia en MAJOBELLA Beauty Studio 🎁\nTarjeta de regalo: ${M.fmtPrice(gift.montoRD)}\nCódigo: ${gift.codigo}${gift.mensaje ? `\n“${gift.mensaje}”` : ''}\nReserva en ${web}#reservar y escribe el código al confirmar.`;
+    const text = `${gift.para ? `${gift.para}, ` : ''}te regalo una experiencia en MAJOBELLA Beauty Studio 🎁\nTarjeta de regalo: ${M.fmtPrice(gift.montoRD)}\nCódigo: ${gift.codigo}${gift.mensaje ? `\n“${gift.mensaje}”` : ''}\nReserva en ${web}reservar.html y escribe el código al confirmar.`;
     $('gd-wa').href = `https://wa.me/?text=${encodeURIComponent(text)}`;
     $('gift-done').focus();
   }
@@ -90,9 +90,8 @@
 
   M.initGiftShop = function () {
     shop = (M.site || {}).giftShop;
-    if (!shop || !shop.enabled || !API.enabled() || !M.PayPal.configured()) { if (M.showNav) M.showNav('regalar', false); return; }
+    if (!shop || !shop.enabled || !API.enabled() || !M.PayPal.configured()) return;
     $('regalar').hidden = false;
-    if (M.showNav) M.showNav('regalar', true); else document.querySelectorAll('[data-nav-for="regalar"]').forEach((n) => { n.hidden = false; });
     // Montos dentro del rango configurado
     document.querySelectorAll('#gf-chips input').forEach((i) => {
       if (i.value !== 'otro' && (Number(i.value) < shop.min || Number(i.value) > shop.max)) i.closest('.gf-chip').hidden = true;

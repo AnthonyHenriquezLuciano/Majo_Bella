@@ -1,8 +1,8 @@
-/* MAJOBELLA · "Instala la app" en la web
-   - Celular: la primera vez se muestra la página de instalación (pantalla completa, como la bienvenida
-     de la app). Al cerrarla queda la cinta abajo para instalar cuando quiera.
-   - PC: solo la cinta, y solo si el navegador permite instalar (Chrome/Edge).
-   - Android/Chrome instala con el aviso del navegador; iPhone muestra los pasos de Safari.
+/* MAJOBELLA · "Descarga la app" en la web
+   - Celular: la primera vez se muestra la página de la app (pantalla completa). Al cerrarla queda la cinta abajo.
+     Android descarga la app nativa (js/config.js → app.androidUrl); iPhone, la de App Store (app.iosUrl)
+     o, mientras no esté, la versión web de la app con los pasos de Safari.
+   - PC: solo la cinta, que lleva a la página «Aplicación».
    - Si ya se abre como app instalada, no aparece nada.
    - Quien llega desde Google no ve la página completa (Google penaliza las pantallas que tapan el
      contenido al entrar desde el buscador): ve solo la cinta. */
@@ -30,20 +30,31 @@
 
   /* ---------- Página de instalación (solo celular) ---------- */
   let lastFocus = null;
+  const APP = () => M.config.app || {};
+  const isAndroid = () => /android/i.test(navigator.userAgent || '');
+  function nativeLink() {
+    const a = APP();
+    if (isAndroid() && a.androidUrl) return { url: a.androidUrl, label: 'Descargar la app' };
+    if (M.Install.isIOS && a.iosUrl) return { url: a.iosUrl, label: 'Descargar en App Store' };
+    return null;
+  }
   function openPage() {
     const page = $('get-app');
     if (!page) return;
-    const direct = M.Install.canPrompt();
+    const nat = nativeLink();
+    const web = !nat && (!M.Install.isIOS || APP().iosWebApp);
+    const direct = !nat && web && M.Install.canPrompt();
     page.innerHTML = `
       <div class="ga-in">
         <img class="ga-logo" src="assets/logo-majobella.png" alt="MAJOBELLA Beauty Studio" width="900" height="351">
         <div class="ga-art"><img src="assets/monograma.png" alt=""></div>
         <h2 id="ga-title">Tu belleza, en tu bolsillo</h2>
         <p>Reserva en segundos, mira tus citas, firma tu consentimiento y guarda tus tarjetas de regalo y paquetes.</p>
-        ${direct ? '' : steps()}
+        ${nat || direct || !web ? '' : steps()}
         <div class="ga-actions">
+          ${nat ? `<a class="btn btn-primary ga-btn" href="${M.escapeHtml(nat.url)}" ${/\.apk(\?|$)/i.test(nat.url) ? 'download' : 'target="_blank" rel="noopener"'} data-ga-native>${IC.phone} ${nat.label}</a>` : ''}
           ${direct ? `<button type="button" class="btn btn-primary ga-btn" data-ga-install>${IC.phone} Instalar la app</button>` : ''}
-          <a class="btn ${direct ? 'btn-line' : 'btn-primary'} ga-btn" href="app/">Abrir la app sin instalar</a>
+          <a class="btn ${nat || direct ? 'btn-line' : 'btn-primary'} ga-btn" href="aplicacion.html">Conocer la app</a>
           <button type="button" class="ga-skip" data-ga-close>Seguir en la web</button>
         </div>
       </div>`;
@@ -66,9 +77,9 @@
 
   /* ---------- Cinta ---------- */
   function ribbonAllowed() {
-    if (M.Install.standalone()) return false;
-    if (Date.now() - get(K.ribbon) < RIBBON_EVERY) return false;
-    return mobile() ? M.Install.available() : M.Install.canPrompt();
+    // Solo en el inicio, Mis citas y Regalos: en Reservar estorbaría y en Aplicación sobra
+    if (M.Install.standalone() || ['inicio', 'citas', 'regalos'].indexOf(document.body.dataset.page) < 0) return false;
+    return Date.now() - get(K.ribbon) >= RIBBON_EVERY;
   }
   function showRibbon() {
     const r = $('app-ribbon');
@@ -88,13 +99,13 @@
   }
 
   async function install() {
-    if (M.Install.canPrompt()) {
+    if (!mobile()) { location.href = 'aplicacion.html'; return; }
+    if (M.Install.canPrompt() && !nativeLink()) {
       const r = await M.Install.prompt();
       if (r === 'accepted') { closePage(); hideRibbon(true); }
       return;
     }
-    if (mobile()) { openPage(); return; }
-    location.href = 'app/?instalar=1';
+    openPage();
   }
 
   M.initGetApp = function () {
@@ -107,6 +118,7 @@
 
     document.addEventListener('click', (e) => {
       const t = (s) => e.target.closest(s);
+      if (t('[data-ga-native]')) { set(K.page); setTimeout(closePage, 300); return; }
       if (t('[data-get-app]') || t('[data-ga-install]') || t('[data-ribbon-install]')) { e.preventDefault(); install(); return; }
       if (t('[data-ga-close]')) { closePage(); return; }
       if (t('[data-ribbon-x]')) { hideRibbon(true); }
@@ -125,7 +137,7 @@
     M.Install.onChange(() => { if (M.Install.standalone()) { closePage(); hideRibbon(false); } else showRibbon(); });
 
     const start = () => {
-      const wantsPage = mobile() && M.Install.available() && !fromSearch() && !location.hash && Date.now() - get(K.page) > PAGE_EVERY;
+      const wantsPage = mobile() && document.body.dataset.page === 'inicio' && !fromSearch() && !location.hash && Date.now() - get(K.page) > PAGE_EVERY;
       if (wantsPage) setTimeout(() => { if (!document.querySelector('.auth-modal:not([hidden])')) openPage(); else showRibbon(); }, 900);
       else setTimeout(showRibbon, mobile() ? 2500 : 1500);
     };

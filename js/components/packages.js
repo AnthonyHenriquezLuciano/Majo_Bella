@@ -81,10 +81,7 @@
     $('pk-done').hidden = false;
     $('pk-done-code').textContent = b.codigo;
     $('pk-done-text').textContent = `Te enviamos el código a tu correo. ${b.sesiones} ${b.sesiones === 1 ? 'sesión' : 'sesiones'} de ${b.serviceName}${b.vence ? `, válido hasta el ${new Intl.DateTimeFormat('es', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${b.vence}T12:00:00Z`))}` : ''}. Escríbelo en "¿Tienes un código o tarjeta?" al reservar.`;
-    $('pk-done-book').onclick = () => {
-      if (M.serviceById[b.servicio]) M.selectOnly([b.servicio], 'package');
-      if (M.applyBookingCode) setTimeout(() => M.applyBookingCode(b.codigo), 50);
-    };
+    $('pk-done-book').onclick = (e) => { e.preventDefault(); M.goBook(M.serviceById[b.servicio] ? [b.servicio] : [], b.codigo, 'package'); };
     $('pk-done').focus();
   }
 
@@ -95,9 +92,8 @@
   };
   M.initPackages = function () {
     list = ((M.site || {}).packages || []).filter((k) => M.serviceById[k.service]);
-    if (!list.length || !API.enabled() || !M.PayPal.configured()) { if (M.showNav) M.showNav('paquetes', false); return; }
+    if (!list.length || !API.enabled() || !M.PayPal.configured()) return;
     $('paquetes').hidden = false;
-    if (M.showNav) M.showNav('paquetes', true); else document.querySelectorAll('[data-nav-for="paquetes"]').forEach((n) => { n.hidden = false; });
     render();
     V.bindName($('pk-first')); V.bindName($('pk-last')); V.bindPhone($('pk-phone'));
     $('pk-grid').addEventListener('click', (e) => { const b = e.target.closest('[data-pk]'); if (b) open(b.dataset.pk); });

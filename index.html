@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MAJOBELLA Beauty Studio · Cejas, pestañas y micropigmentación en Santo Domingo</title>
-<meta name="description" content="Estudio de belleza en Santo Domingo: diseño de cejas, pestañas, faciales, micropigmentación y depilación. Reserva en línea y aparta tu cita al instante. Más yo, más bella.">
+<meta name="description" content="Estudio de belleza en Santo Domingo: diseño de cejas, pestañas, faciales, micropigmentación y depilación. Conoce a Majo, mira resultados reales y reserva en línea. Más yo, más bella.">
 <meta name="theme-color" content="#ffffff">
 <link rel="canonical" href="https://anthonyhenriquezluciano.github.io/Majo_Bella/">
 <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -28,7 +28,6 @@
 <meta name="twitter:title" content="MAJOBELLA Beauty Studio · Más yo, más bella">
 <meta name="twitter:description" content="Cejas, pestañas, faciales y micropigmentación en Santo Domingo. Reserva tu cita en línea.">
 <meta name="twitter:image" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg">
-
 <!-- Ficha del negocio para Google -->
 <script type="application/ld+json">
 {
@@ -57,21 +56,21 @@
     { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Micropigmentación" } },
     { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Depilación" } }
   ],
-  "potentialAction": { "@type": "ReserveAction", "target": "https://anthonyhenriquezluciano.github.io/Majo_Bella/#reservar" }
+  "potentialAction": { "@type": "ReserveAction", "target": "https://anthonyhenriquezluciano.github.io/Majo_Bella/reservar.html" }
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261020a">
+<link rel="stylesheet" href="css/styles.css?v=20261020b">
 </head>
-<body>
+<body data-page="inicio">
 <!--MJB:BODY-START-->
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
 <div class="announce" id="announce" hidden>
   <div class="container announce-in">
-    <a class="announce-link" id="announce-link" href="#reservar"><span id="announce-text"></span><span class="announce-arrow" aria-hidden="true">→</span></a>
+    <a class="announce-link" id="announce-link" href="reservar.html"><span id="announce-text"></span><span class="announce-arrow" aria-hidden="true">→</span></a>
     <button type="button" class="announce-x" id="announce-x" aria-label="Cerrar anuncio">×</button>
   </div>
 </div>
@@ -85,15 +84,14 @@
       <ul>
         <li><a href="#majo">Conoce a Majo</a></li>
         <li><a href="#servicios">Servicios</a></li>
-        <li data-nav-for="resultados" hidden><a href="#resultados">Resultados</a></li>
-        <li><a href="#citas">Mis citas</a></li>
-        <li data-nav-for="regalar" hidden><a href="#regalar">Regalar</a></li>
-        <li class="nav-wide"><a href="#contacto">Contacto</a></li>
-        <li><a href="app/" class="nav-app">Aplicación</a></li>
+        <li data-nav-for="resenas" hidden><a href="#resenas">Opiniones</a></li>
+        <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos">Regalos</a></li>
+        <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
+        <li><a href="aplicacion.html" class="nav-app" data-nav="aplicacion">Aplicación</a></li>
       </ul>
     </nav>
     <div class="header-account" id="header-account"><button type="button" class="header-login" data-open-auth>Iniciar sesión</button></div>
-    <a class="btn btn-primary btn-sm header-cta" href="#reservar">Agendar cita</a>
+    <a class="btn btn-primary btn-sm header-cta" href="reservar.html" data-nav="reservar">Agendar cita</a>
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú">
       <span></span><span></span>
     </button>
@@ -116,22 +114,21 @@
 
 <div class="mobile-menu" id="mobile-menu" hidden>
   <nav aria-label="Menú móvil">
-    <a class="mobile-app" href="app/" data-get-app><span class="mobile-app-ic" aria-hidden="true"><img src="assets/icon-192.png" alt=""></span><span><b>Instala la app MAJOBELLA</b><small>Tus citas, tarjetas y paquetes en tu celular</small></span></a>
+    <a class="mobile-app" href="aplicacion.html"><span class="mobile-app-ic" aria-hidden="true"><img src="assets/icon-192.png" alt=""></span><span><b>La app MAJOBELLA</b><small>Reserva y lleva tus citas en tu celular</small></span></a>
     <ul>
       <li><a href="#inicio">Inicio</a></li>
       <li><a href="#sobre">Sobre MAJOBELLA</a></li>
       <li><a href="#majo">Conoce a Majo</a></li>
       <li><a href="#servicios">Servicios</a></li>
-      <li data-nav-for="paquetes" hidden><a href="#paquetes">Paquetes</a></li>
       <li data-nav-for="resultados" hidden><a href="#resultados">Resultados</a></li>
-      <li data-nav-for="resenas" hidden><a href="#resenas">Reseñas</a></li>
-      <li><a href="#reservar">Reservar</a></li>
-      <li><a href="#citas">Citas</a></li>
-      <li data-nav-for="regalar" hidden><a href="#regalar">Tarjetas de regalo</a></li>
+      <li data-nav-for="resenas" hidden><a href="#resenas">Opiniones</a></li>
+      <li><a href="reservar.html" data-nav="reservar">Reservar</a></li>
+      <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
+      <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos">Regalos y paquetes</a></li>
       <li><a href="#contacto">Contacto</a></li>
-      <li><a href="app/">Aplicación <span class="mm-tag">Para tu celular</span></a></li>
+      <li><a href="aplicacion.html" data-nav="aplicacion">Aplicación <span class="mm-tag">Para tu celular</span></a></li>
     </ul>
-    <a class="btn btn-primary" href="#reservar">Agendar cita</a>
+    <a class="btn btn-primary" href="reservar.html">Agendar cita</a>
     <button type="button" class="mobile-login" data-open-auth>Iniciar sesión</button>
     <p class="mobile-slogan" data-slogan>MÁS YO, MÁS BELLA.</p>
   </nav>
@@ -150,7 +147,7 @@
         <p class="hero-slogan" data-hero data-slogan>MÁS YO, MÁS BELLA.</p>
         <p class="hero-lead" data-hero>Cejas, pestañas, faciales y micropigmentación pensados para tu rostro. Realzamos lo que ya es tuyo.</p>
         <div class="hero-actions" data-hero>
-          <a class="btn btn-primary" href="#reservar">Agendar cita</a>
+          <a class="btn btn-primary" href="reservar.html">Agendar cita</a>
           <a class="btn btn-ghost" href="#servicios">Ver servicios</a>
         </div>
         <a class="hero-wa" data-hero data-wa href="#contacto">¿Tienes dudas? Escríbenos por WhatsApp</a>
@@ -189,7 +186,7 @@
         <li><span class="how-n">2</span><div><h3>Escoge día y hora</h3><p>Solo ves horarios disponibles, o toma el primero libre con un toque.</p></div></li>
         <li><span class="how-n">3</span><div><h3>Confirma y prepárate</h3><p>Recibe tu cita, guárdala en tu calendario y sigue la guía para llegar lista.</p></div></li>
       </ol>
-      <p class="how-note">Sin cuenta, en menos de un minuto. <a href="#servicios">Ver servicios</a></p>
+      <p class="how-note">Sin cuenta, en menos de un minuto. <a href="reservar.html">Reservar ahora</a> · <a href="#servicios">Ver servicios</a></p>
     </div>
   </section>
 
@@ -243,46 +240,10 @@
     <div class="container menu-wrap">
       <div class="menu-head" data-reveal>
         <h2 class="menu-title">Servicios</h2>
-        <p>Añade uno o varios servicios y verás al instante el precio y el tiempo total.</p>
+        <p>Añade uno o varios servicios y verás al instante el precio y el tiempo total. Después eliges día y hora en <a href="reservar.html">Reservar</a>.</p>
       </div>
       <div class="menu-tabs" id="menu-tabs" role="tablist" aria-label="Categorías de servicios"></div>
       <div class="menu-list" id="services-list"></div>
-    </div>
-  </section>
-
-  <!-- PAQUETES -->
-  <section id="paquetes" class="section packages" hidden>
-    <div class="container">
-      <div class="section-head" data-reveal>
-        <div>
-          <p class="label">Paquetes</p>
-          <h2 class="display">Tus sesiones, a mejor precio</h2>
-        </div>
-        <div class="section-head-side">
-          <p>Compra varias sesiones de tu servicio y ahorra. Recibes un código por correo y lo escribes al reservar cada sesión.</p>
-        </div>
-      </div>
-      <div class="pk-grid" id="pk-grid"></div>
-      <form class="pk-buy" id="pk-buy" novalidate hidden>
-        <div class="pk-buy-head"><p class="label">Comprar</p><h3 id="pk-buy-title"></h3><p id="pk-buy-sub"></p></div>
-        <div class="fields">
-          <div class="field"><label for="pk-first">Nombre</label><input id="pk-first" autocomplete="given-name"><span class="field-error">Escribe tu nombre (solo letras).</span></div>
-          <div class="field"><label for="pk-last">Apellido</label><input id="pk-last" autocomplete="family-name"><span class="field-error">Escribe tu apellido (solo letras).</span></div>
-          <div class="field"><label for="pk-phone">Teléfono</label><input id="pk-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="809-555-1234"><span class="field-error">10 dígitos, por ejemplo 809-555-1234.</span></div>
-          <div class="field"><label for="pk-email">Correo</label><input id="pk-email" type="email" autocomplete="email"><span class="field-error">Revisa tu correo: ahí te llega el código.</span></div>
-        </div>
-        <label class="gf-terms"><input type="checkbox" id="pk-terms"><span>Acepto las <a href="cancelacion.html#paquetes" target="_blank">condiciones de los paquetes</a>.</span></label>
-        <div class="gf-pay" id="pk-pay"></div>
-        <p class="gf-msg" id="pk-msg" role="status" aria-live="polite"></p>
-        <button type="button" class="btn btn-quiet" id="pk-cancel">Cancelar</button>
-      </form>
-      <div class="gift-done pk-done" id="pk-done" hidden tabindex="-1">
-        <p class="label">Listo</p>
-        <h3>Tu paquete está activo</h3>
-        <p id="pk-done-text"></p>
-        <p class="gd-code" id="pk-done-code"></p>
-        <div class="gd-actions"><a class="btn btn-primary" id="pk-done-book" href="#reservar">Reservar mi primera sesión</a></div>
-      </div>
     </div>
   </section>
 
@@ -309,7 +270,7 @@
     <div class="container">
       <div class="rv-head" data-reveal>
         <div>
-          <p class="label">Reseñas de Google</p>
+          <p class="label">Opiniones</p>
           <h2 class="display">Lo que dicen nuestras clientas</h2>
         </div>
         <div class="rv-score" id="rv-score" hidden>
@@ -325,12 +286,12 @@
     </div>
   </section>
 
-  <!-- EXPERIENCIA -->
-  <section id="experiencia" class="section experience">
+  <!-- POR QUÉ ELEGIRNOS -->
+  <section id="elegirnos" class="section experience">
     <div class="container">
       <div class="section-head" data-reveal>
         <div>
-          <p class="label">Experiencia</p>
+          <p class="label">Por qué elegirnos</p>
           <h2 class="display">Tu tiempo en MAJOBELLA</h2>
         </div>
       </div>
@@ -342,246 +303,31 @@
       </ul>
       <div class="experience-cta" data-reveal>
         <p class="script">te esperamos</p>
-        <a class="btn btn-primary" href="#reservar">Reservar ahora</a>
+        <a class="btn btn-primary" href="reservar.html">Reservar ahora</a>
       </div>
     </div>
   </section>
 
-  <!-- RESERVAS -->
-  <section id="reservar" class="section booking-section">
-    <div class="container">
-      <div class="section-head" data-reveal>
-        <div>
-          <p class="label">Reservas</p>
-          <h2 class="display">Agenda tu cita</h2>
-        </div>
-        <div class="section-head-side"><p>Elige servicio, día y hora. Solo verás horarios disponibles.</p></div>
-      </div>
-
-      <div class="booking">
-        <form class="booking-flow" id="bk-form" novalidate>
-          <fieldset class="step" id="step-servicio">
-            <legend><span class="step-n">1</span>Servicio</legend>
-            <div class="chips" id="bk-services"></div>
-          </fieldset>
-
-          <fieldset class="step" id="step-fecha">
-            <legend><span class="step-n">2</span>Día</legend>
-            <div class="fastest" id="bk-fastest" hidden>
-              <div><p class="fastest-k">Primer horario disponible</p><p class="fastest-v" id="bk-fastest-label">Buscando…</p></div>
-              <button type="button" class="btn btn-primary btn-sm" id="bk-fastest-btn" disabled>Elegir este horario</button>
-            </div>
-            <div class="quick-days" id="bk-quickdays"></div>
-            <button type="button" class="cal-toggle" id="bk-cal-toggle" aria-expanded="false" aria-controls="bk-calendar">Ver más fechas</button>
-            <div class="calendar" id="bk-calendar" hidden>
-              <div class="cal-head">
-                <button type="button" class="cal-nav" id="bk-prev" aria-label="Mes anterior">‹</button>
-                <p class="cal-title" id="bk-month" aria-live="polite"></p>
-                <button type="button" class="cal-nav" id="bk-next" aria-label="Mes siguiente">›</button>
-              </div>
-              <div class="cal-grid" id="bk-grid"></div>
-            </div>
-            <p class="cal-picked" id="bk-date-label" aria-live="polite"></p>
-          </fieldset>
-
-          <fieldset class="step" id="step-hora">
-            <legend><span class="step-n">3</span>Hora</legend>
-            <p class="slots-msg" id="bk-slots-msg" aria-live="polite"></p>
-            <div class="slots" id="bk-slots"></div>
-            <div class="wait" id="bk-wait" hidden>
-              <button type="button" class="link-inline wait-open" id="bk-wait-open">¿No encuentras horario? Únete a la lista de espera</button>
-              <div class="wait-box" id="bk-wait-box" hidden>
-                <p class="wait-lead">Te avisamos por correo si se libera un horario ese día para los servicios que elegiste.</p>
-                <div class="fields">
-                  <div class="field"><label for="bk-wait-date">Día</label><input id="bk-wait-date" type="date"></div>
-                  <div class="field"><label for="bk-wait-franja">Horario</label>
-                    <select id="bk-wait-franja"><option value="cualquiera">Cualquier hora</option><option value="manana">Mañana</option><option value="tarde">Tarde</option></select></div>
-                </div>
-                <p class="wait-note" id="bk-wait-who"></p>
-                <button type="button" class="btn btn-line" id="bk-wait-join">Avisarme</button>
-                <p class="gf-msg" id="bk-wait-msg" role="status" aria-live="polite"></p>
-              </div>
-            </div>
-          </fieldset>
-
-          <fieldset class="step" id="step-datos">
-            <legend><span class="step-n">4</span>Tus datos</legend>
-            <div class="signin-hint" id="bk-signin-hint"></div>
-            <p class="saved-note" id="bk-saved-note" hidden>Completamos tus datos de tu última reserva. <button type="button" class="link-inline" id="bk-forget">Borrar mis datos</button></p>
-            <div class="fields">
-              <div class="field">
-                <label for="bk-first">Nombre</label>
-                <input id="bk-first" name="nombre" autocomplete="given-name" required>
-                <span class="field-error">Escribe tu nombre (solo letras).</span>
-              </div>
-              <div class="field">
-                <label for="bk-last">Apellido</label>
-                <input id="bk-last" name="apellido" autocomplete="family-name" required>
-                <span class="field-error">Escribe tu apellido (solo letras).</span>
-              </div>
-              <div class="field">
-                <label for="bk-phone">Teléfono</label>
-                <input id="bk-phone" name="telefono" type="tel" autocomplete="tel" inputmode="tel" placeholder="809-555-1234" required>
-                <span class="field-error">10 dígitos, por ejemplo 809-555-1234.</span>
-              </div>
-              <div class="field">
-                <label for="bk-email">Correo electrónico</label>
-                <input id="bk-email" name="correo" type="email" autocomplete="email" required>
-                <span class="field-error">Revisa el formato del correo, por ejemplo nombre@correo.com.</span>
-              </div>
-              <div class="field field-wide">
-                <label for="bk-notes">Nota para el estudio <span class="opt">(opcional)</span></label>
-                <input id="bk-notes" name="nota" autocomplete="off" placeholder="Alergias, dudas o algo que debamos saber">
-              </div>
-              <div class="field field-wide">
-                <label for="bk-origen">¿Cómo nos conociste? <span class="opt">(opcional)</span></label>
-                <select id="bk-origen" name="origen">
-                  <option value="">Elige una opción</option>
-                  <option>Instagram</option>
-                  <option>TikTok</option>
-                  <option>Google</option>
-                  <option>Recomendación de una amiga</option>
-                  <option>Pasé por el estudio</option>
-                  <option>Otro</option>
-                </select>
-              </div>
-              <div class="field field-wide">
-                <label for="bk-bday-d">Tu cumpleaños <span class="opt">(opcional · te enviamos un regalo ese día)</span></label>
-                <div class="bday">
-                  <select id="bk-bday-d" aria-label="Día de tu cumpleaños"><option value="">Día</option></select>
-                  <select id="bk-bday-m" aria-label="Mes de tu cumpleaños"><option value="">Mes</option></select>
-                </div>
-              </div>
-              <p class="loyal-note field-wide" id="bk-loyal" hidden></p>
-              <label class="check field-wide"><input type="checkbox" id="bk-remember" checked><span>Recordar mis datos en este dispositivo para la próxima vez</span></label>
-            </div>
-          </fieldset>
-        </form>
-
-        <aside class="booking-summary" aria-labelledby="sum-title">
-          <p class="summary-title" id="sum-title"><span class="step-n">5</span>Tu cita</p>
-          <dl class="sum-list">
-            <div><dt>Servicio</dt><dd id="sum-service">—</dd></div>
-            <div><dt>Fecha</dt><dd id="sum-date">—</dd></div>
-            <div><dt>Horario</dt><dd id="sum-time">—</dd></div>
-            <div><dt>Duración</dt><dd id="sum-duration">—</dd></div>
-            <div><dt>Precio</dt><dd id="sum-price">—</dd></div>
-            <div class="sum-opt" id="sum-disc-row" hidden><dt>Descuento</dt><dd id="sum-discount">—</dd></div>
-            <div class="sum-opt" id="sum-gift-row" hidden><dt id="sum-gift-label">Tarjeta de regalo</dt><dd id="sum-gift">—</dd></div>
-            <div class="sum-pay" data-pay-only hidden><dt>Depósito hoy</dt><dd id="sum-deposit">—</dd></div>
-            <div class="sum-pay" data-pay-only hidden><dt>Al terminar</dt><dd id="sum-balance">—</dd></div>
-          </dl>
-          <details class="promo-box" id="bk-promo" data-pay-only hidden>
-            <summary>¿Tienes un código de descuento o una tarjeta de regalo?</summary>
-            <div class="promo-row">
-              <input id="bk-code" autocomplete="off" autocapitalize="characters" placeholder="Escribe el código" aria-label="Código de descuento o tarjeta de regalo">
-              <button type="button" class="btn btn-line btn-sm" id="bk-code-apply">Aplicar</button>
-            </div>
-            <p class="promo-msg" id="bk-code-msg" aria-live="polite"></p>
-            <div class="promo-tags" id="bk-code-tags"></div>
-          </details>
-          <button type="button" class="btn btn-primary btn-block" id="bk-confirm" disabled>Confirmar cita</button>
-          <div class="pay-panel" id="bk-pay" hidden>
-            <p class="pay-title">Aparta tu cita con el depósito</p>
-            <div class="pay-methods" id="bk-pay-methods" role="tablist" aria-label="Forma de pago" hidden>
-              <button type="button" class="pay-method is-on" role="tab" aria-selected="true" data-method="paypal">PayPal o tarjeta</button>
-              <button type="button" class="pay-method" role="tab" aria-selected="false" data-method="transferencia">Transferencia</button>
-            </div>
-            <div class="pay-pp" id="bk-pp">
-              <p class="pay-info" id="bk-pay-info"></p>
-              <p class="pay-timer" id="bk-pay-timer" aria-live="polite" hidden></p>
-              <div class="pay-buttons" id="bk-paypal"></div>
-            </div>
-            <div class="tf-panel" id="bk-tf" hidden></div>
-            <p class="pay-msg" id="bk-pay-msg" aria-live="assertive"></p>
-            <button type="button" class="link-inline pay-back" id="bk-pay-back">Cambiar algo de la cita</button>
-          </div>
-          <p class="sum-missing" id="bk-missing" aria-live="polite"></p>
-          <p class="sum-policy" id="bk-policy"></p>
-          <p class="sum-mode" id="bk-mode"></p>
-          <div class="sum-result" id="bk-result" hidden aria-live="polite"></div>
-        </aside>
-      </div>
-    </div>
-  </section>
-
-  <!-- CITAS -->
-  <section id="citas" class="section citas-section">
-    <div class="container">
-      <div class="section-head" data-reveal>
-        <div>
-          <p class="label">Mis citas</p>
-          <h2 class="display">Tus citas</h2>
-        </div>
-        <div class="section-head-side"><p>Consulta tus citas y tus pagos, añádelas a tu calendario, paga el saldo al terminar o cancela si lo necesitas.</p><a class="link-app" href="app/#citas">Ver mis citas en la app <span aria-hidden="true">→</span></a></div>
-      </div>
-      <div class="citas-grid">
-        <div class="account" id="account" aria-live="polite"></div>
-        <div class="citas-panel">
-          <div class="citas-tabs" role="tablist" aria-label="Filtrar citas">
-            <button type="button" class="citas-tab is-active" role="tab" aria-selected="true" data-view="proximas">Próximas <span class="n">0</span></button>
-            <button type="button" class="citas-tab" role="tab" aria-selected="false" data-view="anteriores">Anteriores <span class="n">0</span></button>
-          </div>
-          <ul class="citas-list" id="citas-list" aria-live="polite"></ul>
-          <p class="citas-source" id="citas-source"></p>
+  <!-- LA APP -->
+  <section id="app-band" class="section app-band">
+    <div class="container app-band-in">
+      <div class="app-band-copy" data-reveal>
+        <p class="label">Nuevo</p>
+        <h2 class="display">La app MAJOBELLA</h2>
+        <p>Reserva en segundos, mira tus citas, paga tu depósito y guarda tus tarjetas de regalo y paquetes. Todo desde tu celular.</p>
+        <div class="app-band-ctas">
+          <a class="btn btn-primary" href="aplicacion.html">Conocer la app</a>
+          <a class="btn btn-quiet" href="reservar.html">Reservar en la web</a>
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- TARJETAS DE REGALO -->
-  <section id="regalar" class="section gift" hidden>
-    <div class="container gift-grid">
-      <div class="gift-intro">
-        <p class="label" data-reveal>Tarjetas de regalo</p>
-        <h2 class="display" data-reveal>Regala un momento para ella</h2>
-        <p class="gift-lead" data-reveal>Elige el valor, escribe una dedicatoria y paga con PayPal. La tarjeta llega al instante por correo con un código para usar al reservar cualquier servicio.</p>
-        <div class="gc-preview" id="gc-preview" aria-live="polite">
-          <p class="gc-k">Tarjeta de regalo</p>
-          <p class="gc-amt" id="gc-amt">RD$ 2,500</p>
-          <p class="gc-who" id="gc-who"></p>
-          <p class="gc-msg" id="gc-msg"></p>
-          <p class="gc-code" id="gc-code">MJB-····-····</p>
-        </div>
-      </div>
-      <form class="gift-form" id="gift-form" novalidate>
-        <fieldset class="gf-amounts">
-          <legend>Valor</legend>
-          <div class="gf-chips" id="gf-chips">
-            <label class="gf-chip"><input type="radio" name="amt" value="1500"><span>RD$ 1,500</span></label>
-            <label class="gf-chip"><input type="radio" name="amt" value="2500" checked><span>RD$ 2,500</span></label>
-            <label class="gf-chip"><input type="radio" name="amt" value="5000"><span>RD$ 5,000</span></label>
-            <label class="gf-chip"><input type="radio" name="amt" value="otro"><span>Otro</span></label>
-          </div>
-          <div class="field" id="gf-other-wrap" hidden>
-            <label for="gf-other">Otro valor (RD$)</label>
-            <input id="gf-other" name="otro" type="number" inputmode="numeric" min="500" step="100">
-          </div>
-        </fieldset>
-        <div class="gf-row">
-          <div class="field"><label for="gf-para">Para</label><input id="gf-para" name="para" maxlength="60" autocomplete="off" placeholder="Nombre de quien la recibe"></div>
-          <div class="field"><label for="gf-de">De</label><input id="gf-de" name="de" maxlength="60" autocomplete="name" placeholder="Tu nombre"></div>
-        </div>
-        <div class="field"><label for="gf-mensaje">Dedicatoria <span class="opt">(opcional)</span></label><input id="gf-mensaje" name="mensaje" maxlength="140" placeholder="¡Feliz cumpleaños!"></div>
-        <div class="gf-row">
-          <div class="field"><label for="gf-correo">Tu correo</label><input id="gf-correo" name="correo" type="email" autocomplete="email" required><span class="field-error">Escribe tu correo para enviarte la tarjeta.</span></div>
-          <div class="field"><label for="gf-correo-para">Correo de quien la recibe <span class="opt">(opcional)</span></label><input id="gf-correo-para" name="correoPara" type="email" autocomplete="off"><span class="field-error">Revisa este correo.</span></div>
-        </div>
-        <p class="gf-note" id="gf-note"></p>
-        <label class="gf-terms"><input type="checkbox" name="terms" id="gf-terms"><span>Acepto las <a href="cancelacion.html#tarjetas" target="_blank">condiciones de las tarjetas de regalo</a>.</span></label>
-        <div class="gf-pay" id="gf-pay"></div>
-        <p class="gf-msg" id="gf-msg" role="status" aria-live="polite"></p>
-      </form>
-      <div class="gift-done" id="gift-done" hidden tabindex="-1">
-        <p class="label">Listo</p>
-        <h3>Tu tarjeta está lista</h3>
-        <p id="gd-text"></p>
-        <p class="gd-code" id="gd-code"></p>
-        <div class="gd-actions">
-          <button type="button" class="btn btn-primary" id="gd-download">Descargar tarjeta</button>
-          <a class="btn btn-line" id="gd-wa" target="_blank" rel="noopener">Enviar por WhatsApp</a>
-          <button type="button" class="btn btn-quiet" id="gd-again">Comprar otra</button>
-        </div>
+      <div class="app-band-phone" data-reveal aria-hidden="true">
+        <div class="phone phone-sm"><div class="phone-screen">
+          <p class="ph-hello">Hola, Ana</p>
+          <div class="ph-card"><p class="ph-k">Próxima cita</p><p class="ph-t">Cejas · sáb 24 oct</p><p class="ph-s">10:00 a. m. · faltan 3 días</p></div>
+          <div class="ph-grid"><span>Reservar</span><span>Mis citas</span><span>Billetera</span><span>Cómo llegar</span></div>
+          <div class="ph-promo"><p class="ph-k">Tu premio</p><p class="ph-t">Te faltan 2 visitas</p></div>
+          <div class="ph-tabs"><i></i><i></i><b>+</b><i></i><i></i></div>
+        </div></div>
       </div>
     </div>
   </section>
@@ -604,10 +350,10 @@
       <div class="contact-copy" data-reveal>
         <p class="label">Contacto</p>
         <h2 class="display">¿Tienes alguna duda?</h2>
-        <p>Escríbenos por WhatsApp para pedir información, una valoración o resolver cualquier pregunta. Las citas se reservan aquí en la web.</p>
+        <p>Escríbenos por WhatsApp para pedir información, una valoración o resolver cualquier pregunta. Las citas se reservan en la web o en la app.</p>
         <div class="contact-ctas">
           <a class="btn btn-primary" data-wa href="#contacto">Preguntar por WhatsApp</a>
-          <a class="btn btn-line" href="#reservar">Reservar en línea</a>
+          <a class="btn btn-line" href="reservar.html">Reservar en línea</a>
         </div>
         <p class="wa-note" id="wa-note" hidden>Falta el número de WhatsApp: agrégalo en <code>js/config.js</code>.</p>
       </div>
@@ -640,13 +386,12 @@
     <nav class="footer-links" aria-label="Pie de página">
       <a href="#inicio">Inicio</a>
       <a href="#servicios">Servicios</a>
-      <a href="#reservar">Reservar</a>
-      <a href="#citas">Mis citas</a>
+      <a href="reservar.html">Reservar</a>
+      <a href="citas.html">Mis citas</a>
+      <a href="regalos.html" data-nav-for="regalos" hidden>Regalos y paquetes</a>
       <a href="#preguntas">Preguntas</a>
       <a href="#contacto">Contacto</a>
-      <a href="#regalar" data-nav-for="regalar" hidden>Tarjetas de regalo</a>
-      <a href="#paquetes" data-nav-for="paquetes" hidden>Paquetes</a>
-      <a href="app/" data-get-app>App para el celular</a>
+      <a href="aplicacion.html">La app MAJOBELLA</a>
     </nav>
     <div class="footer-social">
       <a data-social="instagram">Instagram</a>
@@ -660,10 +405,11 @@
   </div>
 </footer>
 
-<div class="app-ribbon" id="app-ribbon" hidden role="region" aria-label="Instala la app">
+
+<div class="app-ribbon" id="app-ribbon" hidden role="region" aria-label="La app MAJOBELLA">
   <img src="assets/icon-192.png" alt="" width="40" height="40">
   <p><b>La app MAJOBELLA</b><span>Tus citas a un toque.</span></p>
-  <button type="button" class="btn btn-primary btn-sm" data-ribbon-install>Instalar</button>
+  <button type="button" class="btn btn-primary btn-sm" data-ribbon-install>Ver app</button>
   <button type="button" class="app-ribbon-x" aria-label="Cerrar" data-ribbon-x>×</button>
 </div>
 
@@ -699,37 +445,38 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/config.js?v=20261020a"></script>
-<script src="js/data/services.js?v=20261020a"></script>
-<script src="js/data/faq.js?v=20261020a"></script>
-<script src="js/data/brows.js?v=20261020a"></script>
-<script src="js/core/utils.js?v=20261020a"></script>
-<script src="js/core/validate.js?v=20261020a"></script>
-<script src="js/integrations/whatsapp.js?v=20261020a"></script>
-<script src="js/integrations/calendar.js?v=20261020a"></script>
-<script src="js/integrations/booking-api.js?v=20261020a"></script>
-<script src="js/integrations/paypal.js?v=20261020a"></script>
-<script src="js/integrations/google-auth.js?v=20261020a"></script>
-<script src="js/integrations/appointments.js?v=20261020a"></script>
-<script src="js/integrations/giftcard.js?v=20261020a"></script>
-<script src="js/integrations/captcha.js?v=20261020a"></script>
-<script src="js/integrations/manage.js?v=20261020a"></script>
-<script src="js/components/nav.js?v=20261020a"></script>
-<script src="js/components/auth-modal.js?v=20261020a"></script>
-<script src="js/components/face.js?v=20261020a"></script>
-<script src="js/components/brows.js?v=20261020a"></script>
-<script src="js/components/hero.js?v=20261020a"></script>
-<script src="js/components/services.js?v=20261020a"></script>
-<script src="js/components/selection-bar.js?v=20261020a"></script>
-<script src="js/components/booking.js?v=20261020a"></script>
-<script src="js/components/citas.js?v=20261020a"></script>
-<script src="js/components/contact.js?v=20261020a"></script>
-<script src="js/components/site.js?v=20261020a"></script>
-<script src="js/components/giftshop.js?v=20261020a"></script>
-<script src="js/components/packages.js?v=20261020a"></script>
-<script src="js/integrations/install.js?v=20261020a"></script>
-<script src="js/components/getapp.js?v=20261020a"></script>
-<script src="js/components/reveal.js?v=20261020a"></script>
-<script src="js/main.js?v=20261020a"></script>
+<script src="js/config.js?v=20261020b"></script>
+<script src="js/data/services.js?v=20261020b"></script>
+<script src="js/data/faq.js?v=20261020b"></script>
+<script src="js/data/brows.js?v=20261020b"></script>
+<script src="js/core/utils.js?v=20261020b"></script>
+<script src="js/core/validate.js?v=20261020b"></script>
+<script src="js/integrations/whatsapp.js?v=20261020b"></script>
+<script src="js/integrations/calendar.js?v=20261020b"></script>
+<script src="js/integrations/booking-api.js?v=20261020b"></script>
+<script src="js/integrations/paypal.js?v=20261020b"></script>
+<script src="js/integrations/google-auth.js?v=20261020b"></script>
+<script src="js/integrations/appointments.js?v=20261020b"></script>
+<script src="js/integrations/giftcard.js?v=20261020b"></script>
+<script src="js/integrations/captcha.js?v=20261020b"></script>
+<script src="js/integrations/manage.js?v=20261020b"></script>
+<script src="js/components/nav.js?v=20261020b"></script>
+<script src="js/components/auth-modal.js?v=20261020b"></script>
+<script src="js/components/face.js?v=20261020b"></script>
+<script src="js/components/brows.js?v=20261020b"></script>
+<script src="js/components/hero.js?v=20261020b"></script>
+<script src="js/components/services.js?v=20261020b"></script>
+<script src="js/components/selection-bar.js?v=20261020b"></script>
+<script src="js/components/booking.js?v=20261020b"></script>
+<script src="js/components/citas.js?v=20261020b"></script>
+<script src="js/components/contact.js?v=20261020b"></script>
+<script src="js/components/site.js?v=20261020b"></script>
+<script src="js/components/giftshop.js?v=20261020b"></script>
+<script src="js/components/packages.js?v=20261020b"></script>
+<script src="js/integrations/install.js?v=20261020b"></script>
+<script src="js/components/getapp.js?v=20261020b"></script>
+<script src="js/components/appinfo.js?v=20261020b"></script>
+<script src="js/components/reveal.js?v=20261020b"></script>
+<script src="js/main.js?v=20261020b"></script>
 </body>
 </html>

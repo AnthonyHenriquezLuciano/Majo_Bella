@@ -120,7 +120,7 @@ export function mailConfirmed_(r, s, byStudio?) {
       intro: 'Tu cita está confirmada. Guarda este correo: aquí tienes todos los detalles.',
       details: apptDetails_(r),
       body: consent.needed && !consent.signed ? '<p style="margin:0">Antes de tu cita, <b>firma el consentimiento</b> desde tu celular. Toma unos 2 minutos y nos ayuda a cuidarte.</p>' : '',
-      cta: consent.needed && !consent.signed ? { text: 'Firmar consentimiento', url: consent.url } : { text: 'Ver mis citas', url: mailUrl_(s, '#citas') },
+      cta: consent.needed && !consent.signed ? { text: 'Firmar consentimiento', url: consent.url } : { text: 'Ver mis citas', url: mailUrl_(s, 'citas.html') },
       secondary: s.mapsUrl ? { text: 'Cómo llegar', url: s.mapsUrl } : null,
       note: (dep && !byStudio ? 'Si cancelas con al menos ' + num_(s.horasCancelacion, 24) + ' horas de aviso te devolvemos el depósito. ' : '') + 'Te recomendamos llegar 10 minutos antes.',
     }),
@@ -165,7 +165,7 @@ export function mailCancelled_(r, s, refunded, byStudio?) {
       intro: esc_(r.servicios) + ' · ' + esc_(whenText_(r)),
       body: dep ? '<p style="margin:0">' + (refunded === 'manual' ? 'Te devolveremos el depósito de RD$ ' + money_(dep) + ' por transferencia en los próximos días. Si necesitamos tus datos bancarios te escribiremos.'
         : refunded ? 'Te devolvimos el depósito en PayPal. Puede tardar unos días en reflejarse.' : (byStudio ? 'Te contactaremos para coordinar la devolución o una nueva cita.' : 'El depósito no es reembolsable para esta cancelación.')) + '</p>' : '',
-      cta: { text: 'Reservar otra cita', url: mailUrl_(s, '#reservar') },
+      cta: { text: 'Reservar otra cita', url: mailUrl_(s, 'reservar.html') },
       note: 'Código de reserva: ' + esc_(r.id),
     }),
   };
@@ -200,7 +200,7 @@ export function mailReminder_(r, s) {
         ['Al terminar', Number(r.saldoRD) > 0 ? 'RD$ ' + money_(r.saldoRD) + ' · efectivo, transferencia o PayPal' : 'Todo pagado'],
         consent.needed ? ['Consentimiento', consent.signed ? 'Firmado ✓' : 'Pendiente: fírmalo antes de llegar'] : null,
       ].filter(Boolean),
-      cta: consent.needed && !consent.signed ? { text: 'Firmar consentimiento', url: consent.url } : { text: 'Ver o cancelar mi cita', url: mailUrl_(s, '#citas') },
+      cta: consent.needed && !consent.signed ? { text: 'Firmar consentimiento', url: consent.url } : { text: 'Ver o cancelar mi cita', url: mailUrl_(s, 'citas.html') },
       secondary: waUrl_(s) ? { text: 'Escribir por WhatsApp', url: waUrl_(s, 'Hola, es sobre mi cita del ' + whenText_(r) + '.') } : null,
       note: 'Si no puedes venir, avísanos cuanto antes. Con al menos ' + num_(s.horasCancelacion, 24) + ' horas de aviso te devolvemos el depósito.',
     }),
@@ -215,7 +215,7 @@ export function mailReview_(r, s) {
       kicker: 'Gracias por tu visita', title: '¿Cómo te sentiste, ' + firstName_(r.clienta) + '?',
       intro: 'Nos encantó atenderte. Si te gustó tu ' + esc_(String(r.servicios).toLowerCase()) + ', ¿nos dejarías una reseña en Google? Toma un minuto y ayuda a otras clientas a encontrarnos.',
       cta: { text: 'Dejar mi reseña', url: s.googleResenaUrl || mailUrl_(s, '') },
-      secondary: { text: 'Reservar mi próxima cita', url: mailUrl_(s, '#reservar') },
+      secondary: { text: 'Reservar mi próxima cita', url: mailUrl_(s, 'reservar.html') },
       note: 'Si algo no salió como esperabas, respóndenos a este correo o escríbenos por WhatsApp: queremos saberlo.',
     }),
   };
@@ -228,7 +228,7 @@ export function mailRetouch_(r, s, svc, ideal) {
       kicker: 'Tu retoque', title: 'Es momento de tu retoque',
       intro: 'Hola, ' + firstName_(r.clienta) + '. Para que tu ' + esc_(svc.name.toLowerCase()) + ' quede perfecta y dure más, el retoque se hace alrededor del <b>' + esc_(longDate_(ideal)) + '</b>.',
       details: [['Servicio', esc_(svc.name)], ['Tu sesión', esc_(longDate_(r.fecha))], ['Fecha ideal del retoque', esc_(longDate_(ideal))]],
-      cta: { text: 'Reservar mi retoque', url: mailUrl_(s, '?servicio=' + encodeURIComponent(svc.id) + '#reservar') },
+      cta: { text: 'Reservar mi retoque', url: mailUrl_(s, 'reservar.html?servicio=' + encodeURIComponent(svc.id)) },
       secondary: waUrl_(s) ? { text: 'Preguntar por WhatsApp', url: waUrl_(s, 'Hola, quiero agendar mi retoque de ' + svc.name.toLowerCase() + '.') } : null,
     }),
   };
@@ -242,7 +242,7 @@ export function mailBirthday_(name, s, code, pct, until) {
       kicker: 'Feliz cumpleaños', title: '¡Feliz cumpleaños, ' + firstName_(name) + '!',
       intro: 'Para celebrarte, te regalamos un <b>' + pct + '% de descuento</b> en tu próxima cita. Escribe este código al reservar:',
       body: codeBox_(code) + '<p style="margin:0">Válido hasta el ' + esc_(longDate_(until)) + ', en cualquier servicio, una vez.</p>',
-      cta: { text: 'Reservar con mi regalo', url: mailUrl_(s, '#reservar') },
+      cta: { text: 'Reservar con mi regalo', url: mailUrl_(s, 'reservar.html') },
       note: 'Más yo, más bella. Que este año te veas y te sientas como quieres.',
     }),
   };
@@ -257,7 +257,7 @@ export function mailWaitlist_(w, s, slots) {
       kicker: 'Lista de espera', title: 'Se liberó un horario',
       intro: 'Hola, ' + firstName_(w.clienta) + '. El <b>' + esc_(longDate_(w.fecha)) + '</b> hay horario disponible para ' + esc_(w.servicios) + ':',
       body: '<p style="margin:0 0 6px;font-size:18px">' + slots.slice(0, 6).map(time12_).join(' &nbsp;·&nbsp; ') + '</p>',
-      cta: { text: 'Reservar ahora', url: mailUrl_(s, '?servicio=' + encodeURIComponent(ids) + '&fecha=' + w.fecha + '#reservar') },
+      cta: { text: 'Reservar ahora', url: mailUrl_(s, 'reservar.html?servicio=' + encodeURIComponent(ids) + '&fecha=' + w.fecha) },
       note: 'Avisamos a todas las personas en la lista de ese día: el horario es de quien reserve primero.',
     }),
   };
@@ -272,7 +272,7 @@ export function mailBono_(b, s) {
       intro: 'Tu paquete está activo. Escribe este código al reservar cada sesión y se descuenta solo:',
       body: codeBox_(b.codigo),
       details: [['Paquete', esc_(b.nombre)], ['Servicio', esc_(svc ? svc.name : b.servicio)], ['Sesiones', esc_(b.sesiones)], b.vence ? ['Válido hasta', esc_(longDate_(b.vence))] : null].filter(Boolean),
-      cta: { text: 'Reservar mi sesión', url: mailUrl_(s, '?servicio=' + encodeURIComponent(b.servicio) + '#reservar') },
+      cta: { text: 'Reservar mi sesión', url: mailUrl_(s, 'reservar.html?servicio=' + encodeURIComponent(b.servicio)) },
     }),
   };
 }
@@ -283,7 +283,7 @@ export function mailConsentCopy_(r, s) {
     html: layout_(s, {
       kicker: 'Consentimiento', title: 'Recibimos tu consentimiento',
       intro: 'Gracias, ' + firstName_(r.clienta) + '. Te enviamos una copia en PDF del consentimiento que firmaste para tu cita del ' + esc_(whenText_(r)) + '.',
-      cta: { text: 'Ver mis citas', url: mailUrl_(s, '#citas') },
+      cta: { text: 'Ver mis citas', url: mailUrl_(s, 'citas.html') },
     }),
   };
 }
@@ -311,8 +311,8 @@ export function mailWallet_(email, items, s) {
       kicker: 'Tu billetera', title: 'Tus códigos',
       intro: 'Estos son las tarjetas de regalo y paquetes asociados a ' + esc_(email) + '. Escribe el código al reservar o guárdalo en la app.',
       details: rows,
-      cta: { text: 'Abrir la app', url: mailUrl_(s, 'app/#billetera') },
-      secondary: { text: 'Reservar', url: mailUrl_(s, '#reservar') },
+      cta: { text: 'Abrir la app', url: mailUrl_(s, 'aplicacion.html') },
+      secondary: { text: 'Reservar', url: mailUrl_(s, 'reservar.html') },
       note: 'Si no pediste este correo, puedes ignorarlo: nadie más puede ver tus códigos.',
     }),
   };
@@ -327,7 +327,7 @@ export function mailTransferReceived_(r, s) {
       kicker: 'Comprobante recibido', title: 'Gracias, ' + firstName_(r.clienta),
       intro: 'Recibimos el comprobante de tu transferencia. <b>Tu horario queda apartado</b> y te confirmamos la cita en cuanto veamos el depósito en la cuenta (normalmente el mismo día).',
       details: apptDetails_(r),
-      cta: { text: 'Ver mis citas', url: mailUrl_(s, '#citas') },
+      cta: { text: 'Ver mis citas', url: mailUrl_(s, 'citas.html') },
       secondary: waUrl_(s) ? { text: 'Escribir por WhatsApp', url: waUrl_(s, 'Hola, envié el comprobante de mi cita ' + r.id + '.') } : null,
     }),
   };
@@ -355,8 +355,8 @@ export function mailTransferRejected_(r, s, motivo) {
       kicker: 'Transferencia', title: 'No pudimos confirmar tu cita',
       intro: 'Hola, ' + firstName_(r.clienta) + '. Revisamos tu comprobante para el ' + esc_(whenText_(r)) + ' y no pudimos confirmar el depósito.',
       body: '<p style="margin:0"><b>Motivo:</b> ' + esc_(motivo) + '</p><p style="margin:12px 0 0">Si ya hiciste la transferencia, escríbenos por WhatsApp con el comprobante y lo resolvemos enseguida.</p>',
-      cta: waUrl_(s) ? { text: 'Escribir por WhatsApp', url: waUrl_(s, 'Hola, es sobre mi transferencia de la cita ' + r.id + '.') } : { text: 'Reservar de nuevo', url: mailUrl_(s, '#reservar') },
-      secondary: { text: 'Reservar de nuevo', url: mailUrl_(s, '#reservar') },
+      cta: waUrl_(s) ? { text: 'Escribir por WhatsApp', url: waUrl_(s, 'Hola, es sobre mi transferencia de la cita ' + r.id + '.') } : { text: 'Reservar de nuevo', url: mailUrl_(s, 'reservar.html') },
+      secondary: { text: 'Reservar de nuevo', url: mailUrl_(s, 'reservar.html') },
       note: 'Código de reserva: ' + esc_(r.id),
     }),
   };

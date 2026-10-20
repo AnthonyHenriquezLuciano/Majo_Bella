@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La app MAJOBELLA · Reserva y lleva tus citas en el celular</title>
+<meta name="description" content="Descarga la app de MAJOBELLA Beauty Studio: reserva en segundos, mira y cambia tus citas, paga tu depósito y guarda tus tarjetas de regalo y paquetes.">
+<meta name="theme-color" content="#ffffff">
+<link rel="canonical" href="https://anthonyhenriquezluciano.github.io/Majo_Bella/aplicacion.html">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MAJOBELLA">
+
+<!-- Vista previa al compartir (WhatsApp, Instagram, Facebook) -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_DO">
+<meta property="og:site_name" content="MAJOBELLA Beauty Studio">
+<meta property="og:title" content="La app MAJOBELLA">
+<meta property="og:description" content="Tu belleza, en tu bolsillo. Reserva y lleva tus citas en el celular.">
+<meta property="og:url" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/aplicacion.html">
+<meta property="og:image" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo de MAJOBELLA Beauty Studio con el lema Más yo, más bella">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="La app MAJOBELLA">
+<meta name="twitter:description" content="Tu belleza, en tu bolsillo. Reserva y lleva tus citas en el celular.">
+<meta name="twitter:image" content="https://anthonyhenriquezluciano.github.io/Majo_Bella/assets/og-image.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="css/styles.css?v=20261020b">
+</head>
+<body data-page="aplicacion">
+<!--MJB:BODY-START-->
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+<div class="announce" id="announce" hidden>
+  <div class="container announce-in">
+    <a class="announce-link" id="announce-link" href="reservar.html"><span id="announce-text"></span><span class="announce-arrow" aria-hidden="true">→</span></a>
+    <button type="button" class="announce-x" id="announce-x" aria-label="Cerrar anuncio">×</button>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="./#inicio" aria-label="MAJOBELLA, ir al inicio">
+      <img src="assets/logo-majobella.png" alt="MAJOBELLA" width="900" height="351">
+    </a>
+    <nav class="main-nav" aria-label="Principal">
+      <ul>
+        <li><a href="./#majo">Conoce a Majo</a></li>
+        <li><a href="./#servicios">Servicios</a></li>
+        <li data-nav-for="resenas" hidden><a href="./#resenas">Opiniones</a></li>
+        <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos">Regalos</a></li>
+        <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
+        <li><a href="aplicacion.html" class="nav-app" data-nav="aplicacion" aria-current="page">Aplicación</a></li>
+      </ul>
+    </nav>
+    <div class="header-account" id="header-account"><button type="button" class="header-login" data-open-auth>Iniciar sesión</button></div>
+    <a class="btn btn-primary btn-sm header-cta" href="reservar.html" data-nav="reservar">Agendar cita</a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú">
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+<script>
+/* Antes de pintar: muestra el anuncio y los apartados del menú que ya se vieron la última vez (evita saltos de la página) */
+(function () {
+  try {
+    var nav = JSON.parse(localStorage.getItem('mjb.nav.v1') || '[]');
+    nav.forEach(function (id) { document.querySelectorAll('[data-nav-for="' + id + '"]').forEach(function (e) { e.hidden = false; }); });
+    var a = localStorage.getItem('mjb.announce.last');
+    if (a && localStorage.getItem('mjb.announce.closed') !== 'mjb.announce.' + a) {
+      document.getElementById('announce-text').textContent = a;
+      document.getElementById('announce').hidden = false;
+    }
+  } catch (e) { /* sin almacenamiento */ }
+})();
+</script>
+
+<div class="mobile-menu" id="mobile-menu" hidden>
+  <nav aria-label="Menú móvil">
+    <a class="mobile-app" href="aplicacion.html"><span class="mobile-app-ic" aria-hidden="true"><img src="assets/icon-192.png" alt=""></span><span><b>La app MAJOBELLA</b><small>Reserva y lleva tus citas en tu celular</small></span></a>
+    <ul>
+      <li><a href="./#inicio">Inicio</a></li>
+      <li><a href="./#sobre">Sobre MAJOBELLA</a></li>
+      <li><a href="./#majo">Conoce a Majo</a></li>
+      <li><a href="./#servicios">Servicios</a></li>
+      <li data-nav-for="resultados" hidden><a href="./#resultados">Resultados</a></li>
+      <li data-nav-for="resenas" hidden><a href="./#resenas">Opiniones</a></li>
+      <li><a href="reservar.html" data-nav="reservar">Reservar</a></li>
+      <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
+      <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos">Regalos y paquetes</a></li>
+      <li><a href="./#contacto">Contacto</a></li>
+      <li><a href="aplicacion.html" data-nav="aplicacion" aria-current="page">Aplicación <span class="mm-tag">Para tu celular</span></a></li>
+    </ul>
+    <a class="btn btn-primary" href="reservar.html">Agendar cita</a>
+    <button type="button" class="mobile-login" data-open-auth>Iniciar sesión</button>
+    <p class="mobile-slogan" data-slogan>MÁS YO, MÁS BELLA.</p>
+  </nav>
+</div>
+
+<main id="contenido" class="page-main app-page">
+
+  <!-- PRESENTACIÓN -->
+  <section class="ap-hero">
+    <div class="container ap-hero-grid">
+      <div class="ap-hero-copy">
+        <p class="label" data-hero>La app MAJOBELLA</p>
+        <h1 class="ap-title" data-hero>Tu belleza, en tu bolsillo.</h1>
+        <p class="ap-lead" data-hero>Reserva en segundos, lleva tus citas contigo, paga tu depósito y guarda tus tarjetas de regalo y paquetes. Todo lo de MAJOBELLA, en una app hecha para tu celular.</p>
+        <div class="ap-downloads" id="ap-downloads" data-hero aria-live="polite"></div>
+        <p class="ap-small" data-hero>Gratis · sin anuncios · con la misma cuenta y las mismas citas que en la web</p>
+      </div>
+      <div class="ap-hero-visual" aria-hidden="true">
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="ph-top"><img src="assets/logo-majobella.png" alt="" width="900" height="351"></div>
+            <p class="ph-hello">Hola, Ana</p>
+            <div class="ph-card">
+              <p class="ph-k">Próxima cita</p>
+              <p class="ph-t">Cejas · sábado 24 de octubre</p>
+              <p class="ph-s">10:00 a. m. · faltan 3 días</p>
+              <div class="ph-actions"><span>Calendario</span><span>Cómo llegar</span></div>
+            </div>
+            <div class="ph-grid"><span>Reservar</span><span>Mis citas</span><span>Billetera</span><span>Perfil</span></div>
+            <div class="ph-promo"><p class="ph-k">Promoción</p><p class="ph-t">15% en cejas este mes</p></div>
+            <div class="ph-tabs"><i></i><i></i><b>+</b><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUÉ TRAE -->
+  <section class="section ap-features" id="novedades">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="label">Todo lo nuevo</p>
+          <h2 class="display">Lo que puedes hacer en la app</h2>
+        </div>
+        <div class="section-head-side"><p>Lo que ya haces en la web, más rápido y siempre a mano. Y cosas que solo tiene la app.</p></div>
+      </div>
+      <ul class="ap-grid" data-reveal="stagger">
+        <li><span class="ap-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M9 14.5l2 2 4-4"/></svg></span><h3>Reserva en segundos</h3><p>Elige servicios, mira solo los horarios libres y aparta tu cita con el primer horario disponible en un toque.</p></li>
+        <li><span class="ap-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><h3>Tus citas siempre a mano</h3><p>Cuenta regresiva, cómo llegar, añadir al calendario, cambiar la fecha o cancelar, sin buscar correos.</p></li>
+        <li><span class="ap-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="11" rx="2"/><circle cx="12" cy="12" r="2.6"/></svg></span><h3>Paga tu depósito</h3><p>Con PayPal o por transferencia: ves las cuentas, subes la foto del comprobante y te confirmamos.</p></li>
+        <li><span class="ap-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/></svg></span><h3>Tu billetera</h3><p>Tus tarjetas de regalo con su saldo y tus paquetes con las sesiones que te quedan, listos para usar al reservar.</p></li>
+        <li><span class="ap-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19.5c2.5-.3 4-1.8 5.5-4.3l6.8-11 2.2 1.4-6.8 11c-1.5 2.4-3.3 3.8-7.7 2.9z"/><path d="M4 21h16"/></svg></span><h3>Consentimiento digital</h3><p>Firma con el dedo desde tu celular antes de la cita. Te llega una copia en PDF.</p></li>
+        <li><span class="ap-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4l2.3 4.8 5.2.7-3.8 3.6.9 5.2L12 15.8l-4.6 2.5.9-5.2-3.8-3.6 5.2-.7z"/></svg></span><h3>Premio por fidelidad</h3><p>Mira cuántas visitas te faltan para tu premio. Se aplica solo en tu siguiente cita.</p></li>
+        <li><span class="ap-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"/><path d="M10 19.5a2 2 0 0 0 4 0"/></svg></span><h3>Avisos en tu celular</h3><p>Recordatorio antes de tu cita, confirmación de tu transferencia y aviso si se libera un horario que esperabas.</p></li>
+        <li><span class="ap-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg></span><h3>Tu cuenta, tus datos</h3><p>Entra con Google o con tu correo. Tus citas de la web aparecen solas en la app con el mismo correo.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- CÓMO INSTALARLA -->
+  <section class="section ap-steps" id="instalar">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="label">Cómo instalarla</p>
+          <h2 class="display">Lista en un minuto</h2>
+        </div>
+      </div>
+      <div class="ap-install" id="ap-install" data-reveal></div>
+    </div>
+  </section>
+
+  <!-- PREGUNTAS -->
+  <section class="section faq-section">
+    <div class="container faq-grid">
+      <div class="faq-head" data-reveal>
+        <p class="label">Preguntas</p>
+        <h2 class="display">Sobre la app</h2>
+        <p>Si tu duda no está aquí, escríbenos.</p>
+      </div>
+      <div class="faq-list ap-faq" data-reveal>
+        <details><summary>¿Cuánto cuesta?</summary><p>Nada. La app es gratis y no tiene anuncios. Solo pagas tus servicios, como siempre.</p></details>
+        <details><summary>¿Necesito crear una cuenta?</summary><p>No para reservar. Si entras con Google o con tu correo, tus citas, tarjetas y paquetes aparecen solos en cualquier celular.</p></details>
+        <details><summary>Ya reservé en la web, ¿lo veo en la app?</summary><p>Sí. Entra con el mismo correo que usaste al reservar y verás tus citas, tarjetas de regalo y paquetes.</p></details>
+        <details><summary>¿Es seguro pagar en la app?</summary><p>Los pagos con tarjeta se hacen en PayPal; nosotras nunca vemos los datos de tu tarjeta. Las transferencias se confirman al ver el depósito en la cuenta.</p></details>
+        <details><summary>¿Puedo seguir usando la web?</summary><p>Claro. La web y la app comparten la misma agenda: reserva donde te quede más cómodo.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="section ap-cta">
+    <div class="container ap-cta-in" data-reveal>
+      <p class="script">más yo, más bella</p>
+      <h2 class="display">Lleva MAJOBELLA contigo</h2>
+      <div class="ap-downloads" id="ap-downloads-2"></div>
+      <a class="btn btn-quiet" href="reservar.html">O reserva ahora en la web</a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <img src="assets/logo-majobella.png" alt="MAJOBELLA" width="900" height="351">
+      <p data-slogan>MÁS YO, MÁS BELLA.</p>
+      <p class="footer-address" data-address></p>
+    </div>
+    <nav class="footer-links" aria-label="Pie de página">
+      <a href="./#inicio">Inicio</a>
+      <a href="./#servicios">Servicios</a>
+      <a href="reservar.html">Reservar</a>
+      <a href="citas.html">Mis citas</a>
+      <a href="regalos.html" data-nav-for="regalos" hidden>Regalos y paquetes</a>
+      <a href="./#preguntas">Preguntas</a>
+      <a href="./#contacto">Contacto</a>
+      <a href="aplicacion.html">La app MAJOBELLA</a>
+    </nav>
+    <div class="footer-social">
+      <a data-social="instagram">Instagram</a>
+      <a data-social="tiktok">TikTok</a>
+      <a data-wa href="./#contacto">WhatsApp</a>
+    </div>
+  </div>
+  <div class="container footer-base">
+    <p>© <span data-year>2026</span> MAJOBELLA — Todos los derechos reservados.</p>
+    <nav class="footer-legal" aria-label="Legal"><a href="privacidad.html">Privacidad</a><a href="cancelacion.html">Cancelación y reembolsos</a><a href="terminos.html">Términos y condiciones</a></nav>
+  </div>
+</footer>
+
+
+<div class="app-ribbon" id="app-ribbon" hidden role="region" aria-label="La app MAJOBELLA">
+  <img src="assets/icon-192.png" alt="" width="40" height="40">
+  <p><b>La app MAJOBELLA</b><span>Tus citas a un toque.</span></p>
+  <button type="button" class="btn btn-primary btn-sm" data-ribbon-install>Ver app</button>
+  <button type="button" class="app-ribbon-x" aria-label="Cerrar" data-ribbon-x>×</button>
+</div>
+
+<div class="get-app" id="get-app" hidden tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="ga-title"></div>
+
+<div class="auth-modal" id="auth-modal" hidden>
+  <div class="am-backdrop"></div>
+  <div class="am-panel" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <button type="button" class="am-close" aria-label="Cerrar">×</button>
+    <img class="am-logo" src="assets/monograma.png" alt="" width="400" height="332">
+    <div id="auth-body"></div>
+  </div>
+</div>
+<p class="toast" id="toast" role="status" hidden></p>
+
+<div class="selection-bar" id="selection-bar" hidden role="region" aria-label="Servicios añadidos">
+  <div class="sb-inner">
+    <div class="sb-text">
+      <p class="sb-names" id="sb-names"></p>
+      <p class="sb-meta" id="sb-meta"></p>
+    </div>
+    <p class="sb-price" id="sb-price" aria-live="polite"></p>
+    <button type="button" class="sb-clear" id="sb-clear" aria-label="Quitar todos los servicios">Vaciar</button>
+    <button type="button" class="btn btn-primary" id="sb-book">Agendar estos servicios</button>
+  </div>
+</div>
+
+<a class="wa-float" data-wa href="./#contacto" aria-label="¿Dudas? Escribir a MAJOBELLA por WhatsApp">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2c-4.9 0-8.8 3.7-8.8 8.3 0 1.7.5 3.2 1.4 4.5L3.6 20.6l4.7-1.3c1.1.6 2.4.9 3.7.9 4.9 0 8.8-3.7 8.8-8.3S16.9 3.2 12 3.2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9.2 8.6c.2-.4.4-.4.6-.4h.4c.2 0 .3.1.4.3l.6 1.4c.1.2 0 .4-.1.5l-.4.5c-.1.1-.1.3 0 .4.6 1 1.4 1.7 2.4 2.2.2.1.3.1.4-.1l.5-.6c.1-.2.3-.2.5-.1l1.4.7c.2.1.3.2.3.4 0 .5-.2 1.1-.7 1.4-.5.3-1.2.4-2.1.1-1.6-.5-3-1.7-3.9-3.1-.6-.9-.9-1.8-.7-2.6.1-.4.2-.7.4-.9z" fill="currentColor"/></svg>
+  <span>¿Dudas?</span>
+</a>
+<!--MJB:BODY-END-->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/config.js?v=20261020b"></script>
+<script src="js/data/services.js?v=20261020b"></script>
+<script src="js/data/faq.js?v=20261020b"></script>
+<script src="js/data/brows.js?v=20261020b"></script>
+<script src="js/core/utils.js?v=20261020b"></script>
+<script src="js/core/validate.js?v=20261020b"></script>
+<script src="js/integrations/whatsapp.js?v=20261020b"></script>
+<script src="js/integrations/calendar.js?v=20261020b"></script>
+<script src="js/integrations/booking-api.js?v=20261020b"></script>
+<script src="js/integrations/paypal.js?v=20261020b"></script>
+<script src="js/integrations/google-auth.js?v=20261020b"></script>
+<script src="js/integrations/appointments.js?v=20261020b"></script>
+<script src="js/integrations/giftcard.js?v=20261020b"></script>
+<script src="js/integrations/captcha.js?v=20261020b"></script>
+<script src="js/integrations/manage.js?v=20261020b"></script>
+<script src="js/components/nav.js?v=20261020b"></script>
+<script src="js/components/auth-modal.js?v=20261020b"></script>
+<script src="js/components/face.js?v=20261020b"></script>
+<script src="js/components/brows.js?v=20261020b"></script>
+<script src="js/components/hero.js?v=20261020b"></script>
+<script src="js/components/services.js?v=20261020b"></script>
+<script src="js/components/selection-bar.js?v=20261020b"></script>
+<script src="js/components/booking.js?v=20261020b"></script>
+<script src="js/components/citas.js?v=20261020b"></script>
+<script src="js/components/contact.js?v=20261020b"></script>
+<script src="js/components/site.js?v=20261020b"></script>
+<script src="js/components/giftshop.js?v=20261020b"></script>
+<script src="js/components/packages.js?v=20261020b"></script>
+<script src="js/integrations/install.js?v=20261020b"></script>
+<script src="js/components/getapp.js?v=20261020b"></script>
+<script src="js/components/appinfo.js?v=20261020b"></script>
+<script src="js/components/reveal.js?v=20261020b"></script>
+<script src="js/main.js?v=20261020b"></script>
+</body>
+</html>
