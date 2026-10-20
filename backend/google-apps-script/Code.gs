@@ -170,6 +170,7 @@ const MAX_FILE_BYTES = 12 * 1024 * 1024;
 /** Ejecuta esta función desde el editor al instalar y después de cada actualización del código:
     crea la hoja, las pestañas y las columnas que falten, sin tocar los datos existentes. */
 function setup() {
+  resetDb_();
   const props = PropertiesService.getScriptProperties();
   let ss = null;
   const existing = props.getProperty('SHEET_ID');
@@ -179,6 +180,7 @@ function setup() {
   props.setProperty('SHEET_ID', ss.getId());
 
   Object.keys(TABLES).forEach(function (name) {
+    resetDb_();
     let t = ss.getSheetByName(name);
     const fresh = !t;
     if (!t) t = ss.insertSheet(name);
@@ -192,6 +194,7 @@ function setup() {
       if (missing.length) t.getRange(1, have.length + 1, 1, missing.length).setValues([missing]).setFontWeight('bold');
     }
     t.getRange(1, 1, t.getMaxRows(), Math.max(want.length, t.getLastColumn())).setNumberFormat('@'); // todo como texto
+    resetDb_();
     if (name === 'Ajustes') {
       const keys = readTable_('Ajustes').map(function (r) { return r.clave; });
       const add = DEFAULT_SETTINGS.filter(function (x) { return keys.indexOf(x[0]) < 0; });
@@ -232,8 +235,15 @@ function setup() {
   if (!pub) { pub = DriveApp.createFolder('MAJOBELLA · Web pública (galería)'); props.setProperty('PUBLIC_FOLDER_ID', pub.getId()); }
 
   // Disparador de las tareas automáticas (cada hora)
-  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === AUTO_TRIGGER) ScriptApp.deleteTrigger(t); });
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === AUTO_TRIGGER || t.getHandlerFunction() === 'alEditarHoja') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger(AUTO_TRIGGER).timeBased().everyHours(1).create();
+  // Si se edita la hoja a mano, la web lo ve al instante
+  try { ScriptApp.newTrigger('alEditarHoja').forSpreadsheet(ss).onEdit().create(); } catch (e) { Logger.log('No se pudo crear el disparador de edición: ' + msg_(e)); }
+
+  // Nombres propios, teléfonos y correos con el mismo formato en todas las pestañas
+  resetDb_();
+  try { Logger.log('Datos ordenados: ' + JSON.stringify(normalizeData_())); } catch (e) { Logger.log('No se pudieron ordenar los datos: ' + msg_(e)); }
+  clearCaches_();
 
   const blank = ss.getSheetByName('Hoja 1') || ss.getSheetByName('Sheet1');
   if (blank && ss.getSheets().length > Object.keys(TABLES).length) ss.deleteSheet(blank);
@@ -251,11 +261,11 @@ function testPaypal() {
    ========================================================================= */
 
 function doGet(e) {
-  SVC_CACHE_ = null; SETTINGS_CACHE_ = null;
+  resetDb_();
   try {
     const p = (e && e.parameter) || {};
-    if (p.action === 'catalog') { heartbeat_(); return json_(catalog_()); }
-    if (p.action === 'busy') return json_(busy_(p.from, p.to));
+    if (p.action === 'catalog') { heartbeat_(); return json_(cachedCatalog_()); }
+    if (p.action === 'busy') return json_(cachedBusy_(p.from, p.to));
     if (p.action === 'availability') return json_(busy_(p.date, p.date)); // compatibilidad
     return json_({ ok: false, error: 'Acción no válida.' });
   } catch (err) {
@@ -265,7 +275,7 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  SVC_CACHE_ = null; SETTINGS_CACHE_ = null;
+  resetDb_();
   let data;
   try { data = JSON.parse((e && e.postData && e.postData.contents) || '{}'); }
   catch (err) { return json_({ ok: false, error: 'Datos no válidos.' }); }
@@ -403,6 +413,35 @@ function busy_(from, to) {
   }).map(function (r) { return { start: r.inicio, end: r.fin }; });
   blockIntervals_(blocks_(), from, to).forEach(function (x) { busy.push({ start: x.start, end: x.end }); });
   return { ok: true, busy: busy };
+}
+
+/* Catálogo desde la caché (10 min o hasta que algo cambie) */
+function cachedCatalog_() {
+  const c = CacheService.getScriptCache();
+  const hit = c.get('catalog');
+  if (hit) { const o = safeJson_(hit, null); if (o) { o.cached = true; return o; } }
+  const out = catalog_();
+  try { const txt = JSON.stringify(out); if (txt.length < 95000) c.put('catalog', txt, 600); } catch (e) { /* muy grande: sin caché */ }
+  return out;
+}
+/* Horarios ocupados desde la caché: hasta que cambie una reserva o venza un apartado */
+function cachedBusy_(from, to) {
+  const c = CacheService.getScriptCache();
+  let ver = c.get('busyver');
+  if (!ver) { ver = String(Date.now()); c.put('busyver', ver, 21600); }
+  const key = 'busy_' + from + '_' + to + '_' + ver;
+  const hit = c.get(key);
+  if (hit) { const o = safeJson_(hit, null); if (o && (!o.until || o.until > Date.now())) return o; }
+  const out = busy_(from, to);
+  if (!out.ok) return out;
+  // Un apartado (retenida) deja de ocupar al vencer: la copia dura hasta ese momento como mucho
+  const now = Date.now();
+  const holds = rows_().filter(function (r) { return r.estado === 'retenida' && new Date(r.retenidaHasta).getTime() > now; })
+    .map(function (r) { return new Date(r.retenidaHasta).getTime(); });
+  out.until = holds.length ? Math.min.apply(null, holds) : now + 300000;
+  const ttl = Math.max(5, Math.min(300, Math.floor((out.until - now) / 1000)));
+  try { c.put(key, JSON.stringify(out), ttl); } catch (e) { /* nada */ }
+  return out;
 }
 
 function occupies_(r, now) {
@@ -562,11 +601,10 @@ function hold_(d) {
   const s = settings_();
   const sch = schedule_(s);
   const c = d.client || {};
-  const name = clean_(c.name, 80), phone = clean_(c.phone, 30), notes = clean_(c.notes, 300);
-  let email = clean_(c.email, 120).toLowerCase();
-  if (name.length < 2 || phone.replace(/\D/g, '').length < 10 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-    return { ok: false, error: 'Revisa tu nombre, teléfono y correo.' };
-  }
+  const cv = client_(c, true);
+  if (!cv.ok) return { ok: false, error: cv.error };
+  const name = cv.name, phone = cv.phone, notes = cv.notes;
+  let email = cv.email;
   if (d.idToken) { const u = verifyIdToken_(d.idToken); if (u) email = u.email; }
   if (!human_(d, s)) return { ok: false, error: NOT_HUMAN };
   if (limited_(d)) return { ok: false, error: TOO_MANY };
@@ -941,9 +979,9 @@ function adminUpdate_(d) {
 function adminCreate_(d) {
   needAdmin_(d);
   const s = settings_();
-  const c = d.client || {};
-  const name = clean_(c.name, 80);
-  if (name.length < 2) return { ok: false, error: 'Escribe el nombre de la clienta.' };
+  const cv = client_(d.client, false);
+  if (!cv.ok) return { ok: false, error: cv.error };
+  const name = cv.name;
   const ids = (d.services || []).filter(Boolean);
   const items = catalogItems_(ids);
   if (!items.length || items.some(function (x) { return !x; })) return { ok: false, error: 'Elige al menos un servicio.' };
@@ -969,7 +1007,7 @@ function adminCreate_(d) {
     subtotalRD: subtotal, descuentoRD: subtotal - total, totalRD: total, depositoRD: dep, saldoRD: total - dep,
     depositoPagado: dep > 0 ? now : '', metodoDeposito: depMethod,
     saldoEstado: total - dep > 0 ? 'pendiente' : 'pagado',
-    clienta: name, telefono: clean_(c.phone, 30), correo: clean_(c.email, 120).toLowerCase(), nota: clean_(c.notes, 300),
+    clienta: name, telefono: cv.phone, correo: cv.email, nota: cv.notes,
     tokenHash: hash_(Utilities.getUuid()), firmaToken: Utilities.getUuid().replace(/-/g, '').slice(0, 20),
     origen: clean_(d.origen, 40) || 'estudio', canal: 'dashboard', creadaPor: 'estudio',
   };
@@ -1076,6 +1114,7 @@ function adminSaveSettings_(d) {
     });
   }
   SVC_CACHE_ = null; SETTINGS_CACHE_ = null;
+  clearCaches_();
   return adminData_(d);
 }
 
@@ -1084,8 +1123,10 @@ function adminSaveClient_(d) {
   needAdmin_(d);
   const clave = clean_(d.clave, 120);
   if (!clave) return { ok: false, error: 'Falta la clienta.' };
+  const cv = client_({ name: d.nombre, phone: d.telefono, email: d.correo }, false);
+  if (!cv.ok) return { ok: false, error: cv.error };
   const patch = {
-    clave: clave, nombre: clean_(d.nombre, 80), telefono: clean_(d.telefono, 30), correo: clean_(d.correo, 120).toLowerCase(),
+    clave: clave, nombre: cv.name, telefono: cv.phone, correo: cv.email,
     notas: clean_(d.notas, 3000), cumpleanos: monthDay_(d.cumpleanos), actualizada: new Date().toISOString(),
   };
   const r = readTable_('Clientas').filter(function (x) { return x.clave === clave; })[0];
@@ -1181,7 +1222,7 @@ function adminSaveGift_(d) {
   if (g.id) {
     const r = readTable_('Tarjetas').filter(function (x) { return x.id === g.id; })[0];
     if (!r) return { ok: false, error: 'No encontramos esa tarjeta.' };
-    const patch = { comprador: clean_(g.comprador, 80), para: clean_(g.para, 80), mensaje: clean_(g.mensaje, 300), vence: isDateKey_(g.vence) ? g.vence : '' };
+    const patch = { comprador: properName_(clean_(g.comprador, 80)), para: properName_(clean_(g.para, 80)), mensaje: clean_(g.mensaje, 300), vence: isDateKey_(g.vence) ? g.vence : '' };
     if (g.estado === 'anulada') patch.estado = 'anulada';
     if (g.estado === 'activa' && r.estado === 'anulada') patch.estado = Number(r.saldoRD) > 0 ? 'activa' : 'agotada';
     updateTable_('Tarjetas', r._row, patch);
@@ -1195,7 +1236,7 @@ function adminSaveGift_(d) {
   if (findGift_(codigo) || readTable_('Promociones').some(function (x) { return normCode_(x.codigo) === codigo; })) return { ok: false, error: 'Ese código ya existe.' };
   const row = {
     id: 'TRG-' + Utilities.getUuid().slice(0, 6).toUpperCase(), codigo: codigo, montoRD: monto, saldoRD: monto,
-    comprador: clean_(g.comprador, 80), para: clean_(g.para, 80), mensaje: clean_(g.mensaje, 300),
+    comprador: properName_(clean_(g.comprador, 80)), para: properName_(clean_(g.para, 80)), mensaje: clean_(g.mensaje, 300),
     metodoPago: ['efectivo', 'transferencia', 'paypal', 'cortesia'].indexOf(g.metodoPago) >= 0 ? g.metodoPago : 'efectivo',
     vendida: isDateKey_(g.vendida) ? g.vendida : todayKey_(), vence: isDateKey_(g.vence) ? g.vence : '',
     estado: 'activa', creada: new Date().toISOString(),
@@ -1374,7 +1415,7 @@ function giftOrder_(d) {
     application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
   }, id + '-order');
   appendRow_('Tarjetas', {
-    id: id, codigo: '', montoRD: monto, saldoRD: 0, comprador: clean_(d.de, 80), para: clean_(d.para, 80), mensaje: clean_(d.mensaje, 160),
+    id: id, codigo: '', montoRD: monto, saldoRD: 0, comprador: properName_(clean_(d.de, 80)), para: properName_(clean_(d.para, 80)), mensaje: clean_(d.mensaje, 160),
     metodoPago: 'paypal', vendida: '', vence: '', estado: 'pendiente', creada: new Date().toISOString(),
     correoComprador: correo, correoPara: correoPara, paypalOrden: order.id,
   });
@@ -1450,7 +1491,7 @@ function tareasProgramadas() {
 }
 
 function runAutomations_() {
-  SVC_CACHE_ = null; SETTINGS_CACHE_ = null;
+  resetDb_();
   const s = settings_();
   const now = new Date();
   const hour = Number(Utilities.formatDate(now, TZ, 'H'));
@@ -1602,9 +1643,9 @@ function waitlistJoin_(d) {
   const s = settings_();
   if (!on_(s.esperaActiva)) return { ok: false, error: 'La lista de espera no está disponible.' };
   if (!human_(d, s)) return { ok: false, error: NOT_HUMAN };
-  const c = d.client || {};
-  const name = clean_(c.name, 80), phone = clean_(c.phone, 30), email = clean_(c.email, 120).toLowerCase();
-  if (name.length < 2 || phone.replace(/\D/g, '').length < 10 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { ok: false, error: 'Revisa tu nombre, teléfono y correo.' };
+  const cv = client_(d.client, true);
+  if (!cv.ok) return { ok: false, error: cv.error };
+  const name = cv.name, phone = cv.phone, email = cv.email;
   const sch = schedule_(s);
   const today = todayKey_();
   if (!isDateKey_(d.date) || d.date < today || d.date > addDaysKey_(today, sch.maxDays)) return { ok: false, error: 'Elige un día dentro de la agenda.' };
@@ -1784,7 +1825,7 @@ function createBono_(k, c, extra) {
   const today = todayKey_();
   const row = {
     id: 'BON-' + Utilities.getUuid().slice(0, 6).toUpperCase(), codigo: extra.codigo || '', paqueteId: k.id, nombre: k.nombre, servicio: k.servicio,
-    sesiones: Number(k.sesiones) || 1, usadas: 0, clienta: clean_(c.name, 80), telefono: clean_(c.phone, 30), correo: clean_(c.email, 120).toLowerCase(),
+    sesiones: Number(k.sesiones) || 1, usadas: 0, clienta: c.name, telefono: c.phone, correo: c.email,
     montoRD: extra.montoRD != null ? extra.montoRD : Number(k.precioRD) || 0, metodoPago: extra.metodoPago || 'efectivo',
     vendida: extra.estado === 'pendiente' ? '' : today, vence: extra.estado === 'pendiente' ? '' : (Number(k.venceDias) > 0 ? addDaysKey_(today, Number(k.venceDias)) : ''),
     estado: extra.estado || 'activo', paypalOrden: extra.paypalOrden || '', creada: new Date().toISOString(),
@@ -1797,8 +1838,8 @@ function adminSellBono_(d) {
   needAdmin_(d);
   const k = readTable_('Paquetes').filter(function (x) { return x.id === d.paqueteId; })[0];
   if (!k) return { ok: false, error: 'Elige un paquete.' };
-  const c = d.client || {};
-  if (clean_(c.name, 80).length < 2) return { ok: false, error: 'Escribe el nombre de la clienta.' };
+  const c = client_(d.client, false);
+  if (!c.ok) return { ok: false, error: c.error };
   const monto = d.montoRD !== '' && d.montoRD != null ? Math.max(0, Math.round(Number(d.montoRD) || 0)) : Number(k.precioRD) || 0;
   const row = createBono_(k, c, { codigo: newBonoCode_(), montoRD: monto, metodoPago: ['efectivo', 'transferencia', 'paypal', 'cortesia'].indexOf(d.metodoPago) >= 0 ? d.metodoPago : 'efectivo' });
   if (d.notify && row.correo) { const m = mailBono_(row, settings_()); safeMail_(row.correo, m.subject, m.html, { tipo: 'paquete', ref: row.id }); }
@@ -1826,8 +1867,8 @@ function bonoOrder_(d) {
   if (!human_(d, s)) return { ok: false, error: NOT_HUMAN };
   const k = readOpt_('Paquetes').filter(function (x) { return x.id === d.paqueteId && !/^no$/i.test(x.activo) && /^s[ií]$/i.test(x.enWeb); })[0];
   if (!k) return { ok: false, error: 'Ese paquete ya no está disponible.' };
-  const c = d.client || {};
-  if (clean_(c.name, 80).length < 2 || clean_(c.phone, 30).replace(/\D/g, '').length < 10 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clean_(c.email, 120))) return { ok: false, error: 'Revisa tu nombre, teléfono y correo.' };
+  const c = client_(d.client, true);
+  if (!c.ok) return { ok: false, error: c.error };
   const rate = num_(s.tasaUSD, 63);
   const usd = usd_(Number(k.precioRD) || 0, rate);
   const id = 'BON-' + Utilities.getUuid().slice(0, 6).toUpperCase();
@@ -2102,19 +2143,35 @@ function settingsCached_() { if (!SETTINGS_CACHE_) SETTINGS_CACHE_ = settings_()
    Hoja de cálculo (las columnas se leen por su nombre)
    ========================================================================= */
 
+/* ---- Acceso a la hoja con memoria por petición ----
+   Cada petición abre la hoja una sola vez y lee cada pestaña una sola vez; las escrituras actualizan esa memoria,
+   así varias funciones pueden consultar la misma pestaña sin volver a leerla. */
+let DB_ = null;
+function db_() { if (!DB_) DB_ = { ss: null, tabs: {}, heads: {}, data: {} }; return DB_; }
+function resetDb_() { DB_ = null; SVC_CACHE_ = null; SETTINGS_CACHE_ = null; }
 function sheet_() {
+  const d = db_();
+  if (d.ss) return d.ss;
   const id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
   if (!id) throw new Error('Falta ejecutar setup() en el editor de Apps Script.');
-  return SpreadsheetApp.openById(id);
+  d.ss = SpreadsheetApp.openById(id);
+  return d.ss;
 }
 function tab_(name) {
+  const d = db_();
+  if (d.tabs[name]) return d.tabs[name];
   const t = sheet_().getSheetByName(name);
   if (!t) throw new Error('Falta la pestaña "' + name + '". Ejecuta setup() otra vez.');
+  d.tabs[name] = t;
   return t;
 }
 function headers_(t) {
+  const d = db_(), key = t.getName ? t.getName() : '';
+  if (key && d.heads[key]) return d.heads[key];
   const n = t.getLastColumn();
-  return n ? t.getRange(1, 1, 1, n).getValues()[0].map(function (h) { return String(h).trim(); }) : [];
+  const h = n ? t.getRange(1, 1, 1, n).getValues()[0].map(function (x) { return String(x).trim(); }) : [];
+  if (key) d.heads[key] = h;
+  return h;
 }
 function cellOut_(v) {
   if (v instanceof Date) {
@@ -2123,17 +2180,20 @@ function cellOut_(v) {
   return String(v == null ? '' : v);
 }
 
-/* Filas de una pestaña como objetos { columna: valor, _row: número de fila } */
+/* Filas de una pestaña como objetos { columna: valor, _row: número de fila } (copias: se pueden modificar) */
 function readTable_(name) {
-  const t = tab_(name);
-  const last = t.getLastRow();
-  const h = headers_(t);
-  if (last < 2 || !h.length) return [];
-  return t.getRange(2, 1, last - 1, h.length).getValues().map(function (v, i) {
-    const o = { _row: i + 2 };
-    h.forEach(function (k, j) { if (k) o[k] = cellOut_(v[j]); });
-    return o;
-  }).filter(function (o) { return o[h[0]]; });
+  const d = db_();
+  if (!d.data[name]) {
+    const t = tab_(name);
+    const last = t.getLastRow();
+    const h = headers_(t);
+    d.data[name] = last < 2 || !h.length ? [] : t.getRange(2, 1, last - 1, h.length).getValues().map(function (v, i) {
+      const o = { _row: i + 2 };
+      h.forEach(function (k, j) { if (k) o[k] = cellOut_(v[j]); });
+      return o;
+    }).filter(function (o) { return o[h[0]]; });
+  }
+  return d.data[name].map(function (o) { return Object.assign({}, o); });
 }
 /* Igual que readTable_, pero devuelve [] si la pestaña aún no existe (antes de volver a ejecutar setup) */
 function readOpt_(name) { try { return readTable_(name); } catch (e) { return []; } }
@@ -2141,18 +2201,54 @@ function appendRow_(name, obj) {
   const t = tab_(name);
   const h = headers_(t);
   const r = t.getLastRow() + 1;
-  t.getRange(r, 1, 1, h.length).setNumberFormat('@').setValues([h.map(function (k) { return cell_(obj[k]); })]);
+  const vals = h.map(function (k) { return cell_(obj[k]); });
+  t.getRange(r, 1, 1, h.length).setNumberFormat('@').setValues([vals]);
+  const d = db_();
+  if (d.data[name] && vals[0] !== '') {
+    const o = { _row: r };
+    h.forEach(function (k, j) { if (k) o[k] = String(obj[k] == null ? '' : obj[k]); });
+    d.data[name].push(o);
+  }
+  touched_(name);
   return r;
 }
+/* Cambia varias columnas de una fila con una sola lectura y una sola escritura */
 function updateTable_(name, row, patch) {
   const t = tab_(name);
   const h = headers_(t);
-  Object.keys(patch).forEach(function (k) {
-    const col = h.indexOf(k);
-    if (col >= 0) t.getRange(row, col + 1).setNumberFormat('@').setValue(cell_(patch[k]));
-  });
+  const cols = Object.keys(patch).map(function (k) { return h.indexOf(k); }).filter(function (c) { return c >= 0; });
+  if (!cols.length) return;
+  const from = Math.min.apply(null, cols), to = Math.max.apply(null, cols);
+  const range = t.getRange(row, from + 1, 1, to - from + 1);
+  const vals = range.getValues()[0];
+  Object.keys(patch).forEach(function (k) { const c = h.indexOf(k); if (c >= 0) vals[c - from] = cell_(patch[k]); });
+  range.setNumberFormat('@').setValues([vals]);
+  const cached = db_().data[name];
+  if (cached) cached.forEach(function (o) { if (o._row === row) Object.keys(patch).forEach(function (k) { if (h.indexOf(k) >= 0) o[k] = String(patch[k] == null ? '' : patch[k]); }); });
+  touched_(name);
 }
-function deleteRow_(name, row) { tab_(name).deleteRow(row); }
+function deleteRow_(name, row) {
+  tab_(name).deleteRow(row);
+  delete db_().data[name];
+  touched_(name);
+}
+
+/* ---- Caché compartida (CacheService) para lo que la web pide a menudo ----
+   Se invalida sola cuando cambia algo de lo que depende, y también al editar la hoja a mano (disparador alEditarHoja). */
+const CATALOG_TABLES = ['Ajustes', 'Servicios', 'Promociones', 'Paquetes', 'Galeria', 'Resenas', 'Cuentas'];
+const BUSY_TABLES = ['Reservas', 'Bloqueos', 'Ajustes'];
+function touched_(name) {
+  try {
+    const c = CacheService.getScriptCache();
+    if (CATALOG_TABLES.indexOf(name) >= 0) c.remove('catalog');
+    if (BUSY_TABLES.indexOf(name) >= 0) c.put('busyver', String(Date.now()), 21600);
+  } catch (e) { /* sin caché */ }
+}
+function clearCaches_() {
+  try { const c = CacheService.getScriptCache(); c.remove('catalog'); c.put('busyver', String(Date.now()), 21600); } catch (e) { /* nada */ }
+}
+/** Disparador: si alguien edita la hoja a mano, la web ve el cambio enseguida. Lo instala setup(). */
+function alEditarHoja() { clearCaches_(); }
 function strip_(o) { const c = {}; Object.keys(o).forEach(function (k) { if (k !== '_row' && k !== 'tokenHash') c[k] = o[k]; }); return c; }
 
 function rows_() { return readTable_('Reservas'); }
@@ -2776,6 +2872,99 @@ function clientKey_(email, phone, name) {
   const t = String(phone || '').replace(/\D/g, '').slice(-10);
   if (t) return 't:' + t;
   return 'n:' + String(name || '').trim().toLowerCase();
+}
+
+/* =========================================================================
+   Datos de las clientas: validación y formato único
+   ========================================================================= */
+
+const NAME_PARTICLES = ['de', 'del', 'la', 'las', 'los', 'y', 'e', 'da', 'das', 'do', 'dos', 'di', 'van', 'von'];
+/* "maría JOSÉ de la cruz" → "María José de la Cruz" (primera letra en mayúscula y el resto en minúscula) */
+function properName_(v) {
+  const words = String(v == null ? '' : v).replace(/\s+/g, ' ').trim().toLocaleLowerCase('es').split(' ').filter(Boolean);
+  return words.map(function (w, i) {
+    if (i > 0 && NAME_PARTICLES.indexOf(w) >= 0) return w;
+    return w.split('-').map(function (part) {
+      return part.split("'").map(function (x) { return x ? x.charAt(0).toLocaleUpperCase('es') + x.slice(1) : x; }).join("'");
+    }).join('-');
+  }).join(' ');
+}
+/* Teléfono: 10 dígitos (809/829/849 → 809-555-1234), +1 de EE. UU./Canadá, u otro país empezando con + */
+function normPhone_(v) {
+  const raw = String(v == null ? '' : v).trim();
+  if (!raw) return { ok: true, value: '' };
+  let d = raw.replace(/\D/g, '');
+  if (raw.charAt(0) === '+' && d.charAt(0) !== '1') return d.length >= 8 && d.length <= 15 ? { ok: true, value: '+' + d } : { ok: false };
+  if (d.length === 11 && d.charAt(0) === '1') d = d.slice(1);
+  if (d.length !== 10) return { ok: false };
+  const f = d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6);
+  return { ok: true, value: /^(809|829|849)/.test(d) ? f : '+1 ' + f };
+}
+const PHONE_ERROR = 'Revisa el teléfono: debe tener 10 dígitos, por ejemplo 809-555-1234. Si es de otro país, empieza con + y el código.';
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const NAME_RE = /^[\p{L}][\p{L}\p{M}'’.\- ]*$/u;
+
+/* Valida y deja con el mismo formato los datos de una clienta.
+   strict (web y app): nombre y apellido, teléfono y correo obligatorios. Sin strict (dashboard): solo el nombre. */
+function client_(c, strict) {
+  c = c || {};
+  const first = clean_(c.firstName, 60), last = clean_(c.lastName, 60);
+  const full = clean_(first || last ? first + ' ' + last : c.name, 90).replace(/\s+/g, ' ');
+  if (full.length < 2) return { ok: false, error: strict ? 'Escribe tu nombre y tu apellido.' : 'Escribe el nombre de la clienta.' };
+  if (!NAME_RE.test(full)) return { ok: false, error: 'El nombre y el apellido solo pueden tener letras.' };
+  if (strict) {
+    const parts = first || last ? [first, last] : [full.split(' ')[0], full.split(' ').slice(1).join(' ')];
+    if (parts[0].replace(/[^\p{L}]/gu, '').length < 2) return { ok: false, error: 'Escribe tu nombre (al menos 2 letras).' };
+    if (parts[1].replace(/[^\p{L}]/gu, '').length < 2) return { ok: false, error: 'Escribe también tu apellido.' };
+  }
+  const ph = normPhone_(c.phone);
+  if (!ph.ok || (strict && !ph.value)) return { ok: false, error: ph.ok ? 'Escribe tu teléfono.' : PHONE_ERROR };
+  const email = clean_(c.email, 120).toLowerCase();
+  if (strict && !email) return { ok: false, error: 'Escribe tu correo.' };
+  if (email && !EMAIL_RE.test(email)) return { ok: false, error: 'Revisa el correo: parece incompleto (ejemplo: nombre@gmail.com).' };
+  return { ok: true, name: properName_(full), phone: ph.value, email: email, notes: clean_(c.notes, 300) };
+}
+
+/* Ordena los datos ya guardados (lo ejecuta setup): nombres propios, teléfonos y correos con un solo formato */
+function normalizeData_() {
+  const plan = {
+    Reservas: { clienta: 'name', telefono: 'phone', correo: 'email' },
+    Clientas: { nombre: 'name', telefono: 'phone', correo: 'email' },
+    Espera: { clienta: 'name', telefono: 'phone', correo: 'email' },
+    Bonos: { clienta: 'name', telefono: 'phone', correo: 'email' },
+    Tarjetas: { comprador: 'name', para: 'name', correoComprador: 'email', correoPara: 'email' },
+  };
+  const out = {};
+  Object.keys(plan).forEach(function (name) {
+    let t;
+    try { t = tab_(name); } catch (e) { return; }
+    const last = t.getLastRow();
+    if (last < 2) return;
+    const h = headers_(t);
+    let changed = 0;
+    Object.keys(plan[name]).forEach(function (col) {
+      const ci = h.indexOf(col);
+      if (ci < 0) return;
+      const range = t.getRange(2, ci + 1, last - 1, 1);
+      const vals = range.getValues();
+      let dirty = false;
+      vals.forEach(function (row) {
+        const v = String(row[0] == null ? '' : row[0]);
+        if (!v) return;
+        const kind = plan[name][col];
+        let n = v;
+        if (kind === 'name') n = properName_(v);
+        else if (kind === 'email') n = v.trim().toLowerCase();
+        else if (kind === 'phone') { const ph = normPhone_(v); if (ph.ok) n = ph.value; }
+        if (name === 'Reservas' && col === 'clienta' && /^Bloqueo|^Bloqueado/.test(v)) n = v;
+        if (n !== v) { row[0] = n; dirty = true; changed++; }
+      });
+      if (dirty) range.setNumberFormat('@').setValues(vals);
+    });
+    if (changed) out[name] = changed;
+  });
+  resetDb_();
+  return out;
 }
 
 /* =========================================================================

@@ -113,8 +113,18 @@ La app vive en `app/` (https://anthonyhenriquezluciano.github.io/Majo_Bella/app/
 - **Mis citas**: próximas y anteriores; en cada cita: calendario, cómo llegar, WhatsApp, firmar el consentimiento, subir el comprobante de la transferencia, cambiar la fecha, pagar el saldo, cancelar (con aviso de reembolso) y reservar de nuevo.
 - **Billetera**: tarjetas de regalo (con saldo) y paquetes (sesiones usadas); con Google aparecen solas las compradas o recibidas con su correo, y sin Google puede pedir sus códigos por correo; agregar un código, usarlo en la próxima cita, compartirlo, descargar la tarjeta y comprar tarjetas o paquetes.
 - **Perfil**: datos (nombre, teléfono, correo y cumpleaños), inicio de sesión con Google, instalar la app, cómo llegar, horario, WhatsApp, Instagram y políticas.
-- **Instalar**: en Android aparece el botón «Instalar la app»; en iPhone se muestran los pasos (Compartir → Agregar a inicio). En la web hay accesos en el menú del celular, en «Tus citas», en el pie de página y un aviso discreto (una sola vez).
+- **Instalar**: en Android aparece el botón «Instalar la app»; en iPhone se muestran los pasos (Compartir → Agregar a inicio).
+- **Desde la web**: el menú de arriba tiene el apartado **Aplicación**, que abre la app. En el celular, la primera visita muestra la página «Tu belleza, en tu bolsillo» para instalarla (vuelve a ofrecerse cada 14 días); al cerrarla queda la **cinta** abajo con el botón Instalar (si se cierra, vuelve a los 5 días). En la PC solo aparece la cinta, y solo en navegadores que permiten instalar (Chrome y Edge). Quien llega desde Google ve solo la cinta, porque Google penaliza las pantallas que tapan el contenido al entrar desde el buscador. Código: `js/components/getapp.js`.
 - **Actualizar la app**: al cambiar archivos, sube el número `?v=` en `app/index.html` y la constante `VERSION`/lista de `sw.js` para que los celulares descarguen lo nuevo.
+
+## Dashboard (admin.html)
+
+- **PC**: menú lateral agrupado (Día a día: Agenda, Clientas, Dinero · Crecer: Promociones, Web, Correos · Configuración: Ajustes). Cada sección empieza con su título y para qué sirve.
+- **Buscador** (botón de arriba, `Ctrl K` o `/`): encuentra secciones, cada opción de Ajustes, acciones («Nueva cita», «Vender tarjeta»…), clientas por nombre, teléfono o correo, y códigos de promociones, tarjetas y paquetes. Código: `js/admin/buscar.js`.
+- **Ajustes** por partes con accesos arriba: Negocio y reservas, Horario, Servicios, Transferencias, Seguridad y Avisos del sistema.
+- **Celular**: barra inferior (Agenda, Clientas, Dinero, Promos y Más), tablas como tarjetas, ventanas como hojas que suben desde abajo y botón Guardar fijo.
+- **Numeritos** en el menú: pendientes en Agenda (transferencias por revisar y depósitos por devolver) y avisos del sistema en Ajustes.
+- **Sin esperas**: los cambios se ven al instante (se aplican antes de que responda el servidor y se deshacen si falla) y el dashboard se actualiza solo cada 3 minutos y al volver a la pestaña.
 
 ## Experiencia de la clienta
 

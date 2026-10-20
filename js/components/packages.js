@@ -9,11 +9,12 @@
 
   const validity = (days) => (!days ? 'Sin fecha de vencimiento' : days % 30 === 0 ? `Válido ${days / 30 === 1 ? '1 mes' : `${days / 30} meses`}` : `Válido ${days} días`);
   const msg = (t, kind) => { $('pk-msg').textContent = t || ''; $('pk-msg').className = `gf-msg${kind ? ` is-${kind}` : ''}`; };
-  const values = () => ({ name: $('pk-name').value.trim(), phone: $('pk-phone').value.trim(), email: $('pk-email').value.trim() });
+  const V = M.Validate;
+  const values = () => ({ name: V.fullName($('pk-first').value, $('pk-last').value), firstName: $('pk-first').value.trim(), lastName: $('pk-last').value.trim(), phone: V.phone($('pk-phone').value).value || $('pk-phone').value.trim(), email: $('pk-email').value.trim().toLowerCase() });
 
   function validate() {
     const v = values();
-    const bad = { 'pk-name': v.name.length < 2, 'pk-phone': v.phone.replace(/\D/g, '').length < 10, 'pk-email': !EMAIL.test(v.email) };
+    const bad = { 'pk-first': !!V.namePart(v.firstName, 'nombre'), 'pk-last': !!V.namePart(v.lastName, 'apellido'), 'pk-phone': !V.phone($('pk-phone').value).ok, 'pk-email': !EMAIL.test(v.email) };
     let first = null;
     Object.entries(bad).forEach(([id, b]) => { $(id).closest('.field').classList.toggle('has-error', b); if (b && !first) first = $(id); });
     if (first) { first.focus(); msg('Revisa los campos marcados.', 'error'); return false; }
@@ -43,6 +44,14 @@
     $('pk-done').hidden = true;
     $('pk-buy').hidden = false;
     $('pk-buy-title').textContent = current.name;
+    // Datos guardados de la última reserva
+    try {
+      const c = JSON.parse(localStorage.getItem('mjb.client.v1')) || {};
+      const sp = c.firstName ? { first: c.firstName, last: c.lastName || '' } : V.splitName(c.name);
+      if (!$('pk-first').value && sp.first) { $('pk-first').value = sp.first; $('pk-last').value = sp.last; }
+      if (!$('pk-phone').value && c.phone) $('pk-phone').value = c.phone;
+      if (!$('pk-email').value && c.email) $('pk-email').value = c.email;
+    } catch (e) { /* sin datos */ }
     const rate = Number(M.config.payments.usdRate) || 63;
     $('pk-buy-sub').textContent = `${M.fmtPrice(current.price)} · se cobra en dólares: ${M.fmtUSD(Math.ceil((current.price / rate) * 100) / 100)} (tasa RD$ ${rate} por US$ 1).`;
     msg('');
@@ -79,12 +88,18 @@
     $('pk-done').focus();
   }
 
+  M.refreshPackages = function () {
+    if (!$('pk-grid') || $('paquetes').hidden) return;
+    list = ((M.site || {}).packages || []).filter((k) => M.serviceById[k.service]);
+    render();
+  };
   M.initPackages = function () {
     list = ((M.site || {}).packages || []).filter((k) => M.serviceById[k.service]);
-    if (!list.length || !API.enabled() || !M.PayPal.configured()) return;
+    if (!list.length || !API.enabled() || !M.PayPal.configured()) { if (M.showNav) M.showNav('paquetes', false); return; }
     $('paquetes').hidden = false;
-    document.querySelectorAll('[data-nav-for="paquetes"]').forEach((n) => { n.hidden = false; });
+    if (M.showNav) M.showNav('paquetes', true); else document.querySelectorAll('[data-nav-for="paquetes"]').forEach((n) => { n.hidden = false; });
     render();
+    V.bindName($('pk-first')); V.bindName($('pk-last')); V.bindPhone($('pk-phone'));
     $('pk-grid').addEventListener('click', (e) => { const b = e.target.closest('[data-pk]'); if (b) open(b.dataset.pk); });
     $('pk-cancel').addEventListener('click', () => { $('pk-buy').hidden = true; M.scrollTo('#paquetes'); });
     $('pk-buy').addEventListener('input', (e) => { const f = e.target.closest('.field'); if (f) f.classList.remove('has-error'); });

@@ -63,7 +63,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261019j">
+<link rel="stylesheet" href="css/styles.css?v=20261020a">
 </head>
 <body>
 <!--MJB:BODY-START-->
@@ -88,7 +88,8 @@
         <li data-nav-for="resultados" hidden><a href="#resultados">Resultados</a></li>
         <li><a href="#citas">Mis citas</a></li>
         <li data-nav-for="regalar" hidden><a href="#regalar">Regalar</a></li>
-        <li><a href="#contacto">Contacto</a></li>
+        <li class="nav-wide"><a href="#contacto">Contacto</a></li>
+        <li><a href="app/" class="nav-app">Aplicación</a></li>
       </ul>
     </nav>
     <div class="header-account" id="header-account"><button type="button" class="header-login" data-open-auth>Iniciar sesión</button></div>
@@ -98,6 +99,20 @@
     </button>
   </div>
 </header>
+<script>
+/* Antes de pintar: muestra el anuncio y los apartados del menú que ya se vieron la última vez (evita saltos de la página) */
+(function () {
+  try {
+    var nav = JSON.parse(localStorage.getItem('mjb.nav.v1') || '[]');
+    nav.forEach(function (id) { document.querySelectorAll('[data-nav-for="' + id + '"]').forEach(function (e) { e.hidden = false; }); });
+    var a = localStorage.getItem('mjb.announce.last');
+    if (a && localStorage.getItem('mjb.announce.closed') !== 'mjb.announce.' + a) {
+      document.getElementById('announce-text').textContent = a;
+      document.getElementById('announce').hidden = false;
+    }
+  } catch (e) { /* sin almacenamiento */ }
+})();
+</script>
 
 <div class="mobile-menu" id="mobile-menu" hidden>
   <nav aria-label="Menú móvil">
@@ -114,6 +129,7 @@
       <li><a href="#citas">Citas</a></li>
       <li data-nav-for="regalar" hidden><a href="#regalar">Tarjetas de regalo</a></li>
       <li><a href="#contacto">Contacto</a></li>
+      <li><a href="app/">Aplicación <span class="mm-tag">Para tu celular</span></a></li>
     </ul>
     <a class="btn btn-primary" href="#reservar">Agendar cita</a>
     <button type="button" class="mobile-login" data-open-auth>Iniciar sesión</button>
@@ -250,9 +266,10 @@
       <form class="pk-buy" id="pk-buy" novalidate hidden>
         <div class="pk-buy-head"><p class="label">Comprar</p><h3 id="pk-buy-title"></h3><p id="pk-buy-sub"></p></div>
         <div class="fields">
-          <div class="field"><label for="pk-name">Nombre</label><input id="pk-name" autocomplete="name"><span class="field-error">Escribe tu nombre.</span></div>
-          <div class="field"><label for="pk-phone">Teléfono</label><input id="pk-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="809 000 0000"><span class="field-error">Escribe un teléfono de al menos 10 dígitos.</span></div>
-          <div class="field field-wide"><label for="pk-email">Correo</label><input id="pk-email" type="email" autocomplete="email"><span class="field-error">Revisa tu correo: ahí te llega el código.</span></div>
+          <div class="field"><label for="pk-first">Nombre</label><input id="pk-first" autocomplete="given-name"><span class="field-error">Escribe tu nombre (solo letras).</span></div>
+          <div class="field"><label for="pk-last">Apellido</label><input id="pk-last" autocomplete="family-name"><span class="field-error">Escribe tu apellido (solo letras).</span></div>
+          <div class="field"><label for="pk-phone">Teléfono</label><input id="pk-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="809-555-1234"><span class="field-error">10 dígitos, por ejemplo 809-555-1234.</span></div>
+          <div class="field"><label for="pk-email">Correo</label><input id="pk-email" type="email" autocomplete="email"><span class="field-error">Revisa tu correo: ahí te llega el código.</span></div>
         </div>
         <label class="gf-terms"><input type="checkbox" id="pk-terms"><span>Acepto las <a href="cancelacion.html#paquetes" target="_blank">condiciones de los paquetes</a>.</span></label>
         <div class="gf-pay" id="pk-pay"></div>
@@ -393,16 +410,21 @@
             <p class="saved-note" id="bk-saved-note" hidden>Completamos tus datos de tu última reserva. <button type="button" class="link-inline" id="bk-forget">Borrar mis datos</button></p>
             <div class="fields">
               <div class="field">
-                <label for="bk-name">Nombre</label>
-                <input id="bk-name" name="nombre" autocomplete="name" required>
-                <span class="field-error">Escribe tu nombre.</span>
+                <label for="bk-first">Nombre</label>
+                <input id="bk-first" name="nombre" autocomplete="given-name" required>
+                <span class="field-error">Escribe tu nombre (solo letras).</span>
+              </div>
+              <div class="field">
+                <label for="bk-last">Apellido</label>
+                <input id="bk-last" name="apellido" autocomplete="family-name" required>
+                <span class="field-error">Escribe tu apellido (solo letras).</span>
               </div>
               <div class="field">
                 <label for="bk-phone">Teléfono</label>
-                <input id="bk-phone" name="telefono" type="tel" autocomplete="tel" inputmode="tel" placeholder="809 000 0000" required>
-                <span class="field-error">Escribe un teléfono de al menos 10 dígitos.</span>
+                <input id="bk-phone" name="telefono" type="tel" autocomplete="tel" inputmode="tel" placeholder="809-555-1234" required>
+                <span class="field-error">10 dígitos, por ejemplo 809-555-1234.</span>
               </div>
-              <div class="field field-wide">
+              <div class="field">
                 <label for="bk-email">Correo electrónico</label>
                 <input id="bk-email" name="correo" type="email" autocomplete="email" required>
                 <span class="field-error">Revisa el formato del correo, por ejemplo nombre@correo.com.</span>
@@ -638,12 +660,14 @@
   </div>
 </footer>
 
-<div class="app-nudge" id="app-nudge" hidden role="dialog" aria-label="Instala la app">
-  <img src="assets/icon-192.png" alt="" width="44" height="44">
-  <p><b>La app MAJOBELLA</b><span>Reserva y mira tus citas desde tu celular.</span></p>
-  <a class="btn btn-primary btn-sm" href="app/" data-get-app>Instalar</a>
-  <button type="button" class="app-nudge-x" aria-label="Cerrar" data-nudge-x>×</button>
+<div class="app-ribbon" id="app-ribbon" hidden role="region" aria-label="Instala la app">
+  <img src="assets/icon-192.png" alt="" width="40" height="40">
+  <p><b>La app MAJOBELLA</b><span>Tus citas a un toque.</span></p>
+  <button type="button" class="btn btn-primary btn-sm" data-ribbon-install>Instalar</button>
+  <button type="button" class="app-ribbon-x" aria-label="Cerrar" data-ribbon-x>×</button>
 </div>
+
+<div class="get-app" id="get-app" hidden tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="ga-title"></div>
 
 <div class="auth-modal" id="auth-modal" hidden>
   <div class="am-backdrop"></div>
@@ -675,36 +699,37 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/config.js?v=20261019j"></script>
-<script src="js/data/services.js?v=20261019j"></script>
-<script src="js/data/faq.js?v=20261019j"></script>
-<script src="js/data/brows.js?v=20261019j"></script>
-<script src="js/core/utils.js?v=20261019j"></script>
-<script src="js/integrations/whatsapp.js?v=20261019j"></script>
-<script src="js/integrations/calendar.js?v=20261019j"></script>
-<script src="js/integrations/booking-api.js?v=20261019j"></script>
-<script src="js/integrations/paypal.js?v=20261019j"></script>
-<script src="js/integrations/google-auth.js?v=20261019j"></script>
-<script src="js/integrations/appointments.js?v=20261019j"></script>
-<script src="js/integrations/giftcard.js?v=20261019j"></script>
-<script src="js/integrations/captcha.js?v=20261019j"></script>
-<script src="js/integrations/manage.js?v=20261019j"></script>
-<script src="js/components/nav.js?v=20261019j"></script>
-<script src="js/components/auth-modal.js?v=20261019j"></script>
-<script src="js/components/face.js?v=20261019j"></script>
-<script src="js/components/brows.js?v=20261019j"></script>
-<script src="js/components/hero.js?v=20261019j"></script>
-<script src="js/components/services.js?v=20261019j"></script>
-<script src="js/components/selection-bar.js?v=20261019j"></script>
-<script src="js/components/booking.js?v=20261019j"></script>
-<script src="js/components/citas.js?v=20261019j"></script>
-<script src="js/components/contact.js?v=20261019j"></script>
-<script src="js/components/site.js?v=20261019j"></script>
-<script src="js/components/giftshop.js?v=20261019j"></script>
-<script src="js/components/packages.js?v=20261019j"></script>
-<script src="js/integrations/install.js?v=20261019j"></script>
-<script src="js/components/getapp.js?v=20261019j"></script>
-<script src="js/components/reveal.js?v=20261019j"></script>
-<script src="js/main.js?v=20261019j"></script>
+<script src="js/config.js?v=20261020a"></script>
+<script src="js/data/services.js?v=20261020a"></script>
+<script src="js/data/faq.js?v=20261020a"></script>
+<script src="js/data/brows.js?v=20261020a"></script>
+<script src="js/core/utils.js?v=20261020a"></script>
+<script src="js/core/validate.js?v=20261020a"></script>
+<script src="js/integrations/whatsapp.js?v=20261020a"></script>
+<script src="js/integrations/calendar.js?v=20261020a"></script>
+<script src="js/integrations/booking-api.js?v=20261020a"></script>
+<script src="js/integrations/paypal.js?v=20261020a"></script>
+<script src="js/integrations/google-auth.js?v=20261020a"></script>
+<script src="js/integrations/appointments.js?v=20261020a"></script>
+<script src="js/integrations/giftcard.js?v=20261020a"></script>
+<script src="js/integrations/captcha.js?v=20261020a"></script>
+<script src="js/integrations/manage.js?v=20261020a"></script>
+<script src="js/components/nav.js?v=20261020a"></script>
+<script src="js/components/auth-modal.js?v=20261020a"></script>
+<script src="js/components/face.js?v=20261020a"></script>
+<script src="js/components/brows.js?v=20261020a"></script>
+<script src="js/components/hero.js?v=20261020a"></script>
+<script src="js/components/services.js?v=20261020a"></script>
+<script src="js/components/selection-bar.js?v=20261020a"></script>
+<script src="js/components/booking.js?v=20261020a"></script>
+<script src="js/components/citas.js?v=20261020a"></script>
+<script src="js/components/contact.js?v=20261020a"></script>
+<script src="js/components/site.js?v=20261020a"></script>
+<script src="js/components/giftshop.js?v=20261020a"></script>
+<script src="js/components/packages.js?v=20261020a"></script>
+<script src="js/integrations/install.js?v=20261020a"></script>
+<script src="js/components/getapp.js?v=20261020a"></script>
+<script src="js/components/reveal.js?v=20261020a"></script>
+<script src="js/main.js?v=20261020a"></script>
 </body>
 </html>

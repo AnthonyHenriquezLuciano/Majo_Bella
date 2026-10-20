@@ -216,21 +216,31 @@
     }
 
     /* ---- 4. Datos ---- */
-    const fields = { name: $('bk-name'), phone: $('bk-phone'), email: $('bk-email'), notes: $('bk-notes') };
+    const V = M.Validate;
+    const fields = { first: $('bk-first'), last: $('bk-last'), phone: $('bk-phone'), email: $('bk-email'), notes: $('bk-notes') };
     const valid = {
-      name: () => fields.name.value.trim().length >= 2,
-      phone: () => fields.phone.value.replace(/\D/g, '').length >= 10,
-      email: () => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(fields.email.value.trim()),
+      first: () => !V.namePart(fields.first.value, 'nombre'),
+      last: () => !V.namePart(fields.last.value, 'apellido'),
+      phone: () => V.phone(fields.phone.value).ok,
+      email: () => V.email(fields.email.value),
     };
+    valid.name = () => valid.first() && valid.last();
+    const fullName = () => V.fullName(fields.first.value, fields.last.value);
+    V.bindName(fields.first); V.bindName(fields.last); V.bindPhone(fields.phone);
     Object.values(fields).forEach((f) => f.addEventListener('input', () => { closePay(); renderSummary(); }));
     Object.entries(valid).forEach(([k, fn]) => {
+      if (!fields[k]) return;
       fields[k].addEventListener('blur', () => fields[k].closest('.field').classList.toggle('has-error', !!fields[k].value && !fn()));
       fields[k].addEventListener('input', () => { if (fn()) fields[k].closest('.field').classList.remove('has-error'); });
     });
+    function fillName(c) {
+      const sp = c.firstName ? { first: c.firstName, last: c.lastName || '' } : V.splitName(c.name);
+      fields.first.value = sp.first || ''; fields.last.value = sp.last || '';
+    }
 
     const saved = loadClient();
     if (saved) {
-      fields.name.value = saved.name || '';
+      fillName(saved);
       fields.phone.value = saved.phone || '';
       fields.email.value = saved.email || '';
       savedNote.hidden = false;
@@ -245,7 +255,7 @@
     function renderSignin(u) {
       if (u) {
         signinHint.innerHTML = `<p>Reservando como <strong>${M.escapeHtml(u.name || u.email)}</strong> · ${M.escapeHtml(u.email)}</p>`;
-        if (!fields.name.value.trim()) fields.name.value = u.name || '';
+        if (!fields.first.value.trim() && !fields.last.value.trim()) fillName({ firstName: u.firstName || V.splitName(u.name).first, lastName: u.lastName || V.splitName(u.name).last });
         if (!fields.email.value.trim()) fields.email.value = u.email || '';
       } else {
         signinHint.innerHTML = '<p>¿Ya eres clienta? <button type="button" class="link-inline" data-open-auth>Inicia sesión</button> y completamos tus datos. También puedes reservar como invitada.</p>';
@@ -260,7 +270,8 @@
       if (!M.state.selected.length) out.push('un servicio');
       if (!M.state.dateKey) out.push('el día');
       if (!M.state.time) out.push('la hora');
-      if (!valid.name()) out.push('tu nombre');
+      if (!valid.first()) out.push('tu nombre');
+      if (!valid.last()) out.push('tu apellido');
       if (!valid.phone()) out.push('tu teléfono');
       if (!valid.email()) out.push('tu correo');
       return out;
@@ -310,7 +321,7 @@
         date: M.state.dateKey, time: M.state.time,
         start: start.toISOString(), end: end.toISOString(),
         durationMinutes: t.minutes, totalPrice: t.price, currency: M.config.currency.symbol,
-        client: { name: fields.name.value.trim(), phone: fields.phone.value.trim(), email: fields.email.value.trim(), notes: fields.notes.value.trim(), birthday: birthday() },
+        client: { name: fullName(), firstName: V.properName(fields.first.value), lastName: V.properName(fields.last.value), phone: V.phone(fields.phone.value).value, email: fields.email.value.trim().toLowerCase(), notes: fields.notes.value.trim(), birthday: birthday() },
         origen: $('bk-origen').value,
       };
     }
@@ -368,12 +379,12 @@
     }
 
     function rememberClient(a) {
-      if (remember.checked) { saveClient({ name: a.client.name, phone: a.client.phone, email: a.client.email, birthday: a.client.birthday || '' }); savedNote.hidden = false; }
+      if (remember.checked) { saveClient({ name: a.client.name, firstName: a.client.firstName, lastName: a.client.lastName, phone: a.client.phone, email: a.client.email, birthday: a.client.birthday || '' }); savedNote.hidden = false; }
       else forgetClient();
     }
 
     /* ---- 5. Pago del depósito ---- */
-    const sig = () => JSON.stringify([M.state.selected, M.state.dateKey, M.state.time, fields.name.value, fields.phone.value, fields.email.value]);
+    const sig = () => JSON.stringify([M.state.selected, M.state.dateKey, M.state.time, fields.first.value, fields.last.value, fields.phone.value, fields.email.value]);
 
     function payMessage(text, tone) {
       pay.msg.textContent = text || '';
@@ -716,7 +727,7 @@
     let loyalSig = '';
     async function checkLoyalty() {
       if (!loyaltyInfo.enabled || !API.enabled()) return;
-      const client = { email: valid.email() ? fields.email.value.trim() : '', phone: valid.phone() ? fields.phone.value.trim() : '' };
+      const client = { email: valid.email() ? fields.email.value.trim() : '', phone: valid.phone() ? V.phone(fields.phone.value).value : '' };
       if (!client.email && !client.phone) return;
       const key = `${client.email}|${client.phone}`;
       if (key === loyalSig) return;
@@ -759,7 +770,7 @@
       if (!date) { msg.textContent = 'Elige el día.'; msg.className = 'gf-msg is-error'; return; }
       const btn = e.currentTarget; btn.disabled = true; msg.className = 'gf-msg'; msg.textContent = 'Guardando…';
       try {
-        const res = await API.waitlistJoin({ date, franja: $('bk-wait-franja').value, services: M.state.selected, client: { name: fields.name.value.trim(), phone: fields.phone.value.trim(), email: fields.email.value.trim() } });
+        const res = await API.waitlistJoin({ date, franja: $('bk-wait-franja').value, services: M.state.selected, client: { name: fullName(), firstName: fields.first.value.trim(), lastName: fields.last.value.trim(), phone: V.phone(fields.phone.value).value, email: fields.email.value.trim() } });
         if (res.available && res.available.length) {
           msg.innerHTML = `¡Ese día ya hay horario libre: ${res.available.slice(0, 4).map(M.fmtTime12).join(', ')}! Puedes reservarlo ahora. Igual te dejamos en la lista.`;
           if (date !== M.state.dateKey) M.set({ dateKey: date, time: null }, 'booking-date');

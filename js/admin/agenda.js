@@ -289,6 +289,23 @@
     const extra = {};
     if (op === 'cancelar') extra.refund = b.dataset.refund === '1';
     if (op === 'nota') { const ta = document.querySelector(`[data-note="${CSS.escape(id)}"]`); extra.note = ta ? ta.value : ''; }
+    // Cambios simples: se ven al instante (si el servidor falla, se deshacen)
+    const now = new Date().toISOString();
+    const QUICK = {
+      completar: (x) => { x.status = 'completada'; },
+      noAsistio: (x) => { x.status = 'no-asistio'; },
+      reabrir: (x) => { x.status = 'confirmada'; },
+      saldoEfectivo: (x) => { Object.assign(x.payment, { balanceStatus: 'pagado', balanceMethod: 'efectivo', balancePaidAt: now }); },
+      saldoTransferencia: (x) => { Object.assign(x.payment, { balanceStatus: 'pagado', balanceMethod: 'transferencia', balancePaidAt: now }); },
+      saldoPendiente: (x) => { Object.assign(x.payment, { balanceStatus: 'pendiente', balanceMethod: '', balancePaidAt: '' }); },
+      nota: (x) => { x.internalNote = extra.note; },
+      reembolsoHecho: (x) => { x.refundPending = false; x.payment.refund = 'reembolsado'; },
+    };
+    const MSG = { saldoEfectivo: 'Saldo cobrado en efectivo.', saldoTransferencia: 'Saldo cobrado por transferencia.', completar: 'Cita marcada como realizada.', noAsistio: 'Marcada como no asistió.', nota: 'Nota guardada.', reabrir: 'Cita reabierta.', saldoPendiente: 'Cobro deshecho.', reembolsoHecho: 'Reembolso marcado como hecho.' };
+    if (QUICK[op]) {
+      try { await A.optimistic('items', id, QUICK[op], () => A.call('adminUpdate', { id, op, ...extra }), MSG[op]); } catch (err) { /* ya se avisó */ }
+      return;
+    }
     await A.busy(b, async () => {
       try {
         const res = await A.call('adminUpdate', { id, op, ...extra });
@@ -335,6 +352,10 @@
     };
     if (!services.length) { $('nc-msg').textContent = 'Elige al menos un servicio.'; return; }
     if (!payload.client.name) { $('nc-msg').textContent = 'Escribe el nombre de la clienta.'; return; }
+    const bad = A.checkContact(payload.client.phone, payload.client.email);
+    if (bad) { $('nc-msg').textContent = bad; return; }
+    payload.client.name = M.Validate.properName(payload.client.name);
+    if (payload.client.phone) payload.client.phone = M.Validate.phone(payload.client.phone).value;
     if (!payload.time) { $('nc-msg').textContent = 'Elige la hora.'; return; }
     await A.busy($('nc-save'), async () => {
       try {

@@ -54,12 +54,24 @@
 
     if (reduce) return;
 
-    /* ---- Microanimaciones: respiración, parpadeo, brillo en los lentes, vello ---- */
-    gsap.to(face.root, { y: -3, duration: 3.6, ease: 'sine.inOut', yoyo: true, repeat: -1 });
-    gsap.to(brows, { sway: 0.06, duration: 3.2, ease: 'sine.inOut', yoyo: true, repeat: -1 });
-    gsap.to(face.hairFront, { rotation: 0.5, svgOrigin: '300 120', duration: 5, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+    /* ---- Microanimaciones: solo mientras el rostro se ve en pantalla (ahorra batería y mantiene el scroll fluido).
+       En computadora: respiración, vaivén de las cejas y del cabello. En celular: respiración y parpadeo (lo más liviano). ---- */
+    const rich = window.matchMedia('(hover: hover) and (min-width: 900px)').matches;
+    let visible = true;
+    const loops = [
+      // La respiración mueve la figura completa (capa propia de la tarjeta gráfica, no redibuja el dibujo)
+      gsap.to(figure, { y: -3, duration: 3.6, ease: 'sine.inOut', yoyo: true, repeat: -1 }),
+    ];
+    if (rich) {
+      loops.push(gsap.to(brows, { sway: 0.06, duration: 3.2, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
+      loops.push(gsap.to(face.hairFront, { rotation: 0.5, svgOrigin: '300 120', duration: 5, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
+    }
+    const setRunning = (on) => { visible = on; loops.forEach((t) => (on ? t.resume() : t.pause())); };
+    if ('IntersectionObserver' in window) new IntersectionObserver((en) => setRunning(en[0].isIntersecting)).observe(hero);
+    document.addEventListener('visibilitychange', () => setRunning(document.visibilityState === 'visible' && hero.getBoundingClientRect().bottom > 0));
 
     function blink() {
+      if (!visible) { gsap.delayedCall(2, blink); return; }
       const tl = gsap.timeline({ onComplete: () => gsap.delayedCall(2.8 + Math.random() * 3.5, blink) });
       face.eyes.forEach((g) => {
         const o = `${g.dataset.cx} ${g.dataset.cy}`;
@@ -70,6 +82,7 @@
     gsap.delayedCall(2.4, blink);
 
     function glint() {
+      if (!visible) { gsap.delayedCall(3, glint); return; }
       gsap.fromTo(face.glares, { x: 0 }, {
         x: 170, duration: 1.4, ease: 'power2.inOut',
         onComplete: () => gsap.delayedCall(5 + Math.random() * 4, glint),
@@ -78,7 +91,7 @@
     gsap.delayedCall(3.2, glint);
 
     /* ---- Profundidad: cada capa del rostro se mueve distinto con el cursor ---- */
-    if (window.matchMedia('(hover: hover)').matches) {
+    if (rich) {
       const domLayers = [...visual.querySelectorAll('[data-depth]')].filter((n) => !svg.contains(n)).map((n) => ({
         d: parseFloat(n.dataset.depth),
         x: gsap.quickTo(n, 'x', { duration: 1.4, ease: 'power3.out' }),
@@ -114,7 +127,7 @@
       });
     }
 
-    if (window.ScrollTrigger) {
+    if (window.ScrollTrigger && rich) {
       gsap.to('.hero-visual-inner', { yPercent: -6, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 1.2 } });
     }
   };

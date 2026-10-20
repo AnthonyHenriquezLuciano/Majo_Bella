@@ -132,6 +132,8 @@
   async function sell(e) {
     e.preventDefault();
     const f = $('sell-form');
+    const bad = A.checkContact(f.phone.value.trim(), f.email.value.trim());
+    if (bad) { A.toast(bad); return; }
     await A.busy($('sell-save'), async () => {
       try {
         const res = await A.call('adminSellBono', { paqueteId: f.paqueteId.value, client: { name: f.name.value.trim(), phone: f.phone.value.trim(), email: f.email.value.trim() }, montoRD: f.montoRD.value, metodoPago: f.metodoPago.value, notify: f.notify.checked && !!f.email.value.trim() });

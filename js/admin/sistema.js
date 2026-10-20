@@ -108,13 +108,9 @@
   }
   function updateBadge() {
     const n = ((A.data && A.data.errors) || []).filter((e) => !e.resuelto).length;
-    const tab = document.querySelector('.ad-tabs [data-sec="ajustes"]');
-    if (!tab) return;
-    let b = tab.querySelector('.tab-badge');
-    if (!n) { if (b) b.remove(); return; }
-    if (!b) { b = document.createElement('span'); b.className = 'tab-badge'; tab.appendChild(b); }
-    b.textContent = n;
-    b.setAttribute('aria-label', `${n} avisos`);
+    const p = ((A.data && A.data.items) || []).filter((a) => a.status === 'por-confirmar' || a.refundPending).length;
+    A.badge('.ad-tabs [data-sec="ajustes"], .more-list [data-sec="ajustes"], #ad-more', n, `${n} avisos del sistema`);
+    A.badge('.ad-tabs [data-sec="agenda"], .ad-bottom [data-sec="agenda"]', p, `${p} pendientes`);
   }
   async function resolve(payload, btn) {
     await A.busy(btn, async () => {

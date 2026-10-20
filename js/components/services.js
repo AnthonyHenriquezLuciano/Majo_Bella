@@ -53,6 +53,7 @@
         </article>`;
     }
 
+    M.refreshServices = () => render();
     function render() {
       const groups = cats
         .filter((c) => active === 'Todos' || c === active)

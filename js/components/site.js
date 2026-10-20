@@ -7,7 +7,16 @@
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } },
   };
-  const showNav = (id, on) => document.querySelectorAll(`[data-nav-for="${id}"]`).forEach((n) => { n.hidden = !on; });
+  /* Muestra u oculta un apartado del menú y lo recuerda para la próxima visita (así el menú no salta al cargar) */
+  const showNav = (id, on) => {
+    document.querySelectorAll(`[data-nav-for="${id}"]`).forEach((n) => { n.hidden = !on; });
+    try {
+      const set = new Set(JSON.parse(store.get('mjb.nav.v1') || '[]'));
+      if (on) set.add(id); else set.delete(id);
+      store.set('mjb.nav.v1', JSON.stringify([...set]));
+    } catch (e) { /* nada */ }
+  };
+  M.showNav = showNav;
   const longDate = (key) => new Intl.DateTimeFormat('es', { timeZone: 'UTC', day: 'numeric', month: 'long' }).format(new Date(`${key}T12:00:00Z`));
 
   /* ---------- Franja de anuncio ---------- */
@@ -19,17 +28,32 @@
   }
   function initAnnounce(site) {
     const a = site.announcement || {};
-    if (a.active === false) return;
+    const hide = () => { $('announce').hidden = true; store.set('mjb.announce.last', ''); };
+    if (a.active === false) { hide(); return; }
     let text = a.text, link = a.link || '#reservar';
     if (!text && (M.promos || []).length) { text = promoText(M.promos[0]); link = a.link || '#servicios'; }
-    if (!text) return;
+    if (!text) { hide(); return; }
     const key = `mjb.announce.${text}`;
-    if (store.get('mjb.announce.closed') === key) return;
+    if (store.get('mjb.announce.closed') === key) { hide(); return; }
+    store.set('mjb.announce.last', text);
     $('announce-text').textContent = text;
     const el = $('announce-link');
     el.href = link;
     if (/^https?:/i.test(link)) { el.target = '_blank'; el.rel = 'noopener'; }
-    $('announce').hidden = false;
+    // Si la franja ya se pintó (visita anterior) no se mueve nada. Si llega tarde (primera visita),
+    // no empuja la página mientras se lee el inicio: aparece al bajar, cuando ya no se ve el tope.
+    const bar = $('announce');
+    const reveal = () => {
+      if (!bar.hidden) return;
+      const anchored = window.CSS && CSS.supports && CSS.supports('overflow-anchor', 'auto');
+      const y = window.scrollY;
+      bar.hidden = false;
+      if (!anchored && y > 0) window.scrollTo(0, y + bar.offsetHeight);
+    };
+    if (bar.hidden && window.scrollY < 400) {
+      const onScroll = () => { if (window.scrollY > 400) { window.removeEventListener('scroll', onScroll); reveal(); } };
+      window.addEventListener('scroll', onScroll, { passive: true });
+    } else reveal();
     $('announce-x').addEventListener('click', () => { $('announce').hidden = true; store.set('mjb.announce.closed', key); });
   }
 

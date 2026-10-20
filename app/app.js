@@ -160,6 +160,7 @@
     onScroll();
   }
   function render(tab) {
+    app.catalogDirty = false;
     setActionbar('');
     setTopAction(null);
     $('tb-back').hidden = true; $('tb-mark').hidden = false;
@@ -537,12 +538,11 @@
         <div class="code-row fld"><input id="bk-code" placeholder="Descuento, tarjeta o paquete" autocomplete="off" autocapitalize="characters" value="${esc(this.pendingCode || '')}"><button type="button" class="btn btn-soft btn-sm" id="bk-code-go" style="min-height:50px">Aplicar</button></div>
         <p class="msg" id="bk-code-msg"></p><div id="bk-tags"></div>
         <div class="sec-title"><h2>Tus datos</h2></div>
-        <div class="fld" id="f-name"><label for="bk-name">Nombre</label><input id="bk-name" autocomplete="name" value="${esc(p.name || (M.Auth.user && M.Auth.user.name) || '')}"><span class="err">Escribe tu nombre.</span></div>
-        <div class="fld" id="f-phone"><label for="bk-phone">Teléfono</label><input id="bk-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="809 000 0000" value="${esc(p.phone || '')}"><span class="err">Al menos 10 dígitos.</span></div>
-        <div class="fld" id="f-email"><label for="bk-email">Correo</label><input id="bk-email" type="email" autocomplete="email" value="${esc(p.email || (M.Auth.user && M.Auth.user.email) || '')}"><span class="err">Revisa tu correo: ahí llega la confirmación.</span></div>
+        ${personFields('bk', p, { emailHint: 'Ahí te llega la confirmación.' })}
         ${needBday ? `<div class="fld"><label>Tu cumpleaños <span style="font-weight:400">(opcional · te enviamos un regalo)</span></label><div class="two">${bdaySelects('bk-bd', '')}</div></div>` : ''}
         <div class="fld"><label for="bk-notes">Nota para el estudio <span style="font-weight:400">(opcional)</span></label><input id="bk-notes" placeholder="Alergias, dudas…"></div>
         <p class="note" id="bk-policy"></p>`;
+      bindPerson($('s-reservar'), 'bk');
       this.refreshLines();
       this.renderTags();
       if (this.pendingCode) { const c = this.pendingCode; this.pendingCode = ''; this.applyCode(c); }
@@ -589,15 +589,13 @@
       if (this.step === 3) { this.refreshLines(); this.renderTags(); }
     },
     readClient() {
-      const v = { name: $('bk-name').value.trim(), phone: $('bk-phone').value.trim(), email: $('bk-email').value.trim(), notes: $('bk-notes').value.trim() };
-      const bad = { 'f-name': v.name.length < 2, 'f-phone': v.phone.replace(/\D/g, '').length < 10, 'f-email': !EMAIL.test(v.email) };
-      let first = null;
-      Object.entries(bad).forEach(([id, b]) => { $(id).classList.toggle('bad', b); if (b && !first) first = $(id); });
-      if (first) { first.querySelector('input').focus(); first.scrollIntoView({ block: 'center', behavior: 'smooth' }); return null; }
+      const v = readPerson($('s-reservar'), 'bk');
+      if (!v) return null;
+      v.notes = $('bk-notes').value.trim();
       const d = $('bk-bd-d'), m = $('bk-bd-m');
       const p = profile();
       v.birthday = d && m && d.value && m.value ? `${m.value}-${d.value}` : (p.birthday || '');
-      store.set(K.profile, { ...p, name: v.name, phone: v.phone, email: v.email, birthday: v.birthday });
+      store.set(K.profile, { ...p, name: v.name, firstName: v.firstName, lastName: v.lastName, phone: v.phone, email: v.email, birthday: v.birthday });
       return v;
     },
     appointment(client) {
@@ -784,6 +782,51 @@
         </div>`;
     },
   };
+
+  /* ---- Datos de la clienta: nombre, apellido, teléfono y correo con las mismas reglas que el servidor ---- */
+  const V = M.Validate;
+  function nameParts(p) {
+    if (p && p.firstName) return { first: p.firstName, last: p.lastName || '' };
+    const u = M.Auth.user;
+    return V.splitName((p && p.name) || (u && u.name) || '');
+  }
+  function personFields(prefix, p, opts = {}) {
+    const n = nameParts(p);
+    const email = p.email || (M.Auth.user && M.Auth.user.email) || '';
+    return `<div class="two">
+        <div class="fld" id="${prefix}-first-f"><label for="${prefix}-first">Nombre</label><input id="${prefix}-first" autocomplete="given-name" value="${esc(n.first)}"><span class="err"></span></div>
+        <div class="fld" id="${prefix}-last-f" style="margin-top:0"><label for="${prefix}-last">Apellido</label><input id="${prefix}-last" autocomplete="family-name" value="${esc(n.last)}"><span class="err"></span></div></div>
+      <div class="fld" id="${prefix}-phone-f"><label for="${prefix}-phone">Teléfono</label><input id="${prefix}-phone" type="tel" autocomplete="tel" placeholder="809-555-1234" value="${esc(p.phone || '')}"><span class="err"></span></div>
+      <div class="fld" id="${prefix}-email-f"><label for="${prefix}-email">Correo</label><input id="${prefix}-email" type="email" autocomplete="email" value="${esc(email)}"><span class="err"></span>${opts.emailHint ? `<small class="hint">${opts.emailHint}</small>` : ''}</div>`;
+  }
+  function bindPerson(root, prefix) {
+    const q = (x) => root.querySelector(`#${prefix}-${x}`);
+    V.bindName(q('first')); V.bindName(q('last')); V.bindPhone(q('phone'));
+    ['first', 'last', 'phone', 'email'].forEach((k) => q(k).addEventListener('input', () => q(`${k}-f`).classList.remove('bad')));
+  }
+  /* Valida y devuelve { name, firstName, lastName, phone, email } o null (marca los campos con su mensaje). optional: todo opcional pero válido si se llena */
+  function readPerson(root, prefix, optional) {
+    const q = (x) => root.querySelector(`#${prefix}-${x}`);
+    const first = q('first').value.trim(), last = q('last').value.trim(), phone = q('phone').value.trim(), email = q('email').value.trim().toLowerCase();
+    const ph = V.phone(phone);
+    const errs = {
+      first: optional && !first ? '' : V.namePart(first, 'nombre'),
+      last: optional && !last ? '' : V.namePart(last, 'apellido'),
+      phone: optional && !phone ? '' : (ph.ok ? '' : (phone ? V.phoneError : 'Escribe tu teléfono.')),
+      email: optional && !email ? '' : (V.email(email) ? '' : (email ? V.emailError : 'Escribe tu correo.')),
+    };
+    let firstBad = null;
+    Object.entries(errs).forEach(([k, m]) => {
+      const f = q(`${k}-f`);
+      f.classList.toggle('bad', !!m);
+      f.querySelector('.err').textContent = m;
+      if (m && !firstBad) firstBad = f;
+    });
+    if (firstBad) { firstBad.querySelector('input').focus(); firstBad.scrollIntoView({ block: 'center', behavior: 'smooth' }); vibrate(20); return null; }
+    const firstName = V.properName(first), lastName = V.properName(last);
+    q('first').value = firstName; q('last').value = lastName; if (ph.ok) q('phone').value = ph.value;
+    return { name: V.fullName(firstName, lastName), firstName, lastName, phone: ph.ok ? ph.value : '', email };
+  }
 
   function bdaySelects(prefix, value) {
     const [m, d] = /^\d{2}-\d{2}$/.test(value || '') ? value.split('-') : ['', ''];
@@ -1113,6 +1156,7 @@
       <p class="note" id="g-usd"></p>
       <div class="pp-box" id="g-pp"></div><p class="msg" id="g-msgx"></p>`, {
       onMount: (b) => {
+        V.bindName(b.querySelector('#g-para')); V.bindName(b.querySelector('#g-de'));
         const rate = Number(C.payments.usdRate) || 63;
         const val = () => (amount === 'otro' ? Math.round(Number(b.querySelector('#g-other').value) || 0) : amount);
         const usd = () => { const v = val(); b.querySelector('#g-usd').textContent = v ? `Se cobra ${M.fmtUSD(Math.ceil((v / rate) * 100) / 100)} con PayPal (tasa RD$ ${rate}).` : ''; };
@@ -1165,18 +1209,17 @@
         ${k.savings > 0 ? `<div><dt>Precio normal</dt><dd><s style="color:var(--faint)">${M.fmtPrice(k.regular)}</s></dd></div><div><dt>Ahorras</dt><dd>${M.fmtPrice(k.savings)}</dd></div>` : ''}
         <div><dt>Validez</dt><dd>${k.validDays ? `${k.validDays} días` : 'Sin vencimiento'}</dd></div></dl></div>
       ${k.description ? `<p class="note">${esc(k.description)}</p>` : ''}
-      <div class="fld" id="k-name-f" style="margin-top:16px"><label for="k-name">Nombre</label><input id="k-name" autocomplete="name" value="${esc(p.name || '')}"></div>
-      <div class="two" style="margin-top:12px"><div class="fld" id="k-phone-f"><label for="k-phone">Teléfono</label><input id="k-phone" type="tel" value="${esc(p.phone || '')}"></div><div class="fld" id="k-mail-f" style="margin-top:0"><label for="k-mail">Correo</label><input id="k-mail" type="email" value="${esc(p.email || '')}"></div></div>
+      <div style="margin-top:6px">${personFields('k', p)}</div>
       <label class="check"><input type="checkbox" id="k-terms"><span>Acepto las <a href="../cancelacion.html#paquetes">condiciones de los paquetes</a>.</span></label>
       <div class="pp-box" id="k-pp"></div><p class="msg" id="k-msg"></p>`, {
       onMount: (b) => {
         const msg = (t, c) => { const m = b.querySelector('#k-msg'); m.className = `msg${c ? ` ${c}` : ''}`; m.textContent = t || ''; };
-        const client = () => ({ name: b.querySelector('#k-name').value.trim(), phone: b.querySelector('#k-phone').value.trim(), email: b.querySelector('#k-mail').value.trim() });
+        bindPerson(b, 'k');
+        let person = null;
+        const client = () => person;
         const valid = () => {
-          const c = client();
-          const bad = { 'k-name-f': c.name.length < 2, 'k-phone-f': c.phone.replace(/\D/g, '').length < 10, 'k-mail-f': !EMAIL.test(c.email) };
-          Object.entries(bad).forEach(([i, x]) => b.querySelector(`#${i}`).classList.toggle('bad', x));
-          if (Object.values(bad).some(Boolean)) { msg('Revisa tu nombre, teléfono y correo.', 'err'); return false; }
+          person = readPerson(b, 'k');
+          if (!person) { msg('Revisa los campos marcados.', 'err'); return false; }
           if (!b.querySelector('#k-terms').checked) { msg('Acepta las condiciones para continuar.', 'err'); return false; }
           msg(''); return true;
         };
@@ -1251,18 +1294,15 @@
   function profileSheet() {
     const p = profile();
     openSheet(sheetHead('Mis datos', 'Se usan para reservar más rápido. Se guardan solo en este celular.') + `
-      <div class="fld" id="p-name-f"><label for="p-name">Nombre</label><input id="p-name" autocomplete="name" value="${esc(p.name || (M.Auth.user && M.Auth.user.name) || '')}"></div>
-      <div class="fld" id="p-phone-f"><label for="p-phone">Teléfono</label><input id="p-phone" type="tel" autocomplete="tel" value="${esc(p.phone || '')}"><span class="err">Al menos 10 dígitos.</span></div>
-      <div class="fld" id="p-mail-f"><label for="p-mail">Correo</label><input id="p-mail" type="email" autocomplete="email" value="${esc(p.email || (M.Auth.user && M.Auth.user.email) || '')}"><span class="err">Revisa el correo.</span></div>
+      ${personFields('p', p)}
       <div class="fld"><label>Cumpleaños <span style="font-weight:400">(te enviamos un regalo ese día)</span></label><div class="two">${bdaySelects('p-bd', p.birthday)}</div></div>
       <button type="button" class="btn btn-block" style="margin-top:20px" id="p-save">Guardar</button>
       ${p.name || p.phone ? '<button type="button" class="link-btn" style="display:block;margin:14px auto 0;color:var(--muted)" id="p-forget">Borrar mis datos de este celular</button>' : ''}`, {
       onMount: (b) => {
+        bindPerson(b, 'p');
         b.querySelector('#p-save').addEventListener('click', () => {
-          const v = { name: b.querySelector('#p-name').value.trim(), phone: b.querySelector('#p-phone').value.trim(), email: b.querySelector('#p-mail').value.trim() };
-          const badPhone = v.phone && v.phone.replace(/\D/g, '').length < 10, badMail = v.email && !EMAIL.test(v.email);
-          b.querySelector('#p-phone-f').classList.toggle('bad', !!badPhone); b.querySelector('#p-mail-f').classList.toggle('bad', !!badMail);
-          if (badPhone || badMail) return;
+          const v = readPerson(b, 'p', true);
+          if (!v) return;
           const d = b.querySelector('#p-bd-d').value, m = b.querySelector('#p-bd-m').value;
           store.set(K.profile, { ...profile(), ...v, birthday: d && m ? `${m}-${d}` : '' });
           closeSheet(); toast('Datos guardados'); loadLoyalty().then(() => render(app.tab));
@@ -1368,6 +1408,11 @@
     M.Auth.init();
     M.Auth.onChange(() => { Promise.all([loadAppts(true), loadWallet()]).then(loadLoyalty).then(() => render(app.tab)); });
     M.Install.onChange(() => render(app.tab));
+    // Cambios del estudio (precios, horario, promociones): se ven sin recargar
+    API.onCatalogChange(() => {
+      const busy = sheet.open || (app.tab === 'reservar' && bk.step >= 3);
+      if (!busy) render(app.tab); else app.catalogDirty = true;
+    });
     route();
     if (API.enabled()) {
       await Promise.race([API.loadCatalog().catch(() => null), new Promise((r) => setTimeout(r, 4000))]);

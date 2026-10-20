@@ -90,9 +90,9 @@
 
   M.initGiftShop = function () {
     shop = (M.site || {}).giftShop;
-    if (!shop || !shop.enabled || !API.enabled() || !M.PayPal.configured()) return;
+    if (!shop || !shop.enabled || !API.enabled() || !M.PayPal.configured()) { if (M.showNav) M.showNav('regalar', false); return; }
     $('regalar').hidden = false;
-    document.querySelectorAll('[data-nav-for="regalar"]').forEach((n) => { n.hidden = false; });
+    if (M.showNav) M.showNav('regalar', true); else document.querySelectorAll('[data-nav-for="regalar"]').forEach((n) => { n.hidden = false; });
     // Montos dentro del rango configurado
     document.querySelectorAll('#gf-chips input').forEach((i) => {
       if (i.value !== 'otro' && (Number(i.value) < shop.min || Number(i.value) > shop.max)) i.closest('.gf-chip').hidden = true;
@@ -103,6 +103,7 @@
     }
     $('gf-other').min = shop.min; $('gf-other').max = shop.max;
     const f = $('gift-form');
+    M.Validate.bindName(f.para); M.Validate.bindName(f.de);
     f.addEventListener('input', (e) => {
       if (e.target.closest('.field')) e.target.closest('.field').classList.remove('has-error');
       preview();

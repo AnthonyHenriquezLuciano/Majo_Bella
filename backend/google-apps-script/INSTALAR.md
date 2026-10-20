@@ -102,6 +102,8 @@ El dinero llega en dólares a tu PayPal. Desde PayPal puedes retirarlo a tu banc
    - También crea la carpeta **MAJOBELLA · Web pública (galería)**. Ahí van solo las copias de las fotos que publicas en la web y tu foto de "Conoce a Majo", compartidas como "cualquier persona con el enlace puede ver". No muevas ni borres esa carpeta.
    - Crea también el **disparador de las tareas automáticas** (recordatorios, reseñas, retoques, cumpleaños y lista de espera), que se ejecuta cada hora. Puedes verlo en Apps Script → **Activadores** (ícono del reloj): `tareasProgramadas`, cada hora.
    - Si Google pide un permiso nuevo (por ejemplo, para crear el activador), acéptalo igual que antes.
+   - Crea el activador **alEditarHoja** (al editar la hoja): si cambias algo a mano en la hoja (un precio, un servicio, un ajuste), la web lo muestra al momento en vez de esperar.
+   - Ordena los datos que ya tienes: nombres con la primera letra en mayúscula (por ejemplo «maría DE LOS santos» → «María de los Santos»), teléfonos con el mismo formato («809-555-1234») y correos en minúscula. No borra nada.
 3. **Implementar → Gestionar implementaciones → lápiz (editar) → Versión: Nueva versión → Implementar.**
 
    Así se mantiene la misma URL `/exec` y no hay que cambiar nada en la web.
@@ -227,3 +229,11 @@ La protección solo se activa cuando están las dos claves. Se aplica al reserva
 
   El dashboard se cierra solo tras los minutos sin uso que elijas (30 por defecto).
 - Los datos del negocio para los términos y la privacidad están en **Ajustes → Datos del negocio**: nombre, RNC o cédula y correo de contacto.
+
+## Rapidez y datos ordenados
+
+- **Los cambios del dashboard se ven enseguida en la web.** El backend guarda una copia rápida del catálogo (servicios, precios, promociones, galería, reseñas y ajustes) y la borra sola cada vez que guardas algo en el dashboard o editas la hoja a mano. La web muestra primero lo último que vio la clienta y en menos de un segundo lo actualiza si cambió algo.
+- **Si editas la hoja a mano** y no ves el cambio, revisa en Apps Script → **Activadores** que exista `alEditarHoja`. Si no está, ejecuta **setup** otra vez.
+- **Nombre y apellido por separado** en la web, la app y los paquetes. Se guardan como nombres propios (primera letra en mayúscula y las demás en minúscula; «de», «del», «la» quedan en minúscula).
+- **Teléfonos de 10 dígitos** (809, 829 o 849, y también otros de EE. UU. y Puerto Rico). Para números de otros países se escribe con «+» y el código del país (de 8 a 15 dígitos).
+- El dashboard pide solo el nombre al crear una cita a mano; teléfono y correo, si los escribes, también se revisan.

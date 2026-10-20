@@ -1,48 +1,134 @@
-/* MAJOBELLA · Botones "Instala la app" de la web
-   - Android/Chrome: abre el aviso de instalación del navegador.
-   - iPhone y el resto: abre la app (app/?instalar=1), que explica cómo añadirla a la pantalla de inicio.
-   - Si ya se abre como app instalada, los botones se ocultan. */
+/* MAJOBELLA · "Instala la app" en la web
+   - Celular: la primera vez se muestra la página de instalación (pantalla completa, como la bienvenida
+     de la app). Al cerrarla queda la cinta abajo para instalar cuando quiera.
+   - PC: solo la cinta, y solo si el navegador permite instalar (Chrome/Edge).
+   - Android/Chrome instala con el aviso del navegador; iPhone muestra los pasos de Safari.
+   - Si ya se abre como app instalada, no aparece nada.
+   - Quien llega desde Google no ve la página completa (Google penaliza las pantallas que tapan el
+     contenido al entrar desde el buscador): ve solo la cinta. */
 (function (M) {
-  const KEY = 'mjb.app.nudge.v1';
-  const get = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
-  const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* nada */ } };
+  const K = { page: 'mjb.getapp.page.v1', ribbon: 'mjb.getapp.ribbon.v1' };
+  const DAY = 864e5;
+  const PAGE_EVERY = 14 * DAY;   // la página completa vuelve a ofrecerse cada 14 días
+  const RIBBON_EVERY = 5 * DAY;  // la cinta cerrada vuelve a los 5 días
+  const get = (k) => { try { return Number(localStorage.getItem(k)) || 0; } catch (e) { return 0; } };
+  const set = (k) => { try { localStorage.setItem(k, String(Date.now())); } catch (e) { /* nada */ } };
+  const $ = (id) => document.getElementById(id);
+  const mobile = () => window.matchMedia('(max-width: 760px)').matches || /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  const fromSearch = () => /(^|\.)(google|bing|yahoo|duckduckgo)\./i.test((() => { try { return new URL(document.referrer).hostname; } catch (e) { return ''; } })());
+
+  const IC = {
+    share: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14V3.5M8.5 7L12 3.5 15.5 7M7 10.5H6A1.5 1.5 0 0 0 4.5 12v7A1.5 1.5 0 0 0 6 20.5h12a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-1"/></svg>',
+    phone: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/></svg>',
+  };
+  function steps() {
+    if (M.Install.isIOS) {
+      return `<ol class="ga-steps"><li><b>1</b><span>Toca <strong>Compartir</strong> ${IC.share} en la barra de Safari.</span></li><li><b>2</b><span>Elige <strong>Agregar a inicio</strong>.</span></li><li><b>3</b><span>Toca <strong>Agregar</strong>. La app aparece en tu pantalla.</span></li></ol>`;
+    }
+    return `<ol class="ga-steps"><li><b>1</b><span>Abre el menú <strong>⋮</strong> de tu navegador.</span></li><li><b>2</b><span>Toca <strong>Instalar app</strong> o <strong>Agregar a pantalla de inicio</strong>.</span></li><li><b>3</b><span>Confirma. La app aparece en tu pantalla.</span></li></ol>`;
+  }
+
+  /* ---------- Página de instalación (solo celular) ---------- */
+  let lastFocus = null;
+  function openPage() {
+    const page = $('get-app');
+    if (!page) return;
+    const direct = M.Install.canPrompt();
+    page.innerHTML = `
+      <div class="ga-in">
+        <img class="ga-logo" src="assets/logo-majobella.png" alt="MAJOBELLA Beauty Studio" width="900" height="351">
+        <div class="ga-art"><img src="assets/monograma.png" alt=""></div>
+        <h2 id="ga-title">Tu belleza, en tu bolsillo</h2>
+        <p>Reserva en segundos, mira tus citas, firma tu consentimiento y guarda tus tarjetas de regalo y paquetes.</p>
+        ${direct ? '' : steps()}
+        <div class="ga-actions">
+          ${direct ? `<button type="button" class="btn btn-primary ga-btn" data-ga-install>${IC.phone} Instalar la app</button>` : ''}
+          <a class="btn ${direct ? 'btn-line' : 'btn-primary'} ga-btn" href="app/">Abrir la app sin instalar</a>
+          <button type="button" class="ga-skip" data-ga-close>Seguir en la web</button>
+        </div>
+      </div>`;
+    lastFocus = document.activeElement;
+    page.hidden = false;
+    document.documentElement.classList.add('ga-lock');
+    requestAnimationFrame(() => { page.classList.add('is-in'); page.focus({ preventScroll: true }); });
+    set(K.page);
+    hideRibbon(false);
+  }
+  function closePage() {
+    const page = $('get-app');
+    if (!page || page.hidden) return;
+    page.classList.remove('is-in');
+    document.documentElement.classList.remove('ga-lock');
+    setTimeout(() => { page.hidden = true; page.innerHTML = ''; }, 260);
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+    showRibbon();
+  }
+
+  /* ---------- Cinta ---------- */
+  function ribbonAllowed() {
+    if (M.Install.standalone()) return false;
+    if (Date.now() - get(K.ribbon) < RIBBON_EVERY) return false;
+    return mobile() ? M.Install.available() : M.Install.canPrompt();
+  }
+  function showRibbon() {
+    const r = $('app-ribbon');
+    if (!r || !ribbonAllowed() || document.body.classList.contains('has-selbar')) return;
+    if (!r.hidden) return;
+    r.hidden = false;
+    document.body.classList.add('has-ribbon');
+    requestAnimationFrame(() => r.classList.add('is-in'));
+  }
+  function hideRibbon(remember) {
+    const r = $('app-ribbon');
+    if (!r) return;
+    if (remember) set(K.ribbon);
+    r.classList.remove('is-in');
+    if (document.body.classList.contains('has-ribbon')) document.body.classList.remove('has-ribbon');
+    setTimeout(() => { if (!r.classList.contains('is-in')) r.hidden = true; }, 300);
+  }
+
+  async function install() {
+    if (M.Install.canPrompt()) {
+      const r = await M.Install.prompt();
+      if (r === 'accepted') { closePage(); hideRibbon(true); }
+      return;
+    }
+    if (mobile()) { openPage(); return; }
+    location.href = 'app/?instalar=1';
+  }
 
   M.initGetApp = function () {
     if (!M.Install) return;
     M.Install.register('sw.js');
-    const standalone = M.Install.standalone();
-    document.querySelectorAll('[data-get-app]').forEach((a) => { if (standalone) a.hidden = true; });
-    if (standalone) return;
-
-    document.addEventListener('click', async (e) => {
-      const a = e.target.closest('[data-get-app]');
-      if (!a) return;
-      e.preventDefault();
-      hideNudge(true);
-      if (M.Install.canPrompt()) {
-        const r = await M.Install.prompt();
-        if (r === 'accepted') return;
-      }
-      location.href = 'app/?instalar=1';
-    });
-
-    /* Aviso discreto en el celular: una sola vez, cuando la clienta ya está navegando */
-    const nudge = document.getElementById('app-nudge');
-    if (!nudge || get(KEY) || !window.matchMedia('(max-width: 760px)').matches) return;
-    nudge.querySelector('[data-nudge-x]').addEventListener('click', () => hideNudge(true));
-    let shown = false;
-    const maybe = () => {
-      if (shown || window.scrollY < 900 || document.body.classList.contains('has-selbar')) return;
-      shown = true; nudge.hidden = false;
-      requestAnimationFrame(() => nudge.classList.add('is-in'));
-      window.removeEventListener('scroll', maybe);
-    };
-    window.addEventListener('scroll', maybe, { passive: true });
-    function hideNudge(remember) {
-      if (remember) set(KEY, '1');
-      nudge.classList.remove('is-in');
-      setTimeout(() => { nudge.hidden = true; }, 300);
+    if (M.Install.standalone()) {
+      document.querySelectorAll('[data-get-app], #app-ribbon').forEach((a) => { a.hidden = true; });
+      return;
     }
-    new MutationObserver(() => { if (document.body.classList.contains('has-selbar') && !nudge.hidden) hideNudge(false); }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    document.addEventListener('click', (e) => {
+      const t = (s) => e.target.closest(s);
+      if (t('[data-get-app]') || t('[data-ga-install]') || t('[data-ribbon-install]')) { e.preventDefault(); install(); return; }
+      if (t('[data-ga-close]')) { closePage(); return; }
+      if (t('[data-ribbon-x]')) { hideRibbon(true); }
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePage(); });
+
+    // La cinta se aparta cuando la barra de servicios elegidos está abierta
+    // (solo cuando cambia la barra: tocar las clases del body dentro del observador lo volvería a disparar)
+    let selbar = document.body.classList.contains('has-selbar');
+    new MutationObserver(() => {
+      const now = document.body.classList.contains('has-selbar');
+      if (now === selbar) return;
+      selbar = now;
+      if (now) hideRibbon(false); else setTimeout(showRibbon, 400);
+    }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    M.Install.onChange(() => { if (M.Install.standalone()) { closePage(); hideRibbon(false); } else showRibbon(); });
+
+    const start = () => {
+      const wantsPage = mobile() && M.Install.available() && !fromSearch() && !location.hash && Date.now() - get(K.page) > PAGE_EVERY;
+      if (wantsPage) setTimeout(() => { if (!document.querySelector('.auth-modal:not([hidden])')) openPage(); else showRibbon(); }, 900);
+      else setTimeout(showRibbon, mobile() ? 2500 : 1500);
+    };
+    if (document.readyState === 'complete') start(); else window.addEventListener('load', start, { once: true });
   };
 })(window.MJB);

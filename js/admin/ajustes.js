@@ -37,6 +37,7 @@
       ['conversionPct', 'Pérdida al convertir dólares a pesos', '%', 'number'],
     ]],
   ];
+  A.settingsGroups = GROUPS;
   let closed = [];
 
   function field([key, label, unit, type], value) {

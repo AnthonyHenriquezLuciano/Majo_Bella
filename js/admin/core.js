@@ -101,17 +101,49 @@
     return `${os} · ${br}`;
   };
 
-  A.load = async () => {
+  A.load = async (silent) => {
+    if (A.loading) return A.loading;
     $('ad-loading').hidden = false;
+    A.loading = (async () => {
+      try {
+        const res = await A.call('adminData');
+        // Si hay un diálogo abierto o se está escribiendo, no se redibuja por debajo (se aplica al cerrar)
+        if (silent && (document.querySelector('dialog[open]') || A.editing())) { A.pending = res; return; }
+        A.data = res;
+        A.loadedAt = Date.now();
+        applySchedule();
+        if (res.sheetUrl) ['ad-sheet', 'ad-sheet-m'].forEach((id) => { const a = $(id); if (a) { a.href = res.sheetUrl; a.hidden = false; } });
+        A.render();
+      } catch (err) {
+        if (!$('ad-main').hidden && !silent) A.toast(err.message);
+      } finally { $('ad-loading').hidden = true; A.loading = null; }
+    })();
+    return A.loading;
+  };
+  /* ¿Está escribiendo en un campo de la página? (no se interrumpe con una actualización) */
+  A.editing = () => { const el = document.activeElement; return !!(el && el.closest && el.closest('#ad-main') && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)); };
+  /* Actualización silenciosa: al volver a la pestaña y cada 3 minutos (citas nuevas, comprobantes…) */
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && A.data && Date.now() - (A.loadedAt || 0) > 60000) A.load(true); });
+  setInterval(() => { if (A.data && document.visibilityState === 'visible' && Date.now() - (A.loadedAt || 0) > 180000) A.load(true); }, 30000);
+  document.addEventListener('close', () => { if (A.pending) { A.data = A.pending; A.pending = null; applySchedule(); A.render(); } }, true);
+
+  /* Cambio optimista: se ve al instante y, si el servidor falla, se deshace */
+  A.optimistic = async (list, id, patchFn, request, okMsg) => {
+    const arr = A.data[list] || [];
+    const i = arr.findIndex((x) => x.id === id);
+    const before = i >= 0 ? JSON.parse(JSON.stringify(arr[i])) : null;
+    if (i >= 0) { patchFn(arr[i]); A.render(); }
     try {
-      const res = await A.call('adminData');
-      A.data = res;
-      applySchedule();
-      if (res.sheetUrl) { const a = $('ad-sheet'); a.href = res.sheetUrl; a.hidden = false; }
+      const res = await request();
+      if (res && res.item) A.upsert(list, res.item);
       A.render();
+      if (okMsg) A.toast(okMsg);
+      return res;
     } catch (err) {
-      if (!$('ad-main').hidden) A.toast(err.message);
-    } finally { $('ad-loading').hidden = true; }
+      if (before) { arr[i] = before; A.render(); }
+      A.toast(`No se guardó: ${err.message}`);
+      throw err;
+    }
   };
 
   /* Cambios locales tras guardar (evita recargar todo) */
@@ -128,7 +160,9 @@
     if (!A.sections[name]) name = 'agenda';
     A.current = name;
     document.querySelectorAll('[data-section]').forEach((s) => { s.hidden = s.dataset.section !== name; });
-    document.querySelectorAll('.ad-tabs [data-sec]').forEach((b) => { const on = b.dataset.sec === name; b.classList.toggle('is-on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
+    document.querySelectorAll('.ad-tabs [data-sec], .ad-bottom [data-sec], .more-list [data-sec]').forEach((b) => { const on = b.dataset.sec === name; b.classList.toggle('is-on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
+    const more = $('ad-more');
+    if (more) more.classList.toggle('is-on', more.dataset.moreFor.split(' ').includes(name));
     if (location.hash.slice(1) !== name) history.replaceState(null, '', `${location.search}#${name}`);
     A.render();
     window.scrollTo({ top: 0 });
@@ -137,10 +171,38 @@
     if (!A.data) return;
     const s = A.sections[A.current];
     if (s && s.render) s.render();
+    A.labelTables(document.querySelector(`[data-section="${A.current}"]`));
+  };
+  /* Numerito en una pestaña (0 = se quita) */
+  A.badge = (sel, n, label) => {
+    document.querySelectorAll(sel).forEach((tab) => {
+      let b = tab.querySelector('.tab-badge');
+      if (!n) { if (b) b.remove(); return; }
+      if (!b) { b = document.createElement('span'); b.className = 'tab-badge'; tab.appendChild(b); }
+      b.textContent = n;
+      b.setAttribute('aria-label', label || String(n));
+    });
+  };
+  /* En el celular las tablas se ven como tarjetas: cada celda lleva el nombre de su columna */
+  A.labelTables = (root) => {
+    if (!root) return;
+    root.querySelectorAll('table.tbl').forEach((t) => {
+      const heads = [...t.querySelectorAll('thead th')].map((th) => th.textContent.replace(/\u00ad/g, '').trim());
+      if (!heads.length) return;
+      t.classList.add('has-labels');
+      t.querySelectorAll('tbody tr').forEach((tr) => {
+        [...tr.children].forEach((td, i) => { if (heads[i] && !td.hasAttribute('data-l')) td.setAttribute('data-l', heads[i]); else if (!heads[i]) td.classList.add('no-l'); });
+      });
+    });
   };
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-sec]');
-    if (b) { e.preventDefault(); A.go(b.dataset.sec); }
+    if (b) { e.preventDefault(); A.go(b.dataset.sec); return; }
+    if (e.target.closest('#ad-more')) { A.open('dlg-more'); return; }
+    if (e.target.closest('[data-refresh]')) { A.load(); return; }
+    // Saltos dentro de una sección (Ajustes): sin cambiar la dirección, que guarda la sección abierta
+    const j = e.target.closest('.jump a[href^="#"]');
+    if (j) { e.preventDefault(); const t = document.querySelector(j.getAttribute('href')); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
 
   /* ---------- Avisos, diálogos y detalle de gráficos ---------- */
@@ -209,7 +271,7 @@
 
   /* ---------- Acceso ---------- */
   A.showGate = (msg) => {
-    $('ad-gate').hidden = false; $('ad-main').hidden = true; $('ad-tabs').hidden = true;
+    $('ad-gate').hidden = false; $('ad-main').hidden = true; $('ad-tabs').hidden = true; $('ad-bottom').hidden = true; $('ad-search-open').hidden = true; document.body.classList.remove('is-in');
     if (msg !== undefined) $('gate-msg').textContent = msg;
     if (!M.BookingAPI.enabled() && !A.DEMO) $('gate-text').textContent = 'El dashboard se activa al conectar la hoja de reservas (booking.apiUrl en js/config.js). Mientras tanto puedes verlo con datos de ejemplo.';
     else if (!M.Auth.configured()) $('gate-text').textContent = 'Falta el ID de cliente de Google en js/config.js.';
@@ -224,14 +286,28 @@
     if (out) out.addEventListener('click', () => { $('gate-msg').textContent = ''; M.Auth.signOut(); });
   }
   async function enter() {
-    $('ad-gate').hidden = true; $('ad-main').hidden = false; $('ad-tabs').hidden = false;
+    $('ad-gate').hidden = true; $('ad-main').hidden = false; $('ad-tabs').hidden = false; $('ad-bottom').hidden = false; $('ad-search-open').hidden = false; document.body.classList.add('is-in');
     renderUser();
+    A.bindInputs();
     Object.values(A.sections).forEach((s) => s.init && s.init());
     A.current = A.sections[location.hash.slice(1)] ? location.hash.slice(1) : 'agenda';
     await A.load();
+    A.loadedAt = Date.now();
     A.go(A.current);
   }
   $('ad-refresh-all').addEventListener('click', () => A.load());
+
+  /* Nombres y teléfonos con el mismo formato que en la web (ver js/core/validate.js) */
+  A.bindInputs = (root) => {
+    (root || document).querySelectorAll('[data-v="name"]').forEach((i) => M.Validate.bindName(i));
+    (root || document).querySelectorAll('[data-v="phone"]').forEach((i) => M.Validate.bindPhone(i));
+  };
+  /* '' si el teléfono y el correo (si se escribieron) están bien; si no, el mensaje */
+  A.checkContact = (phone, email) => {
+    if (phone && !M.Validate.phone(phone).ok) return `Teléfono: ${M.Validate.phoneError}`;
+    if (email && !M.Validate.email(email)) return M.Validate.emailError;
+    return '';
+  };
 
   A.start = () => {
     if (A.DEMO) {

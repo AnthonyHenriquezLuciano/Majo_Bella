@@ -40,6 +40,12 @@
     if (M.initGetApp) M.initGetApp();
     M.initReveal();
     deepLink();
+    // Si el estudio cambió precios, horarios o promociones, la página se actualiza sola
+    M.BookingAPI.onCatalogChange(() => {
+      if (M.refreshServices) M.refreshServices();
+      if (M.refreshBookingCatalog) M.refreshBookingCatalog();
+      if (M.refreshPackages) M.refreshPackages();
+    });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();

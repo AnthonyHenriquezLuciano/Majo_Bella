@@ -58,6 +58,23 @@
     },
   };
 
+  /* Copia local del catálogo (para mostrar la web y la app al instante) */
+  const CAT_KEY = 'mjb.catalog.v2';
+  const catalogListeners = new Set();
+  let refreshing = null, catalogAt = 0, applied = false;
+  const catalogSig = (d) => { const c = Object.assign({}, d); delete c.cached; return JSON.stringify(c); };
+  function readCatalog() {
+    try {
+      const o = JSON.parse(localStorage.getItem(CAT_KEY));
+      return o && o.data && Date.now() - o.at < 7 * 86400000 ? o : null;
+    } catch (e) { return null; }
+  }
+  function saveCatalog(data) { try { localStorage.setItem(CAT_KEY, JSON.stringify({ at: Date.now(), sig: catalogSig(data), data })); } catch (e) { /* sin espacio */ } }
+  // Al volver a la pestaña después de un rato, se revisa si el estudio cambió algo
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && M.BookingAPI && M.BookingAPI.catalogAge() > 120000) M.BookingAPI.refreshCatalog();
+  });
+
   /* Horarios ocupados en memoria (toda la ventana de reserva en una sola consulta) */
   const busyCache = { at: 0, list: [], pending: null, error: null };
   const busyListeners = new Set();
@@ -77,7 +94,7 @@
 
     async get(params) {
       let res;
-      try { res = await fetch(this.url(params), { method: 'GET' }); }
+      try { res = await fetch(this.url(params), { method: 'GET', cache: 'no-store' }); }
       catch (e) { throw new Error('sin conexión con el servidor de reservas'); }
       const data = await res.json().catch(() => ({ ok: false, error: 'el servidor no respondió con datos (revisa que la implementación tenga acceso "Cualquier usuario")' }));
       if (!res.ok || data.ok === false) throw new Error(data.error || `Error ${res.status}`);
@@ -89,17 +106,52 @@
       if (!this.enabled()) throw new Error('No hay backend configurado.');
       let res;
       try {
-        res = await fetch(API.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ device: M.deviceId() }, body)) });
+        res = await fetch(API.apiUrl, { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ device: M.deviceId() }, body)) });
       } catch (e) { throw new Error('Sin conexión. Revisa tu internet e intenta de nuevo.'); }
       const data = await res.json().catch(() => ({ ok: false, error: 'Respuesta no válida del servidor.' }));
       if (!res.ok || !data.ok) { const err = new Error(data.error || fallbackError); err.data = data; throw err; }
       return data;
     },
 
-    /* Precios, duraciones, tasa y horario desde la hoja de MAJOBELLA */
+    /* Precios, duraciones, tasa y horario desde la hoja de MAJOBELLA.
+       Con una copia guardada se muestra al instante y se actualiza por detrás; si cambió algo, avisa con onCatalogChange. */
     async loadCatalog() {
       if (!this.enabled()) return false;
+      const saved = readCatalog();
+      if (saved) {
+        this.applyCatalog(saved.data);
+        this.refreshCatalog();
+        return 'cache';
+      }
       const data = await this.get({ action: 'catalog' });
+      this.applyCatalog(data);
+      saveCatalog(data);
+      catalogAt = Date.now();
+      return 'network';
+    },
+    /* Pide el catálogo fresco; si es distinto al que se está mostrando, lo aplica y avisa */
+    async refreshCatalog() {
+      if (!this.enabled() || refreshing) return refreshing;
+      refreshing = (async () => {
+        try {
+          const data = await this.get({ action: 'catalog' });
+          catalogAt = Date.now();
+          const before = (readCatalog() || {}).sig;
+          saveCatalog(data);
+          if (catalogSig(data) !== before || !applied) {
+            this.applyCatalog(data);
+            catalogListeners.forEach((fn) => { try { fn(data); } catch (e) { console.error(e); } });
+          }
+        } catch (e) { /* sin conexión: queda la copia */ }
+        finally { refreshing = null; }
+      })();
+      return refreshing;
+    },
+    onCatalogChange(fn) { catalogListeners.add(fn); return () => catalogListeners.delete(fn); },
+    catalogAge() { return catalogAt ? Date.now() - catalogAt : Infinity; },
+
+    applyCatalog(data) {
+      applied = true;
       (data.services || []).forEach((r) => {
         const s = M.serviceById[r.id];
         if (s) { s.price = r.price; s.durationMinutes = r.durationMinutes; s.priceFrom = !!r.priceFrom; s.depositPercent = r.depositPercent; }
@@ -112,6 +164,12 @@
         ['minNoticeHours', 'maxDaysAhead', 'slotStepMinutes'].forEach((k) => { if (sc[k]) SCH[k] = sc[k]; });
       }
       if (data.payments && data.payments.cancelHours) M.config.policies.changeHours = data.payments.cancelHours;
+      // Servicios desactivados en el dashboard: dejan de mostrarse
+      if ((data.services || []).length) {
+        const active = new Set(data.services.map((r) => r.id));
+        for (let i = M.services.length - 1; i >= 0; i--) if (!active.has(M.services[i].id)) M.services.splice(i, 1);
+        data.services.forEach((r, i) => { const s = M.serviceById[r.id]; if (s) s.order = i; });
+      }
       // Servicios nuevos creados en el dashboard que aún no están en services.js
       (data.services || []).forEach((r) => {
         if (M.serviceById[r.id]) return;
@@ -127,7 +185,6 @@
       M.transfer = data.transfer || { enabled: false, accounts: [] };
       M.rescheduleInfo = data.reschedule || { max: 1 };
       M.security = data.security || {};
-      if (M.onCatalog) M.onCatalog.forEach((fn) => { try { fn(data); } catch (e) { /* nada */ } });
       return true;
     },
 
