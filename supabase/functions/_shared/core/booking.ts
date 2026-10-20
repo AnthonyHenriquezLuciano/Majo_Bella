@@ -6,7 +6,7 @@ import { catalogItems_, findRow_, rows_, settings_, settingsCached_, updateRow_ 
 import { conflicts_, schedule_, slotProblem_ } from './schedule.ts';
 import { applyBono_, applyGift_, loyaltyFor_, pricing_, pricingOut_, usePromo_ } from './pricing.ts';
 import { changesMax_, refundPending_, transferInfo_ } from './catalog.ts';
-import { firstCapture_, orderBody, paypal_, tryRefund_ } from './paypal.ts';
+import { appContext_, approveUrl_, firstCapture_, orderBody, paypal_, tryRefund_ } from './paypal.ts';
 import { authorized_, human_, limited_, noteFail_, verifyIdToken_ } from './security.ts';
 import { calendarCancel_, calendarCreate_, calendarMove_ } from './google.ts';
 import { adminTo_, mailAdminRescheduled_, mailAdminTransfer_, mailTransferReceived_, notifyCancelled_, notifyConfirmed_, notifyRescheduled_, safeMail_ } from './mail.ts';
@@ -108,14 +108,14 @@ export async function hold_(d) {
       description: ('Depósito · ' + row.servicios).slice(0, 127),
       amount: { currency_code: 'USD', value: p.depositUSD.toFixed(2) },
     }],
-    application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+    application_context: appContext_(d, s),
   }, id + '-order');
   row.paypalOrden = order.id;
   row.metodoDeposito = 'paypal';
   appendRow_('Reservas', row);
 
   return {
-    ok: true, id: id, manageToken: token, orderId: order.id,
+    ok: true, id: id, manageToken: token, orderId: order.id, approveUrl: approveUrl_(order),
     totalRD: p.total, depositRD: p.depositRD, depositUSD: p.depositUSD.toFixed(2), balanceRD: p.balanceRD,
     usdRate: p.usdRate, expiresAt: row.retenidaHasta, pricing: pricingOut_(p),
   };
@@ -205,10 +205,10 @@ export async function balanceOrder_(d) {
       description: ('Saldo · ' + r.servicios).slice(0, 127),
       amount: { currency_code: 'USD', value: amount.toFixed(2) },
     }],
-    application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+    application_context: appContext_(d, settings_()),
   });
   updateRow_(found.index, { saldoOrden: order.id, saldoUSD: amount.toFixed(2) });
-  return { ok: true, orderId: order.id, balanceUSD: amount.toFixed(2), balanceRD: Number(r.saldoRD) };
+  return { ok: true, orderId: order.id, approveUrl: approveUrl_(order), balanceUSD: amount.toFixed(2), balanceRD: Number(r.saldoRD) };
 }
 
 export async function balanceCapture_(d) {

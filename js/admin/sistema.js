@@ -75,12 +75,13 @@
     const sec = A.data.security || {};
     const s = A.settingsMap();
     const ts = sec.turnstile || {};
-    const tsState = ts.siteKey && ts.secret ? ['', 'Activa: las reservas, compras y la lista de espera piden la verificación (casi siempre invisible).']
+    const tsState = ts.siteKey && ts.secret ? ['', 'Activa: las reservas, compras y la lista de espera piden la verificación (casi siempre invisible). En la app de clientas se pide iniciar sesión en su lugar.']
       : ts.siteKey ? ['is-warn', `Falta la clave secreta: añade TURNSTILE_SECRET en ${sec.database ? 'los secretos de Supabase' : 'Apps Script → Propiedades del script'}.`]
         : ['is-off', `Desactivada. Pega aquí la clave del sitio de Cloudflare Turnstile (gratis) y la secreta en ${sec.database ? 'los secretos de Supabase' : 'Apps Script'}.`];
     const acc = (sec.accesses || []).slice(0, 8);
     $('aj-security').innerHTML = `<ul class="sec-list">
       <li class="sec-item"><span class="sec-dot"></span><div><p class="sec-t">Acceso al dashboard</p><p class="sec-s">Solo pueden entrar estas cuentas de Google: <b>${(sec.admins || []).map(esc).join(', ') || '—'}</b>. Se cambian en ${sec.database ? 'Supabase → Edge Functions → Secrets' : 'Apps Script → Propiedades del script'} → ADMIN_EMAILS.</p></div></li>
+      <li class="sec-item"><span class="sec-dot${(M.config.app || {}).studioAndroidUrl ? '' : ' is-off'}"></span><div><p class="sec-t">App del estudio (Android)</p><p class="sec-s">La agenda, las transferencias por confirmar, tus clientas y el dinero en tu celular, con un aviso por cada reserva nueva. Entra con la misma cuenta del dashboard. ${(M.config.app || {}).studioAndroidUrl ? `<a href="${esc(M.config.app.studioAndroidUrl)}">Descargar MAJOBELLA Estudio</a>` : 'Se publica en GitHub → Releases → «app» cuando se arman las apps.'}</p></div></li>
       ${sec.database ? `<li class="sec-item"><span class="sec-dot"></span><div><p class="sec-t">Base de datos</p><p class="sec-s">PostgreSQL en Supabase, privada: nadie la lee desde el navegador ni desde las apps, todo pasa por la API. Guarda las citas y los datos de tus clientas.</p></div></li>`
         : shareLine('Hoja de cálculo', sec.sheet, 'las citas y los datos de tus clientas')}
       ${shareLine(sec.database ? 'Archivos (carpeta privada)' : 'Carpeta de fichas en Drive', sec.folder, 'fotos, consentimientos y comprobantes')}

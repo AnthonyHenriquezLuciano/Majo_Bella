@@ -24,6 +24,9 @@ index.html, reservar.html, citas.html, regalos.html, aplicacion.html   Páginas 
 web/pages/, web/partials/       Contenido de cada página y partes compartidas → node tools/build-web.mjs
 js/components/appinfo.js        Página Aplicación: botones de descarga (js/config.js → app) e instrucciones
 supabase/                       Base de datos (migraciones), API (Edge Function), pruebas y guía de instalación
+apps/cliente, apps/estudio      Apps nativas (React Native + Expo): clientas y estudio → apps/README.md
+packages/core, packages/ui      Código compartido por las dos apps (API, horario, precios, formatos, diseño)
+pago.html                       Regreso de PayPal a la app (majobella://pago)
 css/styles.css                  Estilos, colores y tipografías
 js/config.js                    WhatsApp, redes, contacto, horario y conexión de reservas
 js/data/services.js             Servicios: nombre, precio, duración y detalle (para quién, qué incluye, preparación, cuidados)
@@ -122,9 +125,13 @@ Implementado en `backend/google-apps-script/Code.gs`; otro backend podría respo
 - `POST { action: 'giftOrder', montoRD, correo, correoPara, de, para, mensaje }` → `{ id, orderId }` · `{ action: 'giftCapture', id, orderId }` → `{ gift: { codigo, … } }`
 - `POST { action: 'adminList' | 'adminUpdate' | 'adminBlock', idToken, … }` (solo administradoras)
 
-## App para el celular
+## Apps nativas (Android y iPhone)
 
-La app vive en `app/` (https://anthonyhenriquezluciano.github.io/Majo_Bella/app/) y se instala en la pantalla de inicio como cualquier app. No es la página: es una experiencia aparte, pensada solo para el celular, con barra inferior de pestañas y hojas que se deslizan desde abajo.
+La app de clientas **MAJOBELLA** y la del estudio **MAJOBELLA Estudio** están hechas con React Native + Expo en `apps/` (ver [`apps/README.md`](apps/README.md)). GitHub arma los `.apk` de Android y los publica en Releases → `app`; la página **Aplicación** de la web los ofrece para descargar.
+
+## Versión web de la app (iPhone sin App Store)
+
+La versión web vive en `app/` (https://anthonyhenriquezluciano.github.io/Majo_Bella/app/) y se instala en la pantalla de inicio como cualquier app. No es la página: es una experiencia aparte, pensada solo para el celular, con barra inferior de pestañas y hojas que se deslizan desde abajo.
 
 - **Inicio**: saludo, próxima cita con cuenta regresiva, accesos rápidos, promociones, servicios y tarjeta de fidelidad.
 - **Reservar** (botón central): servicios → día y hora (primer horario libre y lista de espera) → confirmar y pagar el depósito con PayPal, con códigos de descuento, tarjetas de regalo y paquetes.

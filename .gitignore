@@ -2,3 +2,10 @@
 Thumbs.db
 *.log
 node_modules/
+.expo/
+dist/
+web-build/
+*.tsbuildinfo
+apps/*/android/
+apps/*/ios/
+.env

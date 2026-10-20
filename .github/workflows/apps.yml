@@ -1,0 +1,129 @@
+# MAJOBELLA · Apps (Android)
+# Revisa el código de las apps y arma los .apk de la app de clientas y la del estudio.
+# Los publica en GitHub → Releases → "app" (enlaces fijos que usa la web para descargar):
+#   https://github.com/<usuario>/<repo>/releases/download/app/majobella.apk
+#   https://github.com/<usuario>/<repo>/releases/download/app/majobella-estudio.apk
+#
+# Variables del repositorio (Settings → Secrets and variables → Actions → Variables), todas públicas:
+#   SUPABASE_URL        https://<referencia>.supabase.co   (sin ella, la app usa la API anterior para reservar)
+#   SUPABASE_ANON_KEY   llave pública "anon" del proyecto (para iniciar sesión)
+#   EAS_PROJECT_ID      opcional: proyecto de Expo para los avisos push
+# Secretos (Secrets) para firmar con la llave propia del estudio (se crean con tools/android-keystore.sh;
+# si faltan, se firma con la llave de prueba pública de React Native):
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+name: Apps
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/apps.yml']
+  pull_request:
+    paths: ['apps/**', 'packages/**']
+  workflow_dispatch:
+
+concurrency:
+  group: apps-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Tipos (TypeScript)
+        run: npm run typecheck
+      - name: Pruebas del código compartido
+        run: npx tsx packages/core/test/core.test.ts
+
+  android:
+    needs: revisar
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: cliente
+            apk: majobella.apk
+          - app: estudio
+            apk: majobella-estudio.apk
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+      EXPO_PUBLIC_EAS_PROJECT_ID: ${{ vars.EAS_PROJECT_ID }}
+      NODE_ENV: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: Versión (cada compilación sube el número para poder actualizar sin desinstalar)
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          node -e "
+            const f='app.json', j=JSON.parse(require('fs').readFileSync(f,'utf8'));
+            j.expo.android.versionCode=Number(process.env.GITHUB_RUN_NUMBER);
+            j.expo.version='1.0.'+process.env.GITHUB_RUN_NUMBER;
+            require('fs').writeFileSync(f, JSON.stringify(j,null,2));"
+      - name: Código nativo de Android (prebuild)
+        working-directory: apps/${{ matrix.app }}
+        run: npx expo prebuild -p android --no-install --clean
+      - name: Compilar
+        working-directory: apps/${{ matrix.app }}/android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+      - name: Firmar
+        working-directory: apps/${{ matrix.app }}/android/app/build/outputs/apk/release
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            "$BT/apksigner" sign --ks "$RUNNER_TEMP/release.keystore" --ks-pass env:KS_PASS --key-pass env:KEY_PASS --ks-key-alias "$KEY_ALIAS" --out "$GITHUB_WORKSPACE/${{ matrix.apk }}" app-release.apk
+            rm -f "$RUNNER_TEMP/release.keystore"
+          else
+            echo "::warning::Sin llave propia (ANDROID_KEYSTORE_*): se firma con la llave de prueba de React Native. Créala con tools/android-keystore.sh."
+            cp app-release.apk "$GITHUB_WORKSPACE/${{ matrix.apk }}"
+          fi
+          "$BT/apksigner" verify --print-certs "$GITHUB_WORKSPACE/${{ matrix.apk }}" | head -3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.apk }}
+          path: ${{ matrix.apk }}
+          retention-days: 14
+
+  publicar:
+    needs: android
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { merge-multiple: true }
+      - name: Publicar en Releases → app
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          ls -la *.apk
+          NOTES="Apps de MAJOBELLA para Android (versión 1.0.${GITHUB_RUN_NUMBER}).
+          - majobella.apk: app de clientas (reservar, pagar, mis citas, billetera).
+          - majobella-estudio.apk: app del estudio (agenda, transferencias, clientas y dinero).
+          Para instalar: abre el archivo en el celular y permite «instalar apps de este origen»."
+          if gh release view app >/dev/null 2>&1; then
+            gh release edit app --title "Apps MAJOBELLA 1.0.${GITHUB_RUN_NUMBER}" --notes "$NOTES"
+          else
+            gh release create app --title "Apps MAJOBELLA 1.0.${GITHUB_RUN_NUMBER}" --notes "$NOTES" --latest=false
+          fi
+          gh release upload app majobella.apk majobella-estudio.apk --clobber

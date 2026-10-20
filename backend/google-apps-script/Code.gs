@@ -688,14 +688,14 @@ function hold_(d) {
       description: ('Depósito · ' + row.servicios).slice(0, 127),
       amount: { currency_code: 'USD', value: p.depositUSD.toFixed(2) },
     }],
-    application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+    application_context: appContext_(d),
   }, id + '-order');
   row.paypalOrden = order.id;
   row.metodoDeposito = 'paypal';
   appendRow_('Reservas', row);
 
   return {
-    ok: true, id: id, manageToken: token, orderId: order.id,
+    ok: true, id: id, manageToken: token, orderId: order.id, approveUrl: approveUrl_(order),
     totalRD: p.total, depositRD: p.depositRD, depositUSD: p.depositUSD.toFixed(2), balanceRD: p.balanceRD,
     usdRate: p.usdRate, expiresAt: row.retenidaHasta, pricing: pricingOut_(p),
   };
@@ -812,10 +812,10 @@ function balanceOrder_(d) {
       description: ('Saldo · ' + r.servicios).slice(0, 127),
       amount: { currency_code: 'USD', value: amount.toFixed(2) },
     }],
-    application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+    application_context: appContext_(d),
   });
   updateRow_(found.index, { saldoOrden: order.id, saldoUSD: amount.toFixed(2) });
-  return { ok: true, orderId: order.id, balanceUSD: amount.toFixed(2), balanceRD: Number(r.saldoRD) };
+  return { ok: true, orderId: order.id, approveUrl: approveUrl_(order), balanceUSD: amount.toFixed(2), balanceRD: Number(r.saldoRD) };
 }
 
 function balanceCapture_(d) {
@@ -1412,14 +1412,14 @@ function giftOrder_(d) {
       description: 'Tarjeta de regalo MAJOBELLA · RD$ ' + money_(monto),
       amount: { currency_code: 'USD', value: usd.toFixed(2) },
     }],
-    application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+    application_context: appContext_(d),
   }, id + '-order');
   appendRow_('Tarjetas', {
     id: id, codigo: '', montoRD: monto, saldoRD: 0, comprador: properName_(clean_(d.de, 80)), para: properName_(clean_(d.para, 80)), mensaje: clean_(d.mensaje, 160),
     metodoPago: 'paypal', vendida: '', vence: '', estado: 'pendiente', creada: new Date().toISOString(),
     correoComprador: correo, correoPara: correoPara, paypalOrden: order.id,
   });
-  return { ok: true, id: id, orderId: order.id, montoRD: monto, montoUSD: usd.toFixed(2), usdRate: rate };
+  return { ok: true, id: id, orderId: order.id, approveUrl: approveUrl_(order), montoRD: monto, montoUSD: usd.toFixed(2), usdRate: rate };
 }
 
 function giftCapture_(d) {
@@ -1875,10 +1875,10 @@ function bonoOrder_(d) {
   const order = paypal_('post', '/v2/checkout/orders', {
     intent: 'CAPTURE',
     purchase_units: [{ reference_id: id, custom_id: id, invoice_id: id, description: ('Paquete MAJOBELLA · ' + k.nombre).slice(0, 127), amount: { currency_code: 'USD', value: usd.toFixed(2) } }],
-    application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+    application_context: appContext_(d),
   }, id + '-order');
   const row = createBono_(k, c, { estado: 'pendiente', metodoPago: 'paypal', paypalOrden: order.id });
-  return { ok: true, id: row.id, orderId: order.id, montoUSD: usd.toFixed(2), usdRate: rate };
+  return { ok: true, id: row.id, orderId: order.id, approveUrl: approveUrl_(order), montoUSD: usd.toFixed(2), usdRate: rate };
 }
 
 function bonoCapture_(d) {
@@ -2375,6 +2375,23 @@ function paypalToken_() {
   const data = JSON.parse(res.getContentText());
   cache.put(key, data.access_token, Math.max(60, Math.min(21600, Number(data.expires_in || 3600) - 120)));
   return data.access_token;
+}
+
+/* En las apps no hay botones de PayPal: se abre la página de PayPal y al terminar vuelve a pago.html,
+   que devuelve a la clienta a la app (majobella://pago). */
+function appContext_(d) {
+  var ctx = { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' };
+  var base = String(settingsCached_().webUrl || '').trim();
+  if (d && d.app && /^https:\/\//.test(base)) {
+    var root = base.replace(/\/?$/, '/');
+    ctx.return_url = root + 'pago.html?r=ok';
+    ctx.cancel_url = root + 'pago.html?r=cancel';
+  }
+  return ctx;
+}
+function approveUrl_(order) {
+  var l = ((order && order.links) || []).filter(function (x) { return x.rel === 'approve' || x.rel === 'payer-action'; })[0];
+  return l ? String(l.href) : '';
 }
 
 function paypal_(method, path, body, requestId) {

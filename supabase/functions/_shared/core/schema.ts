@@ -6,7 +6,7 @@
 
 export type ColType = 'text' | 'int' | 'num' | 'bool' | 'date' | 'time' | 'ts' | 'json';
 export interface Col { key: string; col: string; type: ColType; notNull?: boolean; check?: string; default?: string }
-export interface Table { name: string; table: string; pk: string | null; cols: Col[]; indexes?: string[]; comment: string }
+export interface Table { name: string; table: string; pk: string | null; cols: Col[]; indexes?: string[]; comment: string; migration?: string }
 
 const c = (key: string, type: ColType = 'text', extra: Partial<Col> = {}): Col => ({ key, col: snake(key), type, ...extra });
 export function snake(k: string): string {
@@ -136,10 +136,17 @@ export const TABLES: Table[] = [
     name: 'Cache', table: 'cache', pk: 'clave', comment: 'Valores temporales (límites de intentos, token de PayPal). Se borran solos al vencer.',
     cols: [c('clave', 'text', { notNull: true }), c('valor'), c('vence', 'ts')],
   },
+  {
+    // Celulares con la app de clientas o la del estudio: reciben un aviso con cada correo que se envía a su cuenta
+    name: 'Dispositivos', table: 'dispositivos', pk: 'token', comment: 'Celulares con la app (avisos push): cuenta, app y plataforma.',
+    migration: '20261021000000_dispositivos',
+    cols: [c('token', 'text', { notNull: true }), c('correo', 'text', { notNull: true }), c('app', 'text', { check: inList(['cliente', 'estudio']) }), c('plataforma'), c('creado', 'ts'), c('visto', 'ts')],
+    indexes: ['correo'],
+  },
 ];
 
 export const TABLE: Record<string, Table> = Object.fromEntries(TABLES.map((t) => [t.name, t]));
 export const COLS: Record<string, Record<string, Col>> = Object.fromEntries(TABLES.map((t) => [t.name, Object.fromEntries(t.cols.map((x) => [x.key, x]))]));
 
 /* Tablas que casi nunca hacen falta y crecen sin parar: solo se cargan cuando la acción las pide */
-export const HEAVY = ['Correos', 'Errores'];
+export const HEAVY = ['Correos', 'Errores', 'Dispositivos'];

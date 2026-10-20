@@ -1,0 +1,22 @@
+{
+  "name": "@majobella/ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Componentes de pantalla compartidos por las apps de MAJOBELLA (botones, campos, tarjetas, \u00edconos).",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-svg": "*",
+    "react-native-safe-area-context": "*",
+    "expo-font": "*",
+    "@expo-google-fonts/source-serif-4": "*"
+  },
+  "dependencies": {
+    "@majobella/core": "*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  }
+}

@@ -2,7 +2,7 @@
    Base PostgreSQL local de verdad (con la misma migración que Supabase) y servicios externos simulados:
    PayPal, sesión de Supabase, Cloudflare Turnstile, Storage y el conector de Google (correo, calendario, PDF). */
 import postgres from 'postgres';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { handle } from '../functions/_shared/core/api.ts';
 import { newCtx, runWith } from '../functions/_shared/core/ctx.ts';
@@ -20,7 +20,8 @@ export async function harness(opts: Opts = {}) {
   const psql = (args: string) => execSync(`psql -h ${PG.host} -p ${PG.port} -U ${PG.user} -v ON_ERROR_STOP=1 -q ${args}`, { stdio: 'pipe' });
   psql(`-c "create database ${dbName}"`);
   psql(`-d ${dbName} -f ${ROOT}dev/local-shim.sql`);
-  psql(`-d ${dbName} -f ${ROOT}migrations/20261020000000_majobella.sql`);
+  // Todas las migraciones menos la de pg_cron (en local se usa la versión simulada de local-shim.sql)
+  for (const f of readdirSync(ROOT + 'migrations').filter((x) => x.endsWith('.sql') && !x.includes('_tareas')).sort()) psql(`-d ${dbName} -f ${ROOT}migrations/${f}`);
   const sql = postgres({ ...PG, database: dbName, max: 4, onnotice: () => {} });
 
   const env: Record<string, string> = {
@@ -36,6 +37,7 @@ export async function harness(opts: Opts = {}) {
   const pp = { n: 0, orders: {} as Record<string, any>, captures: {} as Record<string, any>, refunds: [] as string[], failCapture: false };
   const tokens: Record<string, string> = { 'admin-token': 'majo@example.com', 'client-token': 'ana@example.com' };
   const state = { failMail: !!opts.failMail, relayDown: false, calls: 0 };
+  const pushes: any[] = [];
 
   const json = (status: number, body: any) => ({ status, json: async () => body, text: async () => JSON.stringify(body), arrayBuffer: async () => new ArrayBuffer(0) });
   async function fetchMock(url: string, init: any = {}): Promise<any> {
@@ -78,13 +80,19 @@ export async function harness(opts: Opts = {}) {
       });
       return json(200, { ok: true, results });
     }
+    // Avisos push (Expo)
+    if (url === 'https://exp.host/--/api/v2/push/send') {
+      const list = JSON.parse(body);
+      pushes.push(...list);
+      return json(200, { data: list.map((x: any) => (String(x.to).includes('Viejo') ? { status: 'error', details: { error: 'DeviceNotRegistered' } } : { status: 'ok', id: 'T' + pushes.length })) });
+    }
     // PayPal
     if (url.endsWith('/v1/oauth2/token')) return json(200, { access_token: 'AT', expires_in: 32000 });
     const b = body ? JSON.parse(body) : null;
     if (url.endsWith('/v2/checkout/orders') && method === 'POST') {
       const id = 'ORDER' + (++pp.n);
-      pp.orders[id] = { id, status: 'CREATED', amount: b.purchase_units[0].amount };
-      return json(201, { id, status: 'CREATED' });
+      pp.orders[id] = { id, status: 'CREATED', amount: b.purchase_units[0].amount, context: b.application_context };
+      return json(201, { id, status: 'CREATED', links: [{ rel: 'self', href: 'https://api.sandbox.paypal.com/v2/checkout/orders/' + id }, { rel: 'approve', href: 'https://www.sandbox.paypal.com/checkoutnow?token=' + id }] });
     }
     if ((m = url.match(/orders\/([^/]+)\/capture$/))) {
       const o = pp.orders[m[1]];
@@ -130,7 +138,7 @@ export async function harness(opts: Opts = {}) {
   void COLS;
 
   return {
-    sql, env, mails, events, files, pp, tokens, state, deps,
+    sql, env, mails, events, files, pp, tokens, state, deps, pushes,
     get: (params: any) => call('GET', params),
     post: (body: any) => call('POST', body),
     cron: (key = env.CRON_KEY) => call('POST', { action: 'cron' }, { 'x-cron-key': key }),

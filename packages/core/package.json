@@ -1,0 +1,9 @@
+{
+  "name": "@majobella/core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Código compartido de las apps de MAJOBELLA: API, formatos, validación, horarios y diseño.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": { "typecheck": "tsc --noEmit -p ." }
+}

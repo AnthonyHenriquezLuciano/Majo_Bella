@@ -2,7 +2,7 @@
 import { appendRow_, deleteRow_, readOpt_, readTable_, updateTable_ } from './db.ts';
 import { servicesMap_, settings_ } from './data.ts';
 import { codeTaken_, findBono_, findGift_ } from './pricing.ts';
-import { firstCapture_, paypal_ } from './paypal.ts';
+import { appContext_, approveUrl_, firstCapture_, paypal_ } from './paypal.ts';
 import { human_, limited_, needAdmin_, noteFail_, verifyIdToken_ } from './security.ts';
 import { paidButFailed_ } from './booking.ts';
 import { adminTo_, giftCardHtml_, layout_, mailBono_, mailUrl_, mailWallet_, safeMail_ } from './mail.ts';
@@ -31,14 +31,14 @@ export async function giftOrder_(d) {
       description: 'Tarjeta de regalo MAJOBELLA · RD$ ' + money_(monto),
       amount: { currency_code: 'USD', value: usd.toFixed(2) },
     }],
-    application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+    application_context: appContext_(d, s),
   }, id + '-order');
   appendRow_('Tarjetas', {
     id: id, codigo: '', montoRD: monto, saldoRD: 0, comprador: properName_(clean_(d.de, 80)), para: properName_(clean_(d.para, 80)), mensaje: clean_(d.mensaje, 160),
     metodoPago: 'paypal', vendida: '', vence: '', estado: 'pendiente', creada: new Date().toISOString(),
     correoComprador: correo, correoPara: correoPara, paypalOrden: order.id,
   });
-  return { ok: true, id: id, orderId: order.id, montoRD: monto, montoUSD: usd.toFixed(2), usdRate: rate };
+  return { ok: true, id: id, orderId: order.id, approveUrl: approveUrl_(order), montoRD: monto, montoUSD: usd.toFixed(2), usdRate: rate };
 }
 
 export async function giftCapture_(d) {
@@ -205,10 +205,10 @@ export async function bonoOrder_(d) {
   const order = await paypal_('post', '/v2/checkout/orders', {
     intent: 'CAPTURE',
     purchase_units: [{ reference_id: id, custom_id: id, invoice_id: id, description: ('Paquete MAJOBELLA · ' + k.nombre).slice(0, 127), amount: { currency_code: 'USD', value: usd.toFixed(2) } }],
-    application_context: { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+    application_context: appContext_(d, s),
   }, id + '-order');
   const row = createBono_(k, c, { estado: 'pendiente', metodoPago: 'paypal', paypalOrden: order.id });
-  return { ok: true, id: row.id, orderId: order.id, montoUSD: usd.toFixed(2), usdRate: rate };
+  return { ok: true, id: row.id, orderId: order.id, approveUrl: approveUrl_(order), montoUSD: usd.toFixed(2), usdRate: rate };
 }
 
 export async function bonoCapture_(d) {

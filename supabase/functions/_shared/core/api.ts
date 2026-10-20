@@ -4,7 +4,7 @@
 import { cx, env_, newCtx, runWith, type Deps } from './ctx.ts';
 import { appendRow_, commit, loadTables, readTable_, updateTable_ } from './db.ts';
 import { resetCaches_, settings_ } from './data.ts';
-import { DEFAULT_SERVICES, DEFAULT_SETTINGS, ERROR_TITLES } from './constants.ts';
+import { DEFAULT_SERVICES, DEFAULT_SETTINGS, ERROR_TITLES, NOT_HUMAN } from './constants.ts';
 import { adminTo_, layout_ } from './mail.ts';
 import { esc_, msg_, plainText_ } from './util.ts';
 import { busy_, busyWithUntil_ } from './schedule.ts';
@@ -30,6 +30,7 @@ import {
 } from './admin.ts';
 import { adminRunAutomations_, runAutomations_ } from './automations.ts';
 import { importData_ } from './importer.ts';
+import { pushRegister_, pushUnregister_ } from './push.ts';
 
 type Fn = (d: any, extra?: any) => any;
 /* L = se ejecuta con el candado (una a la vez: agenda, pagos, saldos); N = sin candado */
@@ -55,10 +56,14 @@ L('adminSellBono', adminSellBono_); L('adminSaveBono', adminSaveBono_); L('admin
 N('adminEmailPreview', adminEmailPreview_); N('adminEmailTest', adminEmailTest_); L('adminRunAutomations', adminRunAutomations_);
 L('adminSaveAccount', adminSaveAccount_); L('adminDeleteAccount', adminDeleteAccount_); L('adminTransferReview', adminTransferReview_);
 L('adminResolveErrors', adminResolveErrors_); L('adminImport', importData_);
+// Apps
+N('pushRegister', pushRegister_); N('pushUnregister', pushUnregister_);
 
 /* Acciones que devuelven los datos completos del panel (necesitan historiales y el estado del sistema) */
 const PANEL = ['adminData', 'adminList', 'adminSaveSettings', 'adminRunAutomations', 'adminResolveErrors', 'adminImport'];
 const LOCK_KEY = 7212026;
+/* Tablas que no se cargan siempre y algunas acciones necesitan */
+const EXTRA: Record<string, string[]> = { pushRegister: ['Dispositivos'], pushUnregister: ['Dispositivos'] };
 
 /* Ajustes y servicios iniciales (lo que hacía setup()): se completan solos si faltan */
 function ensureSeed_() {
@@ -160,6 +165,7 @@ export async function handle(deps: Deps, method: string, data: any, headers: Rec
         if (entry.lock) await tx`select pg_advisory_xact_lock(${LOCK_KEY})`;
         await loadTables(tx, panel ? { tables: undefined } : {});
         if (panel) await loadTables(tx, { tables: ['Correos', 'Errores'] });
+        if (EXTRA[action]) await loadTables(tx, { tables: EXTRA[action] });
         ensureSeed_();
         // Verificaciones que necesitan internet, antes de la lógica
         if (data.idToken) { c.userToken = String(data.idToken); c.user = await resolveUser(c.userToken); }
@@ -177,6 +183,8 @@ export async function handle(deps: Deps, method: string, data: any, headers: Rec
           out = { ok: false, error: m };
         }
         await commit(tx);
+        // En las apps no hay cuadro de "no soy un robot": se pide iniciar sesión
+        if (out && out.ok === false && out.error === NOT_HUMAN && data.app) out.error = 'Para continuar desde la app, inicia sesión con tu correo (Cuenta → Iniciar sesión).';
         return out;
       });
       return { status: 200, body, after: safeOutbox(sql) };

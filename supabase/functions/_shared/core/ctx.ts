@@ -20,7 +20,7 @@ export type Op =
   | { kind: 'delete'; table: string; row: Row }
   | { kind: 'upsert'; table: string; row: Row };
 
-export interface OutMail { to: string; subject: string; html: string; text: string; attachments?: { name: string; mime: string; data: string }[]; log: Row | null; ref: string }
+export interface OutMail { to: string; subject: string; html: string; text: string; attachments?: { name: string; mime: string; data: string }[]; log: Row | null; ref: string; tipo?: string; studio?: boolean }
 export type OutTask =
   | { kind: 'mail'; mail: OutMail }
   | { kind: 'calendar.create'; citaId: string; event: any }

@@ -86,6 +86,8 @@ export async function resolveCaptcha(d: any, s: Record<string, string>) {
 }
 export function human_(d: any, s: Record<string, string>) {
   if (!turnstileOn_(s)) return true;
+  // Las apps no tienen el cuadro de Cloudflare: ahí basta con haber iniciado sesión (correo verificado)
+  if (!d.captcha && d.app) return !!cx().user;
   if (!d.captcha) return false;
   return cx().captcha !== false;
 }

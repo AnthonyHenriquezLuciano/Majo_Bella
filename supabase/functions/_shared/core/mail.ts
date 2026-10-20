@@ -397,7 +397,10 @@ export function safeMail_(to: string, subject: string, html: string, meta?: any)
   meta = meta || {};
   let log = null;
   try { log = appendRowRef_('Correos', { fecha: new Date().toISOString(), tipo: meta.tipo || 'otro', para: to, asunto: subject, ref: meta.ref || '', estado: 'pendiente' }); } catch (e) { /* nada */ }
-  cx().out.push({ kind: 'mail', mail: { to, subject, html, text: plainText_(html), attachments: meta.attachments || undefined, log, ref: meta.ref || '' } });
+  // studio: el correo va al estudio (el aviso push sale en la app del estudio, no en la de clientas)
+  let studio = false;
+  try { studio = to === adminTo_(cx().settings || {}); } catch (e) { /* nada */ }
+  cx().out.push({ kind: 'mail', mail: { to, subject, html, text: plainText_(html), attachments: meta.attachments || undefined, log, ref: meta.ref || '', tipo: meta.tipo || 'otro', studio } });
   return true;
 }
 

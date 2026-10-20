@@ -60,7 +60,9 @@ En Supabase, abre **Edge Functions → Secrets** (o **Project Settings → Edge 
 | `CRON_KEY` | Una clave larga inventada por ti (por ejemplo, de tu gestor de contraseñas). Protege las tareas automáticas. |
 | `IMPORT_KEY` | Otra clave larga inventada por ti. Solo sirve para pasar los datos de la hoja (paso 5). Después puedes borrarla. |
 | `GOOGLE_RELAY_URL` y `GOOGLE_RELAY_KEY` | Del conector de Google (paso 4). |
-| `TURNSTILE_SECRET` | Opcional: la clave secreta de Cloudflare Turnstile, si la usas. |
+| `TURNSTILE_SECRET` | Opcional: la clave secreta de Cloudflare Turnstile, si la usas. En las apps, en su lugar se pide haber iniciado sesión. |
+| `EXPO_ACCESS_TOKEN` | Opcional: token de expo.dev para enviar los avisos push de las apps. |
+| `PUSH_ACTIVO` | Opcional: `no` apaga los avisos push de las apps. |
 
 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_DB_URL` los pone Supabase solo. No hay que crearlos.
 
@@ -103,6 +105,16 @@ Recordatorios, reseñas, retoques, cumpleaños, lista de espera y aviso de trans
 
 La primera vez que entras al panel con la API nueva, la API las programa sola: necesita `CRON_KEY` (paso 3). Puedes verlas en Supabase, en **Integrations → Cron → majobella-tareas**.
 
+## 7. Apps del celular
+
+Las apps de clientas y del estudio usan esta misma API. Para que funcionen con Supabase:
+
+1. En GitHub → Settings → Secrets and variables → Actions → **Variables**, crea `SUPABASE_URL` (`https://<referencia>.supabase.co`) y `SUPABASE_ANON_KEY` (Project Settings → API → `anon` `public`; es pública, como la de la web).
+2. En Supabase → **Authentication**: correo con código y las direcciones de regreso `majobella://auth` y `majobella-estudio://auth`.
+3. GitHub vuelve a armar los `.apk` (Actions → Apps → Run workflow).
+
+Los pasos completos (inicio de sesión, Google, avisos push, iPhone) están en [`apps/README.md`](../apps/README.md).
+
 ## Para desarrollar (opcional)
 
 Desde la carpeta `supabase/`:
@@ -112,4 +124,5 @@ npm install
 npm test            # prueba la API contra un PostgreSQL local
 npm run typecheck
 npm run migration   # vuelve a generar el SQL de las tablas desde functions/_shared/core/schema.ts
+PGHOST=/tmp PGPORT=54329 npx tsx dev/servidor-local.ts 8787   # API local con datos de ejemplo (para probar las apps)
 ```

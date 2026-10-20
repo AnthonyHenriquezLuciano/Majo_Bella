@@ -4,6 +4,7 @@ import { cx, env_, type OutTask } from './ctx.ts';
 import { msg_ } from './util.ts';
 import { relay_, relayOn_ } from './google.ts';
 import { removeNow } from './storage.ts';
+import { sendPush, type PushMsg } from './push.ts';
 
 async function sendResend(m: any) {
   const res = await cx().deps.fetch('https://api.resend.com/emails', {
@@ -15,6 +16,11 @@ async function sendResend(m: any) {
     }),
   });
   if (res.status >= 300) throw new Error('Resend ' + res.status + ': ' + (await res.text()).slice(0, 200));
+}
+
+/* El asunto del correo sin la marca al final ("… · MAJOBELLA") */
+function pushText(subject: string): string {
+  return String(subject || '').replace(/\s*[·|-]\s*MAJOBELLA\s*$/i, '').replace(/^MAJOBELLA\s*[·|-]\s*/i, '').slice(0, 178);
 }
 
 export async function runOutbox(sql: any) {
@@ -58,6 +64,17 @@ export async function runOutbox(sql: any) {
     if (t.kind === 'storage.remove') { try { await removeNow(t.bucket, t.paths); } catch (e) { /* el archivo ya no existía */ } }
   }
 
+  // Avisos en el celular: uno por cada correo que salió (a quien tenga la app con esa cuenta)
+  let gone: string[] = [];
+  const pushes: PushMsg[] = mails.filter((t) => t.mail.tipo !== 'prueba').map((t) => ({
+    emails: String(t.mail.to).split(',').map((x: string) => x.trim().toLowerCase()).filter(Boolean),
+    title: t.mail.studio ? 'MAJOBELLA · Estudio' : 'MAJOBELLA',
+    body: pushText(t.mail.subject),
+    data: { tipo: t.mail.tipo || '', ref: t.mail.ref || '' },
+    studio: !!t.mail.studio,
+  }));
+  try { gone = await sendPush(sql, pushes); } catch (e) { console.error('Avisos push:', msg_(e)); }
+
   // Resultado de los envíos
   const failed = mailStatus.filter((m) => !m.ok);
   failed.forEach((m) => problems.push({ tipo: 'correo', mensaje: 'No se pudo enviar «' + m.subject + '» a ' + m.to + ': ' + (m.error || 'error'), ref: m.ref }));
@@ -66,6 +83,7 @@ export async function runOutbox(sql: any) {
       for (const m of mailStatus) {
         if (m.log && typeof m.log._row === 'number') await tx`update public.correos set estado = ${m.ok ? 'enviado' : 'error'} where row_id = ${m.log._row}`;
       }
+      if (gone.length) await tx`delete from public.dispositivos where token = any(${gone})`;
       for (const e of eventIds) await tx`update public.reservas set evento_id = ${e.id} where id = ${e.citaId}`;
       for (const p of problems.slice(0, 20)) {
         await tx`insert into public.errores (fecha, tipo, mensaje, ref, detalle) values (now(), ${p.tipo}, ${p.mensaje.slice(0, 600)}, ${p.ref.slice(0, 80)}, ${'después de guardar'})`;

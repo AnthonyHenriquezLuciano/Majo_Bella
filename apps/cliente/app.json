@@ -1,0 +1,84 @@
+{
+  "expo": {
+    "name": "MAJOBELLA",
+    "slug": "majobella",
+    "version": "1.0.0",
+    "description": "Reserva, paga y maneja tus citas en MAJOBELLA Beauty Studio.",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "majobella",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#ffffff",
+    "primaryColor": "#111111",
+    "ios": {
+      "bundleIdentifier": "com.majobella.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCalendarsUsageDescription": "Para añadir tus citas a tu calendario.",
+        "NSCalendarsWriteOnlyAccessUsageDescription": "Para añadir tus citas a tu calendario.",
+        "NSPhotoLibraryUsageDescription": "Para enviar el comprobante de tu transferencia.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.majobella.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#111111",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "permissions": ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR", "android.permission.POST_NOTIFICATIONS"],
+      "blockedPermissions": ["android.permission.RECORD_AUDIO"],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png",
+      "name": "MAJOBELLA",
+      "themeColor": "#ffffff"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 220
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#111111",
+          "defaultChannel": "avisos"
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Para añadir tus citas a tu calendario."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Para enviar el comprobante de tu transferencia.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {}
+    }
+  }
+}

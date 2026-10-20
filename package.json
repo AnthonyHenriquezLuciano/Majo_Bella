@@ -1,0 +1,15 @@
+{
+  "name": "majobella",
+  "private": true,
+  "description": "MAJOBELLA Beauty Studio: web (raíz del repositorio, GitHub Pages), apps (apps/) y código compartido (packages/). El backend está en supabase/.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "web:build": "node tools/build-web.mjs && node tools/build-core-data.mjs",
+    "cliente": "npm run start -w cliente",
+    "estudio": "npm run start -w estudio",
+    "typecheck": "npm run typecheck -w @majobella/core -w @majobella/ui -w cliente -w estudio"
+  }
+}

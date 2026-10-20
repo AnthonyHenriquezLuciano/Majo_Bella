@@ -63,6 +63,24 @@ export async function tryRefund_(captureId: string, requestId: string) {
 }
 
 /* Orden de cobro en dólares (depósito, saldo, tarjeta o paquete) */
+/* En las apps no hay botones de PayPal: se abre la página de pago de PayPal y, al terminar,
+   PayPal vuelve a pago.html de la web, que devuelve a la clienta a la app (majobella://pago). */
+export function appContext_(d: any, s: any) {
+  const ctx: any = { brand_name: 'MAJOBELLA', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' };
+  const base = String((s && s.webUrl) || '').trim();
+  if (d && d.app && /^https:\/\//.test(base)) {
+    const root = base.replace(/\/?$/, '/');
+    ctx.return_url = root + 'pago.html?r=ok';
+    ctx.cancel_url = root + 'pago.html?r=cancel';
+  }
+  return ctx;
+}
+/* Enlace de PayPal donde la clienta aprueba el pago */
+export function approveUrl_(order: any): string {
+  const l = ((order && order.links) || []).filter((x: any) => x.rel === 'approve' || x.rel === 'payer-action')[0];
+  return l ? String(l.href) : '';
+}
+
 export function orderBody(ref: string, invoice: string, description: string, usd: number) {
   return {
     intent: 'CAPTURE',

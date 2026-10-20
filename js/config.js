@@ -108,5 +108,6 @@ window.MAJOBELLA_CONFIG = {
     androidUrl: '',
     iosUrl: '',
     iosWebApp: true,
+    studioAndroidUrl: '',   // app del estudio (solo se muestra en el dashboard, no en la web pública)
   },
 };
