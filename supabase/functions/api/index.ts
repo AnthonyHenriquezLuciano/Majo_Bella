@@ -10,10 +10,10 @@ import { handle } from '../_shared/core/api.ts';
 // Conexión por el pooler de Supabase (modo transacción: sin consultas preparadas)
 const sql = postgres(Deno.env.get('SUPABASE_DB_URL')!, { prepare: false, max: 4, idle_timeout: 20, connect_timeout: 10, onnotice: () => {} });
 
-const ALLOWED = (Deno.env.get('ALLOWED_ORIGINS') || '').split(',').map((x) => x.trim()).filter(Boolean);
+const ALLOWED = (Deno.env.get('ALLOWED_ORIGINS') || 'https://anthonyhenriquezluciano.github.io').split(',').map((x) => x.trim()).filter(Boolean);
 function cors(origin: string | null) {
   // Las apps nativas no envían Origin; la web sí. Si hay lista de orígenes, solo esos.
-  const allow = !ALLOWED.length ? '*' : origin && ALLOWED.includes(origin) ? origin : ALLOWED[0];
+  const allow = origin && ALLOWED.includes(origin) ? origin : (origin ? 'null' : ALLOWED[0]);
   return {
     'Access-Control-Allow-Origin': allow,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
