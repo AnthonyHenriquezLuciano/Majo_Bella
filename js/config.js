@@ -91,10 +91,12 @@ window.MAJOBELLA_CONFIG = {
      PayPal no cobra en pesos dominicanos: el depósito se cobra en dólares con la tasa de abajo.
      Con el backend activo, la tasa y el porcentaje se toman de la pestaña "Ajustes" de la hoja.
      paypalClientId: ID de cliente PÚBLICO de la app de PayPal (sandbox para pruebas, live para cobrar).
-     El secreto de PayPal NUNCA va aquí: se guarda en las propiedades del script de Apps Script. */
+     El secreto de PayPal NUNCA va aquí: debe estar en Supabase Edge Functions → Secrets. */
   payments: {
-    enabled: true,
-    paypalClientId: 'BAAPu52Nua2n7aV6kWfyDD9Am8Hn6IDSnL9-eztQfm3_TpDqZxiuiR6wFwzCp9bZpL3mbZRers9Rn5Arns',
+    // Se activa SOLO cuando la API confirma las credenciales del mismo entorno.
+    // El catálogo de Supabase proporciona enabled y el ID público correcto.
+    enabled: false,
+    paypalClientId: '',
     depositPercent: 50,
     usdRate: 63,              // RD$ por 1 US$ (ejemplo: actualízala en la hoja "Ajustes")
     holdMinutes: 15,          // minutos que se aparta el horario mientras la clienta paga
