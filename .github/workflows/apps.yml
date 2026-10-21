@@ -46,6 +46,16 @@ jobs:
         run: |
           node --check apps/cliente/app.config.js
           node --check apps/estudio/app.config.js
+      - name: Validar perfiles EAS para Clientas y Estudio
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          for (const app of ['cliente', 'estudio']) {
+            const c = JSON.parse(fs.readFileSync(`apps/${app}/eas.json`, 'utf8'));
+            if (!c.build?.production || c.build?.preview?.distribution !== 'internal' || c.build?.preview?.android?.buildType !== 'apk') throw Error(`Perfil EAS incorrecto: ${app}`);
+            console.log(`EAS JSON correcto: ${app}`);
+          }
+          NODE
       - name: Verificar Firebase por cada app (sin mezclar los JSON)
         run: |
           node - <<'NODE'
