@@ -9,6 +9,14 @@
   const esc = (s) => M.escapeHtml(s == null ? '' : s);
   const API = M.BookingAPI;
   const C = M.config;
+  if (C.testMode && !document.getElementById('mjb-test-label')) {
+    const bar = document.createElement('div');
+    bar.id = 'mjb-test-label';
+    bar.setAttribute('role', 'status');
+    bar.textContent = 'MAJOBELLA · VERSIÓN DE PRUEBAS — Reservas y pagos simulados';
+    bar.style.cssText = 'background:#442712;color:#f7efe3;text-align:center;padding:7px 12px;font:600 11px/1.5 system-ui,sans-serif;letter-spacing:.02em';
+    document.body.prepend(bar);
+  }
   const store = {
     get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
