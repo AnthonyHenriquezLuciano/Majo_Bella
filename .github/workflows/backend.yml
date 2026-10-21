@@ -44,7 +44,8 @@ jobs:
 
   publicar:
     needs: pruebas
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    # Publicación explícita: integrar cambios a main NO debe migrar ni desplegar automáticamente.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
