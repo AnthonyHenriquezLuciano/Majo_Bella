@@ -5,7 +5,7 @@
 -- Solo el backend (Edge Function "api", con la llave de servicio) lee y escribe. La web y las apps
 -- nunca tocan las tablas directamente: piden todo a la API, que valida cada acción.
 
-create or replace function public.majobella_actualizado() returns trigger language plpgsql set search_path = pg_catalog as $
+create or replace function public.majobella_actualizado() returns trigger language plpgsql set search_path = pg_catalog as $$
 begin new.actualizado_en = now(); return new; end $$;
 
 set check_function_bodies = off;
