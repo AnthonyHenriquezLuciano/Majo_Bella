@@ -59,7 +59,8 @@
   };
 
   /* Copia local del catálogo (para mostrar la web y la app al instante) */
-  const CAT_KEY = 'mjb.catalog.v2';
+  // Separa las cachés por servidor: no utilizar precios ni pagos de Apps Script al cambiar a Supabase.
+  const CAT_KEY = 'mjb.catalog.v3:' + encodeURIComponent(String(API.apiUrl || '').trim());
   const catalogListeners = new Set();
   let refreshing = null, catalogAt = 0, applied = false;
   const catalogSig = (d) => { const c = Object.assign({}, d); delete c.cached; return JSON.stringify(c); };
