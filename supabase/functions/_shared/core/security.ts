@@ -82,14 +82,14 @@ export async function resolveCaptcha(d: any, s: Record<string, string>) {
     const body = new URLSearchParams({ secret: env_('TURNSTILE_SECRET'), response: String(d.captcha) });
     const res = await cx().deps.fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body });
     return (await res.json()).success === true;
-  } catch (e) { logError_('sistema', 'No se pudo verificar Turnstile: ' + msg_(e), '', ''); return true; }
+  } catch (e) { logError_('sistema', 'No se pudo verificar Turnstile: ' + msg_(e), '', ''); return false; }
 }
 export function human_(d: any, s: Record<string, string>) {
   if (!turnstileOn_(s)) return true;
   // Las apps no tienen el cuadro de Cloudflare: ahí basta con haber iniciado sesión (correo verificado)
   if (!d.captcha && d.app) return !!cx().user;
   if (!d.captcha) return false;
-  return cx().captcha !== false;
+  return cx().captcha === true;
 }
 
 /* ---- Límite de códigos equivocados: por dispositivo (8 cada 15 min) y en total (150 cada 10 min) ---- */
