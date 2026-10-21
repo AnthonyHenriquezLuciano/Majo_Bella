@@ -5,9 +5,10 @@
 #   https://github.com/<usuario>/<repo>/releases/download/app/majobella-estudio.apk
 #
 # Variables del repositorio (Settings → Secrets and variables → Actions → Variables), todas públicas:
-#   SUPABASE_URL        https://<referencia>.supabase.co   (sin ella, la app usa la API anterior para reservar)
-#   SUPABASE_ANON_KEY   llave pública "anon" del proyecto (para iniciar sesión)
-#   EAS_PROJECT_ID      opcional: proyecto de Expo para los avisos push
+#   SUPABASE_URL        https://thpjpsogcmqkemlxajcm.supabase.co  (respaldo público en ambas apps)
+#   SUPABASE_ANON_KEY   clave pública de Supabase (respaldo publicable en apps)
+#   EAS_PROJECT_ID_CLIENTE  UUID de Expo para MAJOBELLA Cliente
+#   EAS_PROJECT_ID_ESTUDIO  UUID distinto para MAJOBELLA Estudio
 # Secretos (Secrets) para firmar con la llave propia del estudio (se crean con tools/android-keystore.sh;
 # si faltan, se firma con la llave de prueba pública de React Native):
 #   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
@@ -20,6 +21,12 @@ on:
   pull_request:
     paths: ['apps/**', 'packages/**']
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publicar los APK en Releases (requiere firma Android propia y pruebas realizadas)'
+        type: boolean
+        required: true
+        default: false
 
 concurrency:
   group: apps-${{ github.ref }}
@@ -35,13 +42,18 @@ jobs:
       - run: npm ci
       - name: Tipos (TypeScript)
         run: npm run typecheck
+      - name: Validar configuraciones Expo de ambas apps
+        run: |
+          node --check apps/cliente/app.config.js
+          node --check apps/estudio/app.config.js
       - name: Pruebas del código compartido
         run: npx tsx packages/core/test/core.test.ts
 
   android:
     needs: revisar
-    # No construir ni distribuir APK en un push mientras MAJOBELLA está en pruebas.
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    # Push a main: genera APKs de prueba como ARTIFACTOS; nunca publica Releases.
+    # Manual: permite generar APKs y, con aprobación y firma privada, publicar Releases.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -55,7 +67,8 @@ jobs:
     env:
       EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
-      EXPO_PUBLIC_EAS_PROJECT_ID: ${{ vars.EAS_PROJECT_ID }}
+      EXPO_PUBLIC_EAS_PROJECT_ID: ${{ matrix.app == 'cliente' && vars.EAS_PROJECT_ID_CLIENTE || vars.EAS_PROJECT_ID_ESTUDIO }}
+      PUBLISH_RELEASE: ${{ inputs.publish_release || false }}
       NODE_ENV: production
     steps:
       - uses: actions/checkout@v4
@@ -65,6 +78,9 @@ jobs:
         with: { distribution: temurin, java-version: 17 }
       - uses: gradle/actions/setup-gradle@v4
       - run: npm ci
+      - name: Verificar Supabase y proyecto Expo por app
+        run: |
+          node -e "const v=process.env; const url=v.EXPO_PUBLIC_SUPABASE_URL || 'https://thpjpsogcmqkemlxajcm.supabase.co'; if(url !== 'https://thpjpsogcmqkemlxajcm.supabase.co') throw Error('URL incorrecta: se detiene la compilación'); const k=v.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_'; if(!k.startsWith('sb_publishable_') && !k.startsWith('eyJ')) throw Error('No es una clave pública de Supabase'); const id=v.EXPO_PUBLIC_EAS_PROJECT_ID; if (id && !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id)) throw Error('El ID Expo debe ser UUID'); console.log('API Supabase validada. Proyecto push: '+(id?'configurado':'no configurado (sin push remoto)'));"
       - name: Versión (cada compilación sube el número para poder actualizar sin desinstalar)
         working-directory: apps/${{ matrix.app }}
         run: |
@@ -93,7 +109,8 @@ jobs:
             "$BT/apksigner" sign --ks "$RUNNER_TEMP/release.keystore" --ks-pass env:KS_PASS --key-pass env:KEY_PASS --ks-key-alias "$KEY_ALIAS" --out "$GITHUB_WORKSPACE/${{ matrix.apk }}" app-release.apk
             rm -f "$RUNNER_TEMP/release.keystore"
           else
-            echo "::warning::Sin llave propia (ANDROID_KEYSTORE_*): se firma con la llave de prueba de React Native. Créala con tools/android-keystore.sh."
+            if [ "$PUBLISH_RELEASE" = 'true' ]; then echo '::error::No se pueden publicar APKs sin firma propia de Android'; exit 1; fi
+            echo "::warning::APK de PRUEBAS firmado con llave de desarrollo; solo artifact, no Releases."
             cp app-release.apk "$GITHUB_WORKSPACE/${{ matrix.apk }}"
           fi
           "$BT/apksigner" verify --print-certs "$GITHUB_WORKSPACE/${{ matrix.apk }}" | head -3
@@ -105,7 +122,7 @@ jobs:
 
   publicar:
     needs: android
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publish_release == true
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -118,7 +135,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           ls -la *.apk
-          NOTES="Apps de MAJOBELLA para Android (versión 1.0.${GITHUB_RUN_NUMBER}).
+          NOTES="Apps de MAJOBELLA Android (versión de PRUEBAS 1.0.${GITHUB_RUN_NUMBER}).
           - majobella.apk: app de clientas (reservar, pagar, mis citas, billetera).
           - majobella-estudio.apk: app del estudio (agenda, transferencias, clientas y dinero).
           Para instalar: abre el archivo en el celular y permite «instalar apps de este origen»."

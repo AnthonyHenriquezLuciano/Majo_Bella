@@ -39,7 +39,7 @@ tools/app-icons.py          Íconos y pantalla de inicio de las dos apps desde e
 
 ## Instalar en los celulares (sin Play Store ni App Store)
 
-**Android**: GitHub arma los `.apk` solo (pestaña **Actions → Apps**) cada vez que cambian `apps/` o `packages/`, y los publica en **Releases → app**:
+**Android (MAJOBELLA en pruebas)**: cuando cambian `apps/` o `packages/`, **GitHub Actions → Apps** compila ambos APK y los deja como *artifacts* de la ejecución. **No reemplaza Releases automáticamente**. Una publicación de APK firmados en **Releases → app** requiere una ejecución manual con `publish_release=true` y una firma privada configurada en GitHub. Los enlaces de Releases pueden apuntar todavía a versiones anteriores:
 
 - Clientas: `https://github.com/AnthonyHenriquezLuciano/Majo_Bella/releases/download/app/majobella.apk`
 - Estudio: `https://github.com/AnthonyHenriquezLuciano/Majo_Bella/releases/download/app/majobella-estudio.apk`
@@ -47,6 +47,21 @@ tools/app-icons.py          Íconos y pantalla de inicio de las dos apps desde e
 En el celular se abre el enlace, se descarga y se permite «instalar apps de este origen» la primera vez. Cada versión nueva se instala encima de la anterior (misma firma, número de versión mayor). La página **Aplicación** de la web muestra el botón de descarga cuando `js/config.js → app.androidUrl` tiene el enlace; el panel muestra el del estudio con `app.studioAndroidUrl`.
 
 **iPhone**: Apple solo permite instalar apps desde la App Store (o TestFlight), y para eso hace falta una cuenta de Apple Developer (US$ 99 al año). Mientras tanto, en iPhone la web ofrece la versión web de la app (`app/`, se agrega a la pantalla de inicio). Cuando haya cuenta de Apple: `npx eas build -p ios` y `npx eas submit` desde `apps/cliente`.
+
+
+## Dos proyectos independientes de Expo para avisos push
+
+**No existe aún un EAS Project ID registrado en el repositorio de cada app**. Un identificador de Supabase no puede sustituirlo. **No se puede inventar ni obtener un ID Expo sin vincular una cuenta de Expo autorizada.**
+
+1. Inicia sesión en [expo.dev](https://expo.dev) con la cuenta propietaria de MAJOBELLA.
+2. En una copia local del repositorio, abre la carpeta `apps/cliente` y ejecuta `npx eas-cli@latest init`. Esto crea/vincula el proyecto Expo **MAJOBELLA Cliente**. Copia el valor `projectId` mostrado (UUID).
+3. Repite desde `apps/estudio` usando `npx eas-cli@latest init`; debe generar un **segundo** proyecto Expo con otro UUID.
+4. En GitHub → **Settings → Secrets and variables → Actions → Variables**, introduce los dos identificadores en `EAS_PROJECT_ID_CLIENTE` y `EAS_PROJECT_ID_ESTUDIO`. El workflow `apps.yml` pasa únicamente el ID de la app de cada compilación a `EXPO_PUBLIC_EAS_PROJECT_ID`.
+5. `app.config.js` en cada carpeta inyecta `extra.eas.projectId`, que es lo que usa Expo para atribuir los tokens push. Si `eas init` ya guardó un ID en `app.json`, se conservará como respaldo. El código valida el formato UUID y no acepta identificadores mal formados.
+6. Para notificaciones push **Android** configura [Firebase FCM V1](https://docs.expo.dev/push-notifications/fcm-credentials/) para ambos identificadores de paquete (`com.majobella.app` y `com.majobella.estudio`). Descarga y vincula el `google-services.json` correspondiente a cada app; sube su credencial privada de cuenta de servicio **directamente a EAS**, nunca a GitHub. Sin FCM, los tokens de notificaciones remotas pueden fallar incluso con EAS IDs válidos.
+7. Para nuevas compilaciones de prueba puedes usar **Actions → Apps → Run workflow**, con **Publish release: false**; los APK quedarán bajo **Artifacts**. No distribuyas APKs de prueba como producción.
+
+Los recordatorios **locales** de citas funcionan sin EAS cuando la clienta habilita notificaciones en Android. Los avisos push **remotos** de reservas requieren ID EAS, FCM, aplicación instalada, sesión iniciada y permiso de notificaciones.
 
 ## Configuración
 
@@ -56,10 +71,11 @@ Las apps usan solo valores **públicos** (los mismos que ya ve cualquiera en la 
 |---|---|---|
 | `EXPO_PUBLIC_SUPABASE_URL` | GitHub → Settings → Secrets and variables → Actions → **Variables** → `SUPABASE_URL` | `https://<referencia>.supabase.co` |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Variable `SUPABASE_ANON_KEY` | Supabase → Project Settings → API → `anon` `public` |
-| `EXPO_PUBLIC_EAS_PROJECT_ID` | Variable `EAS_PROJECT_ID` (opcional) | Proyecto de Expo para los avisos push (ver abajo) |
+| `EXPO_PUBLIC_EAS_PROJECT_ID` (cliente) | Variable `EAS_PROJECT_ID_CLIENTE` | UUID exclusivo de la app de clientas en Expo (no es el Project Ref de Supabase). |
+| `EXPO_PUBLIC_EAS_PROJECT_ID` (estudio) | Variable `EAS_PROJECT_ID_ESTUDIO` | UUID exclusivo de la app del estudio en Expo; distinto al anterior. |
 | `EXPO_PUBLIC_API_URL` | Solo para pruebas | Otra API (por ejemplo la local) |
 
-Sin `SUPABASE_URL`, la app de clientas usa la API anterior (Apps Script) para reservar como invitada; el inicio de sesión y la app del estudio necesitan Supabase.
+Ambas apps utilizan exclusivamente Supabase. Tienen como respaldo el URL y la clave **publishable** pública del proyecto MAJOBELLA. Las variables de GitHub permiten sustituir estos valores, por ejemplo al rotar la clave.
 
 Para firmar los `.apk` siempre con la misma llave, el repositorio necesita los secretos `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` y `ANDROID_KEY_PASSWORD` (solo viven en GitHub). Se crean una vez desde tu computadora con `bash tools/android-keystore.sh` (necesita Java y GitHub CLI). Mientras no existan, los `.apk` salen firmados con la llave de prueba de React Native (la misma en cada versión, así que se actualizan bien, pero es pública): conviene crear la propia antes de repartir la app. Al pasar de la llave de prueba a la propia (o si algún día se cambia), las apps instaladas tendrán que desinstalarse una vez.
 
