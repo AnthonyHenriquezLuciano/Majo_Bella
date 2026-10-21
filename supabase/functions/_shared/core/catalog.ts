@@ -4,7 +4,7 @@ import { readOpt_ } from './db.ts';
 import { servicesMap_, services_, settings_ } from './data.ts';
 import { schedule_ } from './schedule.ts';
 import { promos_ } from './pricing.ts';
-import { paypalEnv_ } from './paypal.ts';
+import { paypalEnv_, paypalConfigured_ } from './paypal.ts';
 import { turnstileOn_ } from './security.ts';
 import { num_, on_, todayKey_ } from './util.ts';
 
@@ -16,6 +16,9 @@ export function catalog_(): any {
     ok: true,
     services: services_().map(function (x) { return { id: x.id, name: x.name, durationMinutes: x.durationMinutes, price: x.price, priceFrom: x.priceFrom, depositPercent: x.depositPercent }; }),
     payments: {
+      // No ofrecer PayPal hasta que la API tenga un par de credenciales configurado.
+      enabled: paypalConfigured_(),
+      paypalClientId: paypalConfigured_() ? env_('PAYPAL_CLIENT_ID') : '',
       usdRate: num_(s.tasaUSD, 63),
       depositPercent: num_(s.porcentajeDeposito, 50),
       holdMinutes: num_(s.minutosRetencion, 15),
@@ -40,7 +43,7 @@ export function catalog_(): any {
     reschedule: { max: changesMax_(s) },
     security: { turnstileSiteKey: turnstileOn_(s) ? String(s.turnstileSiteKey).trim() : '' },
     giftShop: {
-      enabled: /^s[ií]$/i.test(s.tarjetasEnLinea || 'si') && !!env_('PAYPAL_CLIENT_ID'),
+      enabled: /^s[ií]$/i.test(s.tarjetasEnLinea || 'si') && paypalConfigured_(),
       min: num_(s.tarjetaMin, 500), max: num_(s.tarjetaMax, 30000), validDays: num_(s.tarjetaVenceDias, 365),
     },
     // Solo las promociones automáticas (los códigos no se publican)
