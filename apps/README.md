@@ -49,6 +49,27 @@ En el celular se abre el enlace, se descarga y se permite «instalar apps de est
 **iPhone**: Apple solo permite instalar apps desde la App Store (o TestFlight), y para eso hace falta una cuenta de Apple Developer (US$ 99 al año). Mientras tanto, en iPhone la web ofrece la versión web de la app (`app/`, se agrega a la pantalla de inicio). Cuando haya cuenta de Apple: `npx eas build -p ios` y `npx eas submit` desde `apps/cliente`.
 
 
+## Si `eas credentials -p android` indica "eas.json could not be found"
+
+Ambas aplicaciones incluyen ahora **su propio `eas.json`** con los perfiles **`preview`** (APK de pruebas internas) y **`production`** (perfil de credenciales; **no activa cobros reales**).
+
+Si el repositorio ya existe en Windows, desde PowerShell:
+
+```powershell
+cd C:\Users\Anthony\Majo_Bella
+git pull origin main
+cd .\apps\cliente
+$env:EXPO_PUBLIC_EAS_PROJECT_ID = 'UUID_REAL_CLIENTE'  # Reemplazar por el ID dado por Expo
+npx eas-cli@latest project:info
+npx eas-cli@latest credentials -p android
+```
+
+En el menú de credenciales elegir **Android → production → Google Service Account → Manage your Google Service Account Key for Push Notifications (FCM V1)**. Cargar la **clave privada** de la cuenta de servicio desde el equipo; no es `google-services.json`.
+
+Para el Estudio, cambiar a `cd ..\estudio`, sustituir la variable local `$env:EXPO_PUBLIC_EAS_PROJECT_ID = 'UUID_REAL_ESTUDIO'` por su UUID **diferente** y repetir `project:info` y `credentials -p android`. La variable de PowerShell solo dura durante esa sesión, y garantiza que se utilice el proyecto Expo correcto aunque `eas init` no haya persistido el ID en un archivo.
+
+Si `git pull` muestra conflictos o el proyecto ya tiene `eas.json` local, guardar una copia y revisar los cambios; **no forzar ni sobrescribir** las credenciales. Esta vinculación FCM **no necesita crear otro proyecto EAS ni configurar un Android Keystore**.
+
 ## Dos proyectos independientes de Expo para avisos push
 
 **No existe aún un EAS Project ID registrado en el repositorio de cada app**. Un identificador de Supabase no puede sustituirlo. **No se puede inventar ni obtener un ID Expo sin vincular una cuenta de Expo autorizada.**
