@@ -9,14 +9,15 @@
 
 ## Correo electrónico sin Apps Script
 **Recomendado: Resend** (https://resend.com).
-1. Verificar un dominio propio de envío en Resend (DNS SPF/DKIM), por ejemplo `notificaciones@tudominio.com`.
+1. **Mientras MAJOBELLA siga en GitHub Pages y en pruebas (sin dominio propio):** crear cuenta en Resend; usar como remitente de prueba `MAJOBELLA <onboarding@resend.dev>`. Sin dominio verificado, Resend restringe los correos a la dirección propietaria de esa cuenta; **no permite enviar libremente a las clientas**. No anunciar envío real a terceros.
 2. En **Supabase → Edge Functions → Secrets** configurar:
    - `RESEND_API_KEY`: clave de servidor (privada).
-   - `MAIL_FROM`: `MAJOBELLA <notificaciones@tudominio.com>` (de un dominio realmente verificado).
-   - `ADMIN_EMAILS`: correo(s) autorizados del estudio y que reciben alertas.
-3. La API genera y encola los mensajes **después de registrar la operación en PostgreSQL**. `outbox.ts` intenta el envío mediante Resend; los resultados de cada correo se anotan en `Correos`, y los fallos en `Errores`.
-4. Plantillas de `mail.ts` para: confirmación, cancelación, cambio, recibo/comprobante de transferencia, recordatorio, reseñas, cumpleaños, retoques y avisos de agenda al estudio.
-5. Hacer una reserva de prueba con dirección propia, revisar Resend y `Correos`, y comprobar mensajes en spam. **No anunciar envíos automáticos a clientas hasta probarlos.**
+   - `MAIL_FROM`: `MAJOBELLA <onboarding@resend.dev>` **solo durante las pruebas**.
+   - `ADMIN_EMAILS`: correo(s) autorizados del estudio y que reciben alertas. Para validar entregas, usar como destinataria la dirección de la cuenta Resend.
+3. **Cuando se compre un dominio:** añadirlo a Resend, verificar los registros DNS (SPF/DKIM) y cambiar `MAIL_FROM` por una dirección de ese dominio, por ejemplo `MAJOBELLA <notificaciones@majobella.com>`. Esto no exige abandonar GitHub Pages: alojamiento web y dominio remitente del correo son independientes.
+4. La API genera y encola los mensajes **después de registrar la operación en PostgreSQL**. `outbox.ts` intenta el envío mediante Resend; los resultados de cada correo se anotan en `Correos`, y los fallos en `Errores`.
+5. Plantillas de `mail.ts` para: confirmación, cancelación, cambio, recibo/comprobante de transferencia, recordatorio, reseñas, cumpleaños, retoques y avisos de agenda al estudio.
+6. Hacer una reserva de prueba con dirección propia, revisar Resend y `Correos`, y comprobar mensajes en spam. **No anunciar envíos automáticos a clientas hasta probarlos.**
 
 **Importante:** si falta `RESEND_API_KEY` y tampoco está configurado `GOOGLE_RELAY_URL/KEY`, el sistema **NO envía correos**; solo registra la falta de integración. Se recomienda Resend para no depender de Apps Script.
 
