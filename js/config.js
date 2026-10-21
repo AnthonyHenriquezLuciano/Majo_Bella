@@ -27,7 +27,7 @@ window.MAJOBELLA_CONFIG = {
      1. En https://console.cloud.google.com crea un proyecto → "APIs y servicios" → "Credenciales".
      2. "Crear credenciales" → "ID de cliente de OAuth" → tipo "Aplicación web".
      3. En "Orígenes autorizados de JavaScript" añade el dominio de la web (ej. https://majobella.com).
-     4. Copia el ID de cliente (termina en .apps.googleusercontent.com) aquí y en el backend (Code.gs). */
+     4. Copia el ID de cliente (termina en .apps.googleusercontent.com) aquí y en los secretos de Supabase. */
   google: {
     clientId: '333956941163-rlgrb3759jf2uc05olhhpm9e2ggrhm1s.apps.googleusercontent.com',
   },
@@ -91,7 +91,7 @@ window.MAJOBELLA_CONFIG = {
   /* Pagos con PayPal -------------------------------------------------------
      La cita se aparta pagando un depósito; el saldo se paga al terminar (efectivo o PayPal).
      PayPal no cobra en pesos dominicanos: el depósito se cobra en dólares con la tasa de abajo.
-     Con el backend activo, la tasa y el porcentaje se toman de la pestaña "Ajustes" de la hoja.
+     Con Supabase activo, la tasa y el porcentaje se administran desde el panel MAJOBELLA.
      paypalClientId: ID de cliente PÚBLICO de la app de PayPal (sandbox para pruebas, live para cobrar).
      El secreto de PayPal NUNCA va aquí: debe estar en Supabase Edge Functions → Secrets. */
   payments: {
