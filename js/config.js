@@ -4,6 +4,8 @@
    Los servicios y precios están en js/data/services.js
    ========================================================================== */
 window.MAJOBELLA_CONFIG = {
+  // Hasta que el estudio apruebe la salida a producción: reservas y pagos de prueba.
+  testMode: true,
   brand: {
     name: 'MAJOBELLA',
     // Eslogan tal como aparece en la web. Cámbialo aquí si lo prefieres sin tilde.
