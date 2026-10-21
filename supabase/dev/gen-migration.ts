@@ -45,7 +45,7 @@ function tableSql(t: (typeof TABLES)[number]): string[] {
 }
 for (const t of TABLES.filter((x) => !x.migration)) out.push(...tableSql(t));
 
-const header = `create or replace function public.majobella_actualizado() returns trigger language plpgsql as $$
+const header = `create or replace function public.majobella_actualizado() returns trigger language plpgsql set search_path = pg_catalog as $$
 begin new.actualizado_en = now(); return new; end $$;
 `;
 

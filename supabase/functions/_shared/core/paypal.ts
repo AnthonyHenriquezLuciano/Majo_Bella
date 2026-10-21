@@ -3,7 +3,10 @@ import { cx, env_ } from './ctx.ts';
 import { cacheGet, cachePut } from './db.ts';
 import { msg_ } from './util.ts';
 
-export function paypalEnv_() { return (env_('PAYPAL_ENV') || 'sandbox').toLowerCase() === 'live' ? 'live' : 'sandbox'; }
+export function paypalEnv_() {
+  // Doble confirmación para cobros reales: no basta cambiar PAYPAL_ENV por accidente.
+  return env_('MAJOBELLA_TEST_MODE') === 'production' && env_('PAYPAL_ENV').toLowerCase() === 'live' ? 'live' : 'sandbox';
+}
 function paypalBase_() { return paypalEnv_() === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com'; }
 export function paypalConfigured_() { return !!(env_('PAYPAL_CLIENT_ID') && env_('PAYPAL_SECRET')); }
 

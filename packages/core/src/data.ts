@@ -72,7 +72,7 @@ export const CONFIG: PublicConfig = {
     "holdMinutes": 15
   },
   "webUrl": "https://anthonyhenriquezluciano.github.io/Majo_Bella/",
-  "apiUrl": "https://script.google.com/macros/s/AKfycbxTtcibU04A-shJ2iKioIu6glN9uLDloUoSiJ3Y2bSuSAPDaRdzQ9TjEMTwxmaG5HVp/exec"
+  "apiUrl": "https://thpjpsogcmqkemlxajcm.supabase.co/functions/v1/api"
 };
 
 export const SERVICES: ServiceInfo[] = [

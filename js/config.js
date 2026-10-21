@@ -4,6 +4,8 @@
    Los servicios y precios están en js/data/services.js
    ========================================================================== */
 window.MAJOBELLA_CONFIG = {
+  // Hasta que el estudio apruebe la salida a producción: reservas y pagos de prueba.
+  testMode: true,
   brand: {
     name: 'MAJOBELLA',
     // Eslogan tal como aparece en la web. Cámbialo aquí si lo prefieres sin tilde.
@@ -25,7 +27,7 @@ window.MAJOBELLA_CONFIG = {
      1. En https://console.cloud.google.com crea un proyecto → "APIs y servicios" → "Credenciales".
      2. "Crear credenciales" → "ID de cliente de OAuth" → tipo "Aplicación web".
      3. En "Orígenes autorizados de JavaScript" añade el dominio de la web (ej. https://majobella.com).
-     4. Copia el ID de cliente (termina en .apps.googleusercontent.com) aquí y en el backend (Code.gs). */
+     4. Copia el ID de cliente (termina en .apps.googleusercontent.com) aquí y en los secretos de Supabase. */
   google: {
     clientId: '333956941163-rlgrb3759jf2uc05olhhpm9e2ggrhm1s.apps.googleusercontent.com',
   },
@@ -76,12 +78,12 @@ window.MAJOBELLA_CONFIG = {
   },
 
   /* Sistema de reservas ----------------------------------------------------
-     URL de la aplicación web de Google Apps Script (termina en /exec).
-     Con ella, las reservas se guardan en la hoja de Google de MAJOBELLA, los horarios ocupados
-     se ven en gris para todas y el dashboard (admin.html) muestra la agenda.
-     Pasos en backend/google-apps-script/INSTALAR.md */
+     API de Supabase: las citas se guardan en PostgreSQL y se gestionan
+     desde la web, la app y el panel. Antes de publicar, configurar secretos
+     de PayPal y acceso administrativo en Supabase (supabase/INSTALAR.md).
+     NO cambiar la rama main hasta completar las pruebas de integración. */
   booking: {
-    apiUrl: 'https://script.google.com/macros/s/AKfycbxTtcibU04A-shJ2iKioIu6glN9uLDloUoSiJ3Y2bSuSAPDaRdzQ9TjEMTwxmaG5HVp/exec',
+    apiUrl: 'https://thpjpsogcmqkemlxajcm.supabase.co/functions/v1/api',
     studioCalendarName: 'MAJOBELLA',
     reminderMinutesBefore: 120,
   },
@@ -89,12 +91,14 @@ window.MAJOBELLA_CONFIG = {
   /* Pagos con PayPal -------------------------------------------------------
      La cita se aparta pagando un depósito; el saldo se paga al terminar (efectivo o PayPal).
      PayPal no cobra en pesos dominicanos: el depósito se cobra en dólares con la tasa de abajo.
-     Con el backend activo, la tasa y el porcentaje se toman de la pestaña "Ajustes" de la hoja.
+     Con Supabase activo, la tasa y el porcentaje se administran desde el panel MAJOBELLA.
      paypalClientId: ID de cliente PÚBLICO de la app de PayPal (sandbox para pruebas, live para cobrar).
-     El secreto de PayPal NUNCA va aquí: se guarda en las propiedades del script de Apps Script. */
+     El secreto de PayPal NUNCA va aquí: debe estar en Supabase Edge Functions → Secrets. */
   payments: {
-    enabled: true,
-    paypalClientId: 'BAAPu52Nua2n7aV6kWfyDD9Am8Hn6IDSnL9-eztQfm3_TpDqZxiuiR6wFwzCp9bZpL3mbZRers9Rn5Arns',
+    // Se activa SOLO cuando la API confirma las credenciales del mismo entorno.
+    // El catálogo de Supabase proporciona enabled y el ID público correcto.
+    enabled: false,
+    paypalClientId: '',
     depositPercent: 50,
     usdRate: 63,              // RD$ por 1 US$ (ejemplo: actualízala en la hoja "Ajustes")
     holdMinutes: 15,          // minutos que se aparta el horario mientras la clienta paga

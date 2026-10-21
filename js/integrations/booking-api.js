@@ -1,8 +1,8 @@
-/* MAJOBELLA · Agenda, disponibilidad y pagos (backend de Google Apps Script + Google Sheets)
+/* MAJOBELLA · Agenda, disponibilidad y pagos (backend Supabase PostgreSQL)
    Sin backend (config.booking.apiUrl vacío):
      - las horas se calculan con el horario de config.schedule y no se conocen las reservas ya hechas.
    Con backend (apiUrl definido):
-     GET  ?action=catalog                       → precios, duración, tasa del dólar y horario desde la hoja
+     GET  ?action=catalog                       → precios, duración, tasa del dólar y horario desde Supabase
      GET  ?action=busy&from=AAAA-MM-DD&to=…     → { busy: [{ start, end }] } horarios ocupados (sin datos personales)
      POST { action: 'hold', … }                 → aparta el horario y crea la orden de PayPal del depósito
      POST { action: 'capture', id, orderId }    → cobra el depósito y confirma la cita
@@ -12,7 +12,7 @@
      POST { action: 'myAppointments', idToken } · { action: 'lookup', items: [{ id, token }] }
      POST { action: 'hold', method: 'transferencia' } → aparta el horario; luego 'transferProof' con el comprobante
      POST { action: 'reschedule', id, token|idToken, date, time } · { action: 'myWallet', idToken } · { action: 'walletEmail', email }
-   Implementado en backend/google-apps-script/Code.gs */
+   Implementado en supabase/functions/_shared/core/api.ts */
 (function (M) {
   const SCH = M.config.schedule;
   const API = M.config.booking;
@@ -59,7 +59,8 @@
   };
 
   /* Copia local del catálogo (para mostrar la web y la app al instante) */
-  const CAT_KEY = 'mjb.catalog.v2';
+  // Separa las cachés por servidor: no utilizar precios ni pagos de Apps Script al cambiar a Supabase.
+  const CAT_KEY = 'mjb.catalog.v3:' + encodeURIComponent(String(API.apiUrl || '').trim());
   const catalogListeners = new Set();
   let refreshing = null, catalogAt = 0, applied = false;
   const catalogSig = (d) => { const c = Object.assign({}, d); delete c.cached; return JSON.stringify(c); };
@@ -101,7 +102,7 @@
       return data;
     },
 
-    /* Envío POST (text/plain evita la petición previa CORS con Google Apps Script) */
+    /* Envío POST JSON; el backend Supabase acepta text/plain por compatibilidad. */
     async post(body, fallbackError) {
       if (!this.enabled()) throw new Error('No hay backend configurado.');
       let res;
@@ -113,7 +114,7 @@
       return data;
     },
 
-    /* Precios, duraciones, tasa y horario desde la hoja de MAJOBELLA.
+    /* Precios, duraciones, tasa y horario desde Supabase.
        Con una copia guardada se muestra al instante y se actualiza por detrás; si cambió algo, avisa con onCatalogChange. */
     async loadCatalog() {
       if (!this.enabled()) return false;
@@ -205,7 +206,15 @@
           busyListeners.forEach((fn) => fn());
           return busyCache.list;
         })
-        .catch((err) => { busyCache.error = err.message; busyListeners.forEach((fn) => fn()); throw err; })
+        .catch((err) => {
+          // Sin una lectura válida del servidor no se deben anunciar horas como libres.
+          // Descartar datos anteriores para evitar disponibilidad obsoleta tras un fallo.
+          busyCache.at = 0;
+          busyCache.list = [];
+          busyCache.error = err.message;
+          busyListeners.forEach((fn) => fn());
+          throw err;
+        })
         .finally(() => { busyCache.pending = null; });
       return busyCache.pending;
     },

@@ -3,7 +3,7 @@
 -- pg_cron llama a la API cada hora (pg_net hace la llamada HTTP). La propia API crea o actualiza
 -- el trabajo "majobella-tareas" la primera vez que se abre el panel, con su dirección y su clave.
 create extension if not exists pg_cron;
-create extension if not exists pg_net;
+create extension if not exists pg_net with schema extensions;
 
 -- La API usa esta función para programar (o reprogramar) la tarea sin exponer pg_cron a nadie más.
 create or replace function public.majobella_programar_tareas(url text, clave text)

@@ -35,7 +35,18 @@
 
   const run = (name, fn) => { try { fn(); } catch (e) { console.error('[MAJOBELLA] ' + name, e); } };
 
+  function showTestMode() {
+    if (!M.config.testMode || document.getElementById('mjb-test-label')) return;
+    const bar = document.createElement('div');
+    bar.id = 'mjb-test-label';
+    bar.setAttribute('role', 'status');
+    bar.textContent = 'MAJOBELLA · VERSIÓN DE PRUEBAS — Citas simuladas y pagos PayPal Sandbox, sin dinero real';
+    bar.style.cssText = 'position:relative;z-index:1000;background:#442712;color:#f7efe3;text-align:center;padding:10px 16px;font:600 12px/1.5 system-ui,sans-serif;letter-spacing:.025em';
+    document.body.prepend(bar);
+  }
+
   async function start() {
+    showTestMode();
     if (window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
     run('nav', M.initNav);
     run('auth', M.initAuthModal);

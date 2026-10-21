@@ -144,7 +144,9 @@ export async function capture_(d) {
     patch.estado = 'cancelada'; patch.canceladaEn = new Date().toISOString(); patch.canceladaPor = 'sistema: horario ocupado';
     patch.reembolso = refund;
     updateRow_(found.index, patch);
-    return { ok: false, error: 'El horario se ocupó mientras pagabas. Te devolvimos el depósito completo en PayPal.' };
+    return { ok: false, error: /^reembolsado/.test(refund)
+      ? 'El horario se ocupó mientras pagabas. Se solicitó el reembolso de tu depósito en PayPal.'
+      : 'El horario se ocupó mientras pagabas. Tu reembolso está pendiente de revisión por el estudio. Guarda este código: ' + r.id };
   }
 
   patch.estado = 'confirmada';
@@ -219,6 +221,12 @@ export async function balanceCapture_(d) {
   if (r.saldoOrden !== d.orderId) return { ok: false, error: 'El pago no corresponde a esta cita.' };
   const cap = firstCapture_(await paypal_('post', '/v2/checkout/orders/' + encodeURIComponent(d.orderId) + '/capture', {}, r.id + '-saldo-' + d.orderId));
   if (!cap || cap.status !== 'COMPLETED') return { ok: false, error: 'PayPal no completó el pago.' };
+  // El monto lo fijó el servidor al crear la orden; nunca marcar pagado un cobro inferior.
+  if (cap.amount?.currency_code !== 'USD' || !Number.isFinite(Number(cap.amount?.value)) ||
+      Number(cap.amount.value) + 0.001 < Number(r.saldoUSD)) {
+    return paidButFailed_('un importe diferente al saldo esperado de la cita ' + r.id,
+      cap.id, r.id, new Error('Monto o moneda de PayPal no coincide con la orden registrada'));
+  }
   const patch: any = { saldoEstado: 'pagado', saldoMetodo: 'paypal', saldoPagado: new Date().toISOString(), saldoCaptura: cap.id };
   try { updateRow_(found.index, patch); } catch (err) { return paidButFailed_('el saldo de la cita ' + r.id, cap.id, r.id, err); }
   Object.keys(patch).forEach(function (k) { r[k] = patch[k]; });
