@@ -46,6 +46,18 @@ jobs:
         run: |
           node --check apps/cliente/app.config.js
           node --check apps/estudio/app.config.js
+      - name: Verificar Firebase por cada app (sin mezclar los JSON)
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          for (const [app, pkg] of [['cliente', 'com.majobella.app'], ['estudio', 'com.majobella.estudio']]) {
+            const expo = JSON.parse(fs.readFileSync(`apps/${app}/app.json`, 'utf8')).expo;
+            const firebase = JSON.parse(fs.readFileSync(`apps/${app}/google-services.json`, 'utf8'));
+            const packages = firebase.client.map(x => x.client_info.android_client_info.package_name);
+            if (expo.android.package !== pkg || expo.android.googleServicesFile !== './google-services.json' || firebase.project_info.project_id !== 'majobella' || packages.length !== 1 || packages[0] !== pkg) throw Error(`Firebase no coincide con ${app}: ${packages}`);
+            console.log(`Firebase validado: ${app} -> ${pkg}`);
+          }
+          NODE
       - name: Pruebas del código compartido
         run: npx tsx packages/core/test/core.test.ts
 
