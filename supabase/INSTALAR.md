@@ -2,6 +2,8 @@
 
 La hoja de Google se reemplaza por una base de datos PostgreSQL en Supabase. La web, la app de clientas, la app del estudio y el panel hablan con una sola API.
 
+> **Activación MAJOBELLA v1.1:** la persona propietaria confirmó que todos los registros antiguos son pruebas. **No hay que importar Google Sheets ni Drive**, configurar `IMPORT_KEY` ni ejecutar las funciones de migración. El procedimiento mínimo vigente está en [ESTADO-MIGRACION.md](ESTADO-MIGRACION.md). La publicación desde GitHub Actions es **manual**, no automática.
+
 ```
 web · app de clientas · app del estudio · panel
                  │
@@ -34,7 +36,7 @@ Las claves secretas viven solo en Supabase. **Nunca** van en GitHub ni se mandan
 
 > Plan gratis: sirve para empezar, pero el proyecto se pausa si pasa 7 días sin uso. Para el negocio en marcha conviene el plan Pro (US$25 al mes).
 
-## 2. Publicar la base y la API desde GitHub (automático)
+## 2. Publicar la base y la API desde GitHub (manual, tras validar)
 
 1. En Supabase, abre **Account → Access Tokens** (<https://supabase.com/dashboard/account/tokens>) y crea un token. Cópialo.
 2. En GitHub, abre el repositorio y ve a **Settings → Secrets and variables → Actions → New repository secret**. Crea estos tres:
@@ -44,7 +46,7 @@ Las claves secretas viven solo en Supabase. **Nunca** van en GitHub ni se mandan
 3. Ve a **Actions → Backend → Run workflow**.
    - Primero corren las pruebas.
    - Si pasan, se crean las tablas y se publica la API.
-   - Desde ahí, cada cambio en `supabase/` se prueba y se publica solo.
+   - Los cambios en `supabase/` se prueban automáticamente; el despliegue queda **manual**.
 
 ## 3. Secretos de la API
 
@@ -84,7 +86,7 @@ Los correos salen desde tu Gmail, como hasta ahora, y las citas se agendan en tu
 
 > Alternativa solo para el correo: una cuenta de [Resend](https://resend.com). Añade `RESEND_API_KEY` y `MAIL_FROM`; necesita un dominio propio verificado.
 
-## 5. Pasar los datos de la hoja
+## 5. Pasar los datos de la hoja (NO APLICA: solo datos de prueba)
 
 1. Abre el proyecto de Apps Script de siempre (el de la hoja) y pega la versión nueva de `backend/google-apps-script/Code.gs`.
 2. En **Configuración del proyecto → Propiedades del script**, añade:
