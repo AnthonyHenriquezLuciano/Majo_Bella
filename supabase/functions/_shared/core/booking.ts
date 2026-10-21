@@ -144,7 +144,9 @@ export async function capture_(d) {
     patch.estado = 'cancelada'; patch.canceladaEn = new Date().toISOString(); patch.canceladaPor = 'sistema: horario ocupado';
     patch.reembolso = refund;
     updateRow_(found.index, patch);
-    return { ok: false, error: 'El horario se ocupó mientras pagabas. Te devolvimos el depósito completo en PayPal.' };
+    return { ok: false, error: /^reembolsado/.test(refund)
+      ? 'El horario se ocupó mientras pagabas. Se solicitó el reembolso de tu depósito en PayPal.'
+      : 'El horario se ocupó mientras pagabas. Tu reembolso está pendiente de revisión por el estudio. Guarda este código: ' + r.id };
   }
 
   patch.estado = 'confirmada';
