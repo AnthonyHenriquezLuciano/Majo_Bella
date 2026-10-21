@@ -42,6 +42,10 @@ jobs:
       - run: npm ci
       - name: Tipos (TypeScript)
         run: npm run typecheck
+      - name: Validar configuraciones Expo de ambas apps
+        run: |
+          node --check apps/cliente/app.config.js
+          node --check apps/estudio/app.config.js
       - name: Pruebas del código compartido
         run: npx tsx packages/core/test/core.test.ts
 
