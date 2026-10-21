@@ -34,3 +34,20 @@ Fecha: 2026-10-21. **El propietario confirmó que todo el historial de Google Sh
 - No comparar ni replicar las reservas de prueba del servidor anterior. **Al activar la nueva web, esos datos de prueba dejarán de aparecer, por decisión del propietario.**
 
 **Importante:** si antes del cambio aparece alguna reserva auténtica en el sistema antiguo, detener el corte y trasladarla o confirmarla manualmente. No exponer claves, tokens ni contraseñas en GitHub o el chat.
+
+## Verificación Sandbox efectuada (2026-10-21)
+- La API reporta PayPal **habilitado** y entorno `sandbox`; devuelve 5 servicios (HTTP 200).
+- Se creó una orden PayPal Sandbox por un depósito de RD$450, equivalente a US$7.15, para una cita de prueba: el token de PayPal Sandbox y la creación de orden funcionaron, **sin capturar dinero**.
+- Segunda retención en el mismo horario: rechazada correctamente por el backend (`ok:false`). Esto comprueba conflicto con una retención existente, **no sustituye una prueba de solicitudes simultáneas**.
+- Se liberó la retención de prueba mediante la API y se eliminó exclusivamente la fila de QA expirada; la base volvió a 0 reservas, con 5 servicios iniciales y 0 clientas.
+- Se comprobó acceso CORS desde GitHub Pages: actualmente devuelve `Access-Control-Allow-Origin: *`. Antes de producción establecer `ALLOWED_ORIGINS=https://anthonyhenriquezluciano.github.io` en Supabase y verificar nuevamente.
+- El catálogo en localStorage se separó por URL de backend (`mjb.catalog.v3`) para impedir reutilizar configuración heredada de Apps Script durante la activación.
+- GitHub Actions: pruebas backend + sintaxis web aprobadas en la ejecución `39660655380` para la corrección de caché.
+
+## Pendiente para declarar lanzamiento listo
+- Validar en un navegador una **compra completa con usuario comprador de PayPal Sandbox**, su captura y confirmación, más cancelación y reembolso.
+- Probar inicio de sesión de una administradora autorizada y panel web.
+- Configurar correo/calendario mediante Google Relay o la alternativa de correo seleccionada; activar y verificar tareas automáticas si son necesarias.
+- Configurar origen CORS y volver a comprobar respuesta; publicar versión final del backend desde archivos locales en GitHub Actions, no conservar el despliegue provisional con imports remotos.
+- Cambiar a **PayPal live** solo con las credenciales reales correctas y después de aprobar las pruebas; evitar publicar un checkout Sandbox al público como si aceptara pagos reales.
+- Fusionar PR y comprobar la web publicada, manteniendo un plan de reversión.
