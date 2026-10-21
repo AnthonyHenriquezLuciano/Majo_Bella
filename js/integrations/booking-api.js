@@ -1,8 +1,8 @@
-/* MAJOBELLA · Agenda, disponibilidad y pagos (backend de Google Apps Script + Google Sheets)
+/* MAJOBELLA · Agenda, disponibilidad y pagos (backend Supabase PostgreSQL)
    Sin backend (config.booking.apiUrl vacío):
      - las horas se calculan con el horario de config.schedule y no se conocen las reservas ya hechas.
    Con backend (apiUrl definido):
-     GET  ?action=catalog                       → precios, duración, tasa del dólar y horario desde la hoja
+     GET  ?action=catalog                       → precios, duración, tasa del dólar y horario desde Supabase
      GET  ?action=busy&from=AAAA-MM-DD&to=…     → { busy: [{ start, end }] } horarios ocupados (sin datos personales)
      POST { action: 'hold', … }                 → aparta el horario y crea la orden de PayPal del depósito
      POST { action: 'capture', id, orderId }    → cobra el depósito y confirma la cita
@@ -12,7 +12,7 @@
      POST { action: 'myAppointments', idToken } · { action: 'lookup', items: [{ id, token }] }
      POST { action: 'hold', method: 'transferencia' } → aparta el horario; luego 'transferProof' con el comprobante
      POST { action: 'reschedule', id, token|idToken, date, time } · { action: 'myWallet', idToken } · { action: 'walletEmail', email }
-   Implementado en backend/google-apps-script/Code.gs */
+   Implementado en supabase/functions/_shared/core/api.ts */
 (function (M) {
   const SCH = M.config.schedule;
   const API = M.config.booking;
@@ -102,7 +102,7 @@
       return data;
     },
 
-    /* Envío POST (text/plain evita la petición previa CORS con Google Apps Script) */
+    /* Envío POST JSON; el backend Supabase acepta text/plain por compatibilidad. */
     async post(body, fallbackError) {
       if (!this.enabled()) throw new Error('No hay backend configurado.');
       let res;
@@ -114,7 +114,7 @@
       return data;
     },
 
-    /* Precios, duraciones, tasa y horario desde la hoja de MAJOBELLA.
+    /* Precios, duraciones, tasa y horario desde Supabase.
        Con una copia guardada se muestra al instante y se actualiza por detrás; si cambió algo, avisa con onCatalogChange. */
     async loadCatalog() {
       if (!this.enabled()) return false;
