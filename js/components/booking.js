@@ -65,20 +65,24 @@
     let payMethod = 'paypal';
 
     /* ---- Modo de reserva ---- */
-    const canPayPal = M.PayPal.configured();
-    const canTransfer = M.Transfer.enabled();
-    const mode = API.enabled()
+    let canPayPal = false, canTransfer = false, mode = 'none', sandbox = false;
+    function refreshPaymentMode() {
+      canPayPal = M.PayPal.configured();
+      canTransfer = M.Transfer.enabled();
+      mode = API.enabled()
       ? (canPayPal || canTransfer ? 'pay' : 'paysoon')
       : (M.WhatsApp.isConfigured() ? 'request' : 'none');
     document.querySelectorAll('[data-pay-only]').forEach((n) => { n.hidden = mode !== 'pay'; });
     confirmBtn.textContent = mode === 'pay' ? 'Continuar al pago del depósito' : mode === 'request' ? 'Enviar solicitud' : 'Confirmar cita';
-    const sandbox = PAY.paypalEnv === 'sandbox';
+      sandbox = PAY.paypalEnv === 'sandbox';
     modeNote.innerHTML = {
       pay: `${canPayPal ? 'Pagas el depósito con PayPal (tarjeta o cuenta) y tu cita queda confirmada al instante.' : ''}${canTransfer ? (canPayPal ? ' También puedes pagarlo por transferencia: subes el comprobante y te confirmamos.' : 'Pagas el depósito por transferencia, subes el comprobante y te confirmamos la cita.') : ''} Te llega un correo con todos los detalles.${sandbox && canPayPal ? ' <strong>Modo de prueba: no se hacen cobros reales.</strong>' : ''}`,
       paysoon: 'Los pagos en línea se están activando. Si tienes dudas, escríbenos por WhatsApp.',
       request: 'La reserva con depósito en línea se activa pronto. Por ahora tu cita se envía como solicitud y te confirmamos por WhatsApp.',
       none: 'Reserva en línea pendiente de activar.',
     }[mode];
+    }
+    refreshPaymentMode();
     function renderPolicy() {
       const items = M.totals().items;
       const label = items.length ? M.depositPctLabel(items) : null;
@@ -839,7 +843,7 @@
       renderWait();
     });
 
-    M.refreshBookingCatalog = () => { renderPolicy(); renderQuick(); renderCalendar(); renderSlots(); findFastest(); renderSummary(); };
+    M.refreshBookingCatalog = () => { refreshPaymentMode(); renderPolicy(); renderQuick(); renderCalendar(); renderSlots(); findFastest(); renderSummary(); };
 
     renderQuick();
     renderCalendar();
