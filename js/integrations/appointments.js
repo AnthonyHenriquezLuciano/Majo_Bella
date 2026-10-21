@@ -1,9 +1,10 @@
 /* MAJOBELLA · Registro de citas de la clienta
    - En este dispositivo: cada reserva se guarda en el navegador con su código y su clave de gestión
      (la clave permite ver el estado, pagar el saldo o cancelar sin iniciar sesión).
-   - Con el backend: el estado real se lee de la hoja de MAJOBELLA (y con Google, desde cualquier dispositivo). */
+   - Con el backend: el estado real se lee de Supabase PostgreSQL (y con sesión, desde cualquier dispositivo). */
 (function (M) {
-  const KEY = 'mjb.citas.v1';
+  // No trasladar al nuevo sistema las citas de prueba guardadas en los navegadores antiguos.
+  const KEY = 'mjb.citas.supabase.v1';
   const listeners = new Set();
 
   const readLocal = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } };
