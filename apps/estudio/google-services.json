@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "483134079714",
+    "project_id": "majobella",
+    "storage_bucket": "majobella.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:483134079714:android:5c8eeec3c10f2410b014bb",
+        "android_client_info": {
+          "package_name": "com.majobella.estudio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkP10X7L_Nh4ODglqhl3_l4ZtOkkpmDok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
