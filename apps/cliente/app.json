@@ -29,9 +29,16 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "permissions": ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR", "android.permission.POST_NOTIFICATIONS"],
-      "blockedPermissions": ["android.permission.RECORD_AUDIO"],
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "single",
