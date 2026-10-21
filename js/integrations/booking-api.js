@@ -205,7 +205,15 @@
           busyListeners.forEach((fn) => fn());
           return busyCache.list;
         })
-        .catch((err) => { busyCache.error = err.message; busyListeners.forEach((fn) => fn()); throw err; })
+        .catch((err) => {
+          // Sin una lectura válida del servidor no se deben anunciar horas como libres.
+          // Descartar datos anteriores para evitar disponibilidad obsoleta tras un fallo.
+          busyCache.at = 0;
+          busyCache.list = [];
+          busyCache.error = err.message;
+          busyListeners.forEach((fn) => fn());
+          throw err;
+        })
         .finally(() => { busyCache.pending = null; });
       return busyCache.pending;
     },
