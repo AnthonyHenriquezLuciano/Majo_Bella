@@ -1,52 +1,36 @@
-# MAJOBELLA · Estado real de la migración (21 octubre 2026)
+# MAJOBELLA · Activación desde cero (v1.1)
 
-**NO CAMBIAR EL BACKEND DE LA WEB AÚN.** La API antigua tiene un intervalo ocupado en el periodo 2026-10-21 a 2026-12-21 y la nueva todavía no. No se ha importado el historial.
+Fecha: 2026-10-21. **El propietario confirmó que todo el historial de Google Sheets/Apps Script es de prueba y no se debe importar.** Los datos de prueba quedan en el sistema anterior; no eliminarlos ni copiarlos.
 
-## Completado y verificado
+## Preparado
+- Proyecto Supabase `thpjpsogcmqkemlxajcm` (us-east-1), PostgreSQL con 20 tablas, tres migraciones registradas y RLS habilitado; tablas privadas a clientes.
+- Buckets `fichas` (privado) y `publico` (público), revisión de seguridad sin avisos WARN/ERROR al terminar la instalación inicial.
+- Edge Function `api` desplegada y probada en catálogo (HTTP 200).
+- Pruebas automatizadas de backend, TypeScript y controles de sesión negativa completados en CI.
+- Rama `fix/v1.1-reservas-fail-closed` prepara `js/config.js → booking.apiUrl` hacia el proyecto nuevo, **sin publicar en main**.
+- PayPal desactivado como opción pública hasta que el backend tenga `PAYPAL_CLIENT_ID` y `PAYPAL_SECRET`, del mismo entorno; el catálogo de API aporta el Client ID público y el modo sandbox/live.
+- Workflow Backend: despliegue manual desde `main`, nunca automático al fusionar cambios.
 
-- Proyecto Supabase: `thpjpsogcmqkemlxajcm` · región `us-east-1`.
-- 20 tablas PostgreSQL instaladas; todas con RLS activo, sin permisos de lectura directa para `anon` ni `authenticated`.
-- Migraciones aplicadas y registro sincronizado con los nombres del repositorio: `20261020000000`, `20261020000100`, `20261021000000`.
-- Storage: bucket privado `fichas`, bucket público `publico`.
-- `pg_cron` y `pg_net` instalados; este último fuera del esquema `public`.
-- Función `public.majobella_actualizado` con `search_path=pg_catalog`.
-- Security Advisor: solo 20 notas informativas de RLS sin políticas, deliberadas porque la aplicación usa una API con controles de permisos.
-- GitHub Actions Backend: comprobación de TypeScript y 8 suites de tests aprobadas para commit `e0484de8`, ejecución `39651654416`.
-- API `https://thpjpsogcmqkemlxajcm.supabase.co/functions/v1/api` desplegada en Supabase; `GET ?action=catalog` devolvió HTTP 200 y `ok:true`.
-- La API denegó `adminImport` con clave inválida y `adminData` sin token verificado.
-- Catálogo del sistema antiguo vs nuevo: 5 servicios iguales, mismos horarios y parámetros públicos de pago; cero promociones en ambos.
-- **Advertencia importante:** despliegue inicial de la API compilado desde una importación de código fuente GitHub fijada al commit `e0484de8`. Antes del corte definitivo volver a desplegar usando el workflow completo de GitHub Actions con el paquete local de archivos (no depender de importaciones remotas).
-- El workflow de publicación del backend requiere ejecución manual desde `main` (nunca despliega al hacer merge).
+## Solo lo indispensable para activar reservas
+1. Configurar en **Supabase → Edge Functions → Secrets**, sin enviar valores por chat:
+   - `ADMIN_EMAILS`: correo(s) que gestionarán el panel.
+   - `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_ENV=sandbox`: credenciales para **la misma aplicación de PayPal Sandbox**. El ID público llega a la web desde el catálogo API.
+   - `ALLOWED_ORIGINS=https://anthonyhenriquezluciano.github.io` para restringir los orígenes web; verificar si hay dominio propio.
+2. **Opcional para primera fase, necesario para correos/calendario:** configurar `GOOGLE_RELAY_URL`, `GOOGLE_RELAY_KEY`; `CRON_KEY` para recordatorios automáticos.
+3. Confirmar inicio de sesión: configurar **Supabase Authentication** con correo y las URLs web/app; Google OAuth solo si se va a utilizar.
+4. Confirmar `catalog` con `payments.enabled=true` y el PayPal Client ID de **sandbox**, sin usar credenciales live en pruebas.
+5. Ejecutar prueba end-to-end: elegir servicio y fecha, retener horario, pagar en PayPal Sandbox, ver cita en panel, cancelación y reembolso; comprobar que dos reservas simultáneas no ocupen el mismo horario.
+6. Verificar que la web no cobre si falla la lectura del catálogo o faltan credenciales.
+7. Tras aprobación, **fusionar PR**, reconstruir las páginas con el flujo de publicación habitual y validar reservas en GitHub Pages. La rama `main` no ha cambiado hasta entonces.
 
-## Bloqueos que requieren acceso del propietario
+## Aplicaciones móviles (etapa posterior a reservas web)
+- GitHub Actions variables: `SUPABASE_URL=https://thpjpsogcmqkemlxajcm.supabase.co` y `SUPABASE_ANON_KEY` (clave pública compatible).
+- Configurar firma de APK privada y probar inicio de sesión del estudio; no publicar APKs firmadas con llave de prueba.
 
-### A. Datos antiguos de Apps Script/Sheets/Drive
-1. Hacer copia de la hoja de cálculo y archivos del Drive del estudio antes de importar.
-2. Crear **fuera del chat** una clave aleatoria segura `IMPORT_KEY` en un gestor de contraseñas; guardarla en Supabase (Edge Functions → Secrets).
-3. En el Apps Script que usa la hoja, actualizar el código con `backend/google-apps-script/Code.gs` del repositorio si no se ha hecho. En Propiedades del script establecer:
-   - `NUEVA_API_URL` = `https://thpjpsogcmqkemlxajcm.supabase.co/functions/v1/api`
-   - `IMPORT_KEY` = el mismo secreto configurado en Supabase.
-4. Ejecutar `migrarABaseDeDatos()` y revisar registro de cada tabla.
-5. Ejecutar `migrarArchivos()` hasta terminar; comprobar que `fallos=0`.
-6. Realizar comparación del número de citas por estado, las reservas futuras, saldos/depósitos, servicios, cupones, tarjetas y archivos. La comparación pública de intervalos ocupados debe quedar sin diferencias.
-7. Inmediatamente antes de cambiar la web realizar una sincronización final, con nuevas reservas temporalmente detenidas o un procedimiento coordinado, para evitar escrituras perdidas.
+## No es necesario
+- No configurar `IMPORT_KEY`.
+- No ejecutar `migrarABaseDeDatos()` ni `migrarArchivos()`.
+- No conectar Google Drive/Sheets a ChatGPT.
+- No comparar ni replicar las reservas de prueba del servidor anterior. **Al activar la nueva web, esos datos de prueba dejarán de aparecer, por decisión del propietario.**
 
-### B. Configuración operativa y de pagos (SIN secretos en GitHub)
-Configurar Supabase → Edge Functions → Secrets: `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_ENV=sandbox`, `ADMIN_EMAILS`, `CRON_KEY`, `GOOGLE_RELAY_URL`, `GOOGLE_RELAY_KEY` y opcionalmente `ALLOWED_ORIGINS=https://anthonyhenriquezluciano.github.io`. Desplegar `backend/google-relay/Relay.gs` desde una cuenta de Google autorizada y configurar su clave. Validar Google Auth y las URLs de redirección de ambas apps.
-
-### C. Publicar la versión de código definitiva desde GitHub
-GitHub → Settings → Secrets and variables → Actions:
-- Secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF` = `thpjpsogcmqkemlxajcm` (puede ser Variable pública), `SUPABASE_DB_PASSWORD`.
-- Variables: `SUPABASE_URL=https://thpjpsogcmqkemlxajcm.supabase.co`, `SUPABASE_ANON_KEY` (clave pública legacy, si la requieren las apps).
-- Tras validar y fusionar PR #1, ejecutar **manualmente** Actions → Backend → Run workflow desde `main`. Confirmar que no hay discrepancias en historial de migraciones ni fallos de despliegue.
-
-### D. Pruebas finales y cambio
-- PayPal Sandbox: reserva, captura repetida, pago parcial, reversión y reembolso, saldo final.
-- Transferencia: pendiente, comprobante, aprobación/rechazo y caducidad.
-- Prueba de concurrencia sobre la misma hora en backend nuevo.
-- Inicio de sesión en web y ambas apps, cliente/admin; RLS y Storage privados.
-- Envío de correo y calendario/recordatorios; no duplicar avisos.
-- Backup completo, corte coordinado, actualizar `js/config.js → booking.apiUrl`, probar producción y conservar rollback al Apps Script.
-- Cambiar `PAYPAL_ENV` a live solo después de pruebas controladas y autorización del propietario.
-
-**Nunca publicar ni enviar por chat** secretos PayPal, contraseñas, claves de servicio, tokens de GitHub/Supabase o la clave de importación.
+**Importante:** si antes del cambio aparece alguna reserva auténtica en el sistema antiguo, detener el corte y trasladarla o confirmarla manualmente. No exponer claves, tokens ni contraseñas en GitHub o el chat.
