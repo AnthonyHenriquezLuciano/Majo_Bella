@@ -76,12 +76,12 @@ window.MAJOBELLA_CONFIG = {
   },
 
   /* Sistema de reservas ----------------------------------------------------
-     URL de la aplicación web de Google Apps Script (termina en /exec).
-     Con ella, las reservas se guardan en la hoja de Google de MAJOBELLA, los horarios ocupados
-     se ven en gris para todas y el dashboard (admin.html) muestra la agenda.
-     Pasos en backend/google-apps-script/INSTALAR.md */
+     API de Supabase: las citas se guardan en PostgreSQL y se gestionan
+     desde la web, la app y el panel. Antes de publicar, configurar secretos
+     de PayPal y acceso administrativo en Supabase (supabase/INSTALAR.md).
+     NO cambiar la rama main hasta completar las pruebas de integración. */
   booking: {
-    apiUrl: 'https://script.google.com/macros/s/AKfycbxTtcibU04A-shJ2iKioIu6glN9uLDloUoSiJ3Y2bSuSAPDaRdzQ9TjEMTwxmaG5HVp/exec',
+    apiUrl: 'https://thpjpsogcmqkemlxajcm.supabase.co/functions/v1/api',
     studioCalendarName: 'MAJOBELLA',
     reminderMinutesBefore: 120,
   },
