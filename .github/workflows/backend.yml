@@ -13,7 +13,7 @@ on:
     branches: [main]
     paths: ['supabase/**', '.github/workflows/backend.yml']
   pull_request:
-    paths: ['supabase/**', 'js/config.js', 'js/components/booking.js', 'js/components/services.js', 'js/admin/catalogo.js', 'app/app.js', 'js/integrations/booking-api.js', '.github/workflows/backend.yml']
+    paths: ['supabase/**', 'admin.html', 'css/admin-pro.css', 'js/admin/centro.js', 'js/admin/core.js', 'js/config.js', 'js/components/booking.js', 'js/components/services.js', 'js/admin/catalogo.js', 'app/app.js', 'js/integrations/booking-api.js', '.github/workflows/backend.yml']
   workflow_dispatch:
 
 jobs:
@@ -48,9 +48,12 @@ jobs:
           node --check ../js/components/membresias.js
           node --check ../js/admin/membresias.js
           node --check ../js/admin/catalogo.js
+          node --check ../js/admin/centro.js
+          node --check ../js/admin/core.js
           node --check ../js/admin/ajustes.js
           node --check ../js/main.js
           node --check ../app/app.js
+      - run: node dev/test-admin-center.mjs
       - run: npm run typecheck
       - run: npm test
 
