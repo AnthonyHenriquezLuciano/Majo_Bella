@@ -8,7 +8,7 @@ import { CatalogBrowser } from '@/components/catalog-browser';
 import { CartBar } from '@/components/cart-bar';
 
 export default function Servicios() {
-  const { cart, refreshCatalog, catalogError } = useApp();
+  const { studio, cart, refreshCatalog, catalogError } = useApp();
   const [refreshing, setRefreshing] = useState(false);
   return (
     <View style={{ flex: 1 }}>
