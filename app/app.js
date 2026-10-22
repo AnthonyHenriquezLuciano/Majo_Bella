@@ -760,7 +760,7 @@
       const sigNow = JSON.stringify([this.ids, this.date, this.time, a.client.email]);
       openSheet(sheetHead('Paga tu depósito', 'Con PayPal: tarjeta o cuenta.') + `
         <div class="surface" style="padding:16px"><dl class="lines" style="margin:0;padding:0;border:0">
-          <div><dt>Depósito hoy</dt><dd>${M.fmtPrice(pr.depositRD)}<small>${M.fmtUSD(pr.depositUSD)} · tasa RD$ ${esc(C.payments.usdRate)}</small></dd></div>
+          <div><dt>Depósito hoy</dt><dd>${M.fmtPrice(pr.depositRD)}<small>${M.fmtUSD(pr.depositUSD)} · tasa RD$ ${esc(C.payments.usdRate)}${C.payments.fxAutomatic ? ' · <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Referencia ExchangeRate-API</a>' : ''}</small></dd></div>
           <div><dt>Al terminar</dt><dd>${M.fmtPrice(pr.balanceRD)}</dd></div></dl></div>
         <p class="note"><span class="timer" id="pay-timer">${I.clock}<span>Te apartamos el horario mientras pagas.</span></span></p>
         <div class="pp-box" id="pp-box"></div>
