@@ -13,6 +13,11 @@
   const nowIso = () => new Date().toISOString();
 
   const categories = [['cejas','Cejas'],['pestanas','Pestañas'],['faciales','Faciales'],['micropigmentacion','Micropigmentación'],['depilacion','Depilación'],['otros','Otros']].map(([id,nombre],i)=>({ id,nombre,estado:'activo',activo:'si',orden:i+1 }));
+  const consentTemplates = [
+    { id:'ejemplo-cejas',nombre:'Consentimiento de diseño de cejas',descripcion:'Ejemplo de prueba',estado:'borrador',
+      texto:'Declaro que he recibido información sobre el tratamiento, sus cuidados y los resultados esperados. Puedo retirar mi consentimiento antes de iniciar el servicio.',
+      preguntas:[{id:'piel',text:'¿Tienes alguna irritación activa en la zona?',required:true,stopOn:'si',stopMessage:'Gracias por informarnos. Por tu bienestar, recomendamos esperar a que la piel esté recuperada antes de realizar este tratamiento. No se realizará ningún cargo. Con gusto podemos orientarte por WhatsApp.'}]},
+  ];
   const services = [
     { id: 'faciales', nombre: 'Faciales', duracionMin: '60', precioRD: '2500', precioDesde: 'no', activo: 'si', volverDias: '30', depositoPct: '50', retoqueDias: '0', consentimiento: 'si' },
     { id: 'cejas', nombre: 'Cejas', duracionMin: '45', precioRD: '900', precioDesde: 'no', activo: 'si', volverDias: '28', depositoPct: '50', retoqueDias: '0', consentimiento: 'no' },
@@ -198,7 +203,7 @@
   const uploaded = {};
 
   const db = () => ({
-    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, categories, services, gallery, reviews, packages, bonos, waitlist, emails, accounts, errors, security,
+    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, categories, services, consentTemplates, gallery, reviews, packages, bonos, waitlist, emails, accounts, errors, security,
     automation: { trigger: true, quota: 96, lastRun: { at: new Date(Date.now() - 22 * 60000).toISOString(), out: {} } },
     consentDefault: 'Declaro que la información que di sobre mi salud es verdadera y completa…\n\n(Texto general de ejemplo.)',
     schedule: { hours: M.config.schedule.hours, blocked: ['2026-12-25', '2027-01-01'], minNotice: 3, maxDays: 60, step: 30 },
@@ -251,6 +256,11 @@
           return { ok: true, block: clone(b) };
         }
         case 'adminDeleteBlock': { const i = blocks.findIndex((b) => b.id === d.id); if (i >= 0) blocks.splice(i, 1); return { ok: true }; }
+        case 'adminSaveConsentTemplate': {
+          const x=clone(d.template),i=consentTemplates.findIndex(t=>t.id===x.id);
+          if(i>=0)consentTemplates[i]=x;else consentTemplates.push(x);
+          return clone(db());
+        }
         case 'adminSaveSettings': {
           Object.entries(d.settings || {}).forEach(([k, v]) => { const s = settings.find((x) => x.key === k); if (s) s.value = v; });
           (d.categories || []).forEach((cat) => { const row = categories.find(x=>x.id===cat.id); if(row)Object.assign(row,cat); else categories.push(cat); });
