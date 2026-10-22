@@ -6,7 +6,7 @@ import * as Linking from 'expo-linking';
 import { Studio, createApi, addDaysKey, todayKey, type Appointment, type Catalog, type ClientData, type Loyalty } from '@majobella/core';
 import { API_URL, AUTH_ENABLED, SCHEME } from './env';
 import { KEYS, deviceId, store } from './storage';
-import { supabase } from './supabase';
+import { finishOAuthCode, supabase } from './supabase';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -152,7 +152,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!url || !/\/\/auth/.test(url)) return;
       const { queryParams } = Linking.parse(url);
       const code = queryParams && queryParams.code;
-      if (typeof code === 'string') { try { await supabase!.auth.exchangeCodeForSession(code); } catch (e) { /* enlace vencido */ } }
+      if (typeof code === 'string') await finishOAuthCode(code).catch(() => { /* la ruta /auth muestra el error */ });
     };
     Linking.getInitialURL().then(handle);
     const sub = Linking.addEventListener('url', (e) => handle(e.url));
@@ -181,8 +181,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { queryParams } = Linking.parse(res.url);
     const code = queryParams && queryParams.code;
     if (typeof code !== 'string') throw new Error('Google no completó el inicio de sesión.');
-    const ex = await supabase.auth.exchangeCodeForSession(code);
-    if (ex.error) throw new Error('No se pudo iniciar sesión con Google.');
+    await finishOAuthCode(code);
     return true;
   }, []);
 
