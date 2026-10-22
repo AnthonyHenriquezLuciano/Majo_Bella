@@ -100,6 +100,7 @@ export function apptDetails_(r, extra?) {
     Number(r.bonoRD) > 0 ? ['Paquete', 'RD$ ' + money_(r.bonoRD) + ' cubiertos con tu paquete'] : null,
     Number(r.giftRD) > 0 ? ['Tarjeta de regalo', 'RD$ ' + money_(r.giftRD)] : null,
     dep ? ['Depósito', esc_(depositText_(r))] : null,
+    r.paypalCaptura ? ['Referencia del cobro PayPal',esc_(r.paypalCaptura)] : null,
     ['Al terminar', Number(r.saldoRD) > 0 ? 'RD$ ' + money_(r.saldoRD) + ' · efectivo, transferencia o PayPal' : 'Todo pagado'],
     ['Código', esc_(r.id)],
   ];
