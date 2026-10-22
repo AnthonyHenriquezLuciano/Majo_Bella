@@ -50,14 +50,16 @@
     const isGroup = x.tipo === 'grupo';
     const st = status(x), stLabel = STATUS[st][1];
     const id=esc(x.id), chosen=selected?.id===x.id && selected.kind===(isCat?'categoria':'servicio');
-    const sub = isCat ? `${nForCat(x.id)} opciones · Explorar categoría` :
-      isGroup ? `${services().filter(s=>s.padreId===x.id).length} subservicios · Ver opciones` :
+    const sub = isCat ? '' :
+      isGroup ? 'Ver opciones' :
       x.padreId ? `${Number(x.duracionMin)||30} min · RD$ ${Number(x.precioRD||0).toLocaleString('es-DO')}` :
       x.descripcion || `${Number(x.duracionMin)||30} min · RD$ ${Number(x.precioRD||0).toLocaleString('es-DO')}`;
     return `<article class="cat-item ${isCat?'category':'service'}${chosen?' is-chosen':''}" draggable="true" data-cat-id="${id}" data-cat-kind="${isCat?'categoria':'servicio'}">
       <button type="button" class="cat-item-main" data-cat-open="${id}" aria-label="${isCat?'Entrar a la categoría':isGroup?'Ver subservicios de':'Editar'} ${title(x)}">
-        <span class="cat-mini">${isCat?'CATEGORÍA':isGroup?'SERVICIO CON OPCIONES':x.padreId?'SUBSERVICIO':'SERVICIO'}</span>
-        <h3>${title(x)}</h3><p>${esc(sub)}</p>
+        ${isCat ? `<h3>${title(x)}</h3><span class="cat-explore">Explorar →</span>` :
+          `<span class="cat-mini">${isGroup?'SERVICIO CON OPCIONES':x.padreId?'SUBSERVICIO':'SERVICIO'}</span>
+          <h3>${title(x)}</h3><p>${esc(sub)}</p>
+          ${isGroup ? '<span class="cat-group-plus" aria-hidden="true">+</span>' : '<span class="cat-detail-link">Ver detalle</span>'}`}
       </button>
       <div class="cat-item-footer">
         <span class="cat-status" title="${stLabel}">${STATUS[st][0]} ${stLabel}</span>
@@ -90,9 +92,12 @@
   function preview(x,kind) {
     const isCat=kind==='categoria';
     return `<div class="cat-live-preview ${isCat?'':'service'}" aria-label="Vista previa del elemento">
-      <small>${isCat?'CATEGORÍA':x.tipo==='grupo'?'SERVICIO':'OPCIÓN RESERVABLE'}</small>
-      <strong data-cat-preview-name>${title(x)}</strong>
-      <p data-cat-preview-description>${esc(x.descripcion|| (isCat?'Explora nuestros tratamientos.':'Descripción del tratamiento'))}</p>
+      ${isCat ? `<strong data-cat-preview-name>${title(x)}</strong>
+        <span class="cat-explore">Explorar →</span>` :
+        `<small>${x.tipo==='grupo'?'SERVICIO':'OPCIÓN RESERVABLE'}</small>
+        <strong data-cat-preview-name>${title(x)}</strong>
+        <p data-cat-preview-description>${esc(x.descripcion||'Descripción del tratamiento')}</p>
+        <span class="cat-detail-link">${x.tipo==='grupo'?'+ Ver opciones':'Ver detalle'}</span>`}
     </div>`;
   }
   function statusField(x) {
