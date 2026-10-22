@@ -29,7 +29,7 @@ export const TABLES: Table[] = [
       c('retenidaHasta', 'ts'), c('eventoId'), c('canceladaEn', 'ts'), c('canceladaPor'), c('reembolso'), c('notaInterna'),
       c('subtotalRD', 'num'), c('descuentoRD', 'num'), c('promoId'), c('codigo'), c('giftCodigo'), c('giftRD', 'num'),
       c('metodoDeposito'), c('origen'), c('canal'), c('creadaPor'), c('reprogramadaDe'),
-      c('recordatorio', 'ts'), c('resenaPedida'), c('retoqueAviso'), c('firmaToken'), c('consentimiento', 'ts'), c('consentimientoArchivo'), c('permisoFotos', 'bool'),
+      c('recordatorio', 'ts'), c('resenaPedida'), c('retoqueAviso'), c('firmaToken'), c('consentimiento', 'ts'), c('consentimientoArchivo'), c('permisoFotos', 'bool'), c('consentimientosJson', 'json'),
       c('bonoCodigo'), c('bonoRD', 'num'), c('fidelidad', 'bool'), c('cumpleanos'),
       c('comprobanteId'), c('comprobanteEn', 'ts'), c('cuentaId'), c('transferenciaRef'), c('revisadaEn', 'ts'), c('cambios', 'int'),
     ],
@@ -48,7 +48,14 @@ export const TABLES: Table[] = [
     cols: [
       c('id', 'text', { notNull: true }), c('nombre'), c('duracionMin', 'int'), c('precioRD', 'num'), c('precioDesde', 'bool'), c('activo', 'bool'),
       c('volverDias', 'int'), c('depositoPct', 'num'), c('retoqueDias', 'int'), c('consentimiento', 'bool'),
-      c('categoriaId'), c('padreId'), c('tipo'), c('orden', 'int'), c('descripcion'), c('estado'),
+      c('categoriaId'), c('padreId'), c('tipo'), c('orden', 'int'), c('descripcion'), c('estado'), c('consentTemplateId'),
+    ],
+  },
+  {
+    name: 'PlantillasConsentimiento', table: 'plantillas_consentimiento', pk: 'id', comment: 'Plantillas informadas del estudio con preguntas y reglas de elegibilidad.',
+    cols: [
+      c('id', 'text', { notNull: true }), c('nombre'), c('descripcion'), c('texto'),
+      c('estado'), c('preguntas', 'json'), c('actualizado', 'ts'),
     ],
   },
   {

@@ -155,6 +155,7 @@
       applied = true;
       M.serviceCategories = data.categories || [];
       M.serviceGroups = data.serviceGroups || [];
+      M.consentTemplates = data.consentTemplates || [];
       (data.services || []).forEach((r) => {
         const s = M.serviceById[r.id];
         if (s) {
@@ -162,7 +163,7 @@
           s.categoryId = r.categoryId || ''; s.parentId = r.parentId || '';
           s.description = r.description === undefined ? s.description : r.description;
           s.price = r.price; s.durationMinutes = r.durationMinutes;
-          s.priceFrom = !!r.priceFrom; s.depositPercent = r.depositPercent;
+          s.priceFrom = !!r.priceFrom; s.depositPercent = r.depositPercent; s.consentTemplateId = r.consentTemplateId || '';
         }
       });
       if (data.payments) Object.assign(M.config.payments, data.payments);
@@ -183,13 +184,13 @@
             s = { id: r.id, name: r.name, category: r.category || r.name,
               categoryId: r.categoryId || '', parentId: r.parentId || '',
               description: r.description || '', durationMinutes: r.durationMinutes, price: r.price,
-              priceFrom: !!r.priceFrom, depositPercent: r.depositPercent };
+              priceFrom: !!r.priceFrom, depositPercent: r.depositPercent, consentTemplateId: r.consentTemplateId || '' };
             M.serviceById[s.id] = s;
           }
           s.name = r.name; s.category = r.category || s.category; s.categoryId = r.categoryId || '';
           s.parentId = r.parentId || ''; s.description = r.description === undefined ? s.description : r.description;
           s.price = r.price; s.durationMinutes = r.durationMinutes; s.priceFrom = !!r.priceFrom;
-          s.depositPercent = r.depositPercent; s.order = r.order ?? i;
+          s.depositPercent = r.depositPercent; s.consentTemplateId = r.consentTemplateId || ''; s.order = r.order ?? i;
           M.services.push(s);
         });
       }
@@ -282,7 +283,7 @@
         client: appointment.client, idToken: idToken || null, birthday: appointment.client.birthday || '',
         code: M.Pricing.code || '', giftCode: M.Pricing.gift || '',
         origen: appointment.origen || '', canal: M.Origin.channel(),
-        method: opts.method || 'paypal', captcha: M.Captcha ? await M.Captcha.token() : '',
+        method: opts.method || 'paypal', consents: appointment.consents || [], captcha: M.Captcha ? await M.Captcha.token() : '',
       }, 'No se pudo apartar el horario.');
     },
     transferProof(id, auth, file, accountId, ref) {

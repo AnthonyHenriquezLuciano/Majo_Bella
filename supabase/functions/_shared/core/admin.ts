@@ -1,5 +1,6 @@
 /* MAJOBELLA · Panel del estudio (solo las cuentas en ADMIN_EMAILS) */
 import { cx, env_ } from './ctx.ts';
+import { allTemplates_ } from './consent-templates.ts';
 import { appendRow_, deleteRow_, readOpt_, readTable_, updateTable_ } from './db.ts';
 import { catalogItems_, findRow_, resetCaches_, rows_, settings_, updateRow_ } from './data.ts';
 import { blocks_, conflicts_, describeClash_, schedule_ } from './schedule.ts';
@@ -49,6 +50,7 @@ export function adminData_(d, extra?) {
     emails: readOpt_('Correos').slice(-200).reverse().map(strip_),
     automation: automationStatus_(),
     consentDefault: DEFAULT_CONSENT,
+    consentTemplates: allTemplates_(),
     settings: readTable_('Ajustes').map(function (r) { return { key: r.clave, value: r.valor, help: r['qué es'] || '' }; }),
     categories: readTable_('Categorias').map(strip_),
     services: readTable_('Servicios').map(strip_),
@@ -261,6 +263,7 @@ export function adminSaveSettings_(d) {
         : /^(no|false)$/i.test(String(sv.activo)) ? 'desactivado' : (current?.estado || 'activo');
       const patch: any = {
         id: id, nombre: name, categoriaId, padreId, tipo, descripcion: clean_(sv.descripcion, 500), estado,
+        consentTemplateId: clean_(sv.consentTemplateId,40),
         orden: Math.max(0, Math.round(Number(sv.orden) || 0)),
         duracionMin: Math.max(5, Math.round(Number(sv.duracionMin) || 30)),
         precioRD: Math.max(0, Math.round(Number(sv.precioRD) || 0)),

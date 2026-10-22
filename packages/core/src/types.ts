@@ -25,6 +25,9 @@ export interface PublicConfig {
 }
 
 /* Servicio con sus textos de detalle (de la web) y su precio y duración (del estudio) */
+export interface ConsentQuestion { id: string; text: string; required: boolean; stopOn?: '' | 'si' | 'no'; stopMessage?: string }
+export interface ConsentTemplate { id: string; nombre: string; descripcion?: string; texto: string; preguntas: ConsentQuestion[] }
+export interface ConsentSubmission { templateId: string; name: string; accepted: boolean; answers: Record<string, 'si' | 'no'> }
 export interface ServiceInfo {
   id: string;
   category: string;
@@ -36,6 +39,7 @@ export interface ServiceInfo {
   price: number;
   priceFrom: boolean;
   depositPercent?: number | null;
+  consentTemplateId?: string;
   idealFor?: string;
   includes?: string[];
   results?: string;
@@ -56,7 +60,8 @@ export interface Catalog {
   ok: boolean;
   categories?: { id: string; name: string }[];
   serviceGroups?: { id: string; name: string; categoryId: string; description?: string; order?: number }[];
-  services: { id: string; name: string; category?: string; categoryId?: string; parentId?: string; description?: string; order?: number; durationMinutes: number; price: number; priceFrom: boolean; depositPercent: number | null }[];
+  consentTemplates?: ConsentTemplate[];
+  services: { id: string; name: string; category?: string; categoryId?: string; parentId?: string; description?: string; order?: number; durationMinutes: number; price: number; priceFrom: boolean; depositPercent: number | null; consentTemplateId?: string }[];
   payments: { usdRate: number; depositPercent: number; holdMinutes: number; cancelHours: number; paypalEnv?: string };
   schedule: Partial<ScheduleConfig>;
   site: {

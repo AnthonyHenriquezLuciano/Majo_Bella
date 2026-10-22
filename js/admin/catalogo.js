@@ -124,6 +124,11 @@
           <label>Categoría
             <select name="categoriaId">${opts(categories,x.categoriaId)}</select>
           </label>
+          ${leaf ? `<label>Plantilla de consentimiento previa al pago
+            <select name="consentTemplateId">
+              <option value="">Ninguna plantilla asignada</option>
+              ${(A.data.consentTemplates||[]).filter(t=>t.estado==='activo'||t.id===x.consentTemplateId).map(t=>`<option value="${esc(t.id)}"${t.id===x.consentTemplateId?' selected':''}>${esc(t.nombre)}${t.estado!=='activo'?' · no publicada':''}</option>`).join('')}
+            </select></label><p class="cat-editor-help">La clienta deberá completar esta plantilla <b>antes de pagar</b>. <button type="button" class="chip-btn" data-cat-consent-create>Crear / editar plantillas</button></p>`:''}
           ${leaf ? `<label>Dentro de un servicio
             <select name="padreId">${opts([['','Servicio independiente'],...parents],x.padreId||'')}</select></label>`:''}
           ${leaf ? `<div class="cat-two-col">
@@ -210,6 +215,7 @@
     if(el.name==='padreId' && val) x.categoriaId=service(val)?.categoriaId||x.categoriaId;
     x[el.name]=val;
     if(el.name==='estado')x.activo=val==='activo'?'si':'no';
+    if(el.name==='consentTemplateId' && val)x.consentimiento='si';
     updateDirty();
     if(el.name==='nombre') {
       const p=document.querySelector('[data-cat-preview-name]');if(p)p.textContent=val||'Sin nombre';
@@ -245,6 +251,7 @@
     if(button.hasAttribute('data-cat-up')) {swap(button.dataset.catUp,-1);return;}
     if(button.hasAttribute('data-cat-down')) {swap(button.dataset.catDown,1);return;}
     if(button.hasAttribute('data-cat-back')) {selected=null;render();return;}
+    if(button.hasAttribute('data-cat-consent-create')){A.go('consentimientos');return;}
     if(button.hasAttribute('data-cat-add')){
       const k=button.dataset.catAdd;
       if(k==='direct'||k==='group'){if(selected?.kind==='categoria')categoryId=selected.id;make(k);}

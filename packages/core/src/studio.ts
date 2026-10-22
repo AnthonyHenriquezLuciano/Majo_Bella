@@ -41,6 +41,7 @@ export class Studio {
         return { ...base, name: r.name, category: r.category || base.category, categoryId: r.categoryId || base.categoryId,
           parentId: r.parentId || '', description: r.description === undefined ? base.description : r.description, price: r.price,
           durationMinutes: r.durationMinutes, priceFrom: !!r.priceFrom, depositPercent: r.depositPercent,
+          consentTemplateId: r.consentTemplateId || '',
           order: r.order ?? i } as ServiceInfo;
       });
       this.byId = Object.fromEntries(this.services.map((s) => [s.id, s]));

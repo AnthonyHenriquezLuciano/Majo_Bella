@@ -17,6 +17,7 @@ import {
   balanceCapture_, balanceOrder_, cancel_, capture_, hold_, lookup_, myAppointments_, release_, reschedule_, transferProof_,
 } from './booking.ts';
 import { consentInfo_, consentSign_ } from './consent.ts';
+import { adminSaveConsentTemplate_ } from './consent-templates.ts';
 import { adminWaitlist_, waitlistJoin_ } from './waitlist.ts';
 import {
   adminDeletePackage_, adminSaveBono_, adminSaveGift_, adminSavePackage_, adminSellBono_, bonoCapture_, bonoOrder_, giftCapture_, giftOrder_,
@@ -46,7 +47,7 @@ L('consentSign', consentSign_); L('transferProof', transferProof_); L('reschedul
 // Panel
 N('adminData', adminData_); N('adminList', adminData_); L('adminUpdate', adminUpdate_); L('adminCreate', adminCreate_);
 L('adminReschedule', adminReschedule_); L('adminBlock', adminBlock_); L('adminDeleteBlock', adminDeleteBlock_);
-L('adminSaveSettings', adminSaveSettings_); L('adminSaveClient', adminSaveClient_); L('adminUpload', adminUpload_); N('adminFile', adminFile_);
+L('adminSaveSettings', adminSaveSettings_); L('adminSaveConsentTemplate', adminSaveConsentTemplate_); L('adminSaveClient', adminSaveClient_); L('adminUpload', adminUpload_); N('adminFile', adminFile_);
 L('adminDeleteFile', adminDeleteFile_); L('adminSavePromo', adminSavePromo_); L('adminDeletePromo', adminDeletePromo_);
 L('adminSaveGift', adminSaveGift_); L('adminSaveExpense', adminSaveExpense_); L('adminDeleteExpense', adminDeleteExpense_);
 L('adminPublishGallery', adminPublishGallery_); L('adminSaveGallery', adminSaveGallery_); L('adminDeleteGallery', adminDeleteGallery_);
@@ -60,7 +61,7 @@ L('adminResolveErrors', adminResolveErrors_); L('adminImport', importData_);
 N('pushRegister', pushRegister_); N('pushUnregister', pushUnregister_);
 
 /* Acciones que devuelven los datos completos del panel (necesitan historiales y el estado del sistema) */
-const PANEL = ['adminData', 'adminList', 'adminSaveSettings', 'adminRunAutomations', 'adminResolveErrors', 'adminImport'];
+const PANEL = ['adminData', 'adminList', 'adminSaveSettings', 'adminSaveConsentTemplate', 'adminRunAutomations', 'adminResolveErrors', 'adminImport'];
 const LOCK_KEY = 7212026;
 /* Tablas que no se cargan siempre y algunas acciones necesitan */
 const EXTRA: Record<string, string[]> = { pushRegister: ['Dispositivos'], pushUnregister: ['Dispositivos'] };
@@ -127,7 +128,7 @@ export async function handle(deps: Deps, method: string, data: any, headers: Rec
       if (method === 'GET') {
         if (action === 'catalog') {
           const body = await sql.begin(async (tx: any) => {
-            await loadTables(tx, { tables: ['Ajustes', 'Categorias', 'Servicios', 'Promociones', 'Paquetes', 'Galeria', 'Resenas', 'Cuentas'] });
+            await loadTables(tx, { tables: ['Ajustes', 'Categorias', 'Servicios', 'Promociones', 'Paquetes', 'Galeria', 'Resenas', 'Cuentas', 'PlantillasConsentimiento'] });
             ensureSeed_();
             heartbeat_();
             const out = catalog_();
