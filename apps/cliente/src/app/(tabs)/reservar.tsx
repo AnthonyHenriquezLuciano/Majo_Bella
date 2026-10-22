@@ -5,7 +5,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {
   CONFIG, Validate, colors, fmtDuration, fmtPrice, fmtServicePrice, fmtUSD, fonts, space, whenText,
-  type Appointment, type HoldResult, type Pricing, type TransferAccount,
+  type Appointment, type ConsentSubmission, type HoldResult, type Pricing, type TransferAccount,
 } from '@majobella/core';
 import { Button, Card, Check, Chip, Divider, Field, Icon, KV, Notice, Row, Screen, T, inform } from '@majobella/ui';
 import { api, useApp } from '@/lib/app-state';
@@ -40,6 +40,8 @@ export default function Reservar() {
   const [server, setServer] = useState<{ sig: string; pricing: Pricing } | null>(null);
   const [method, setMethod] = useState<'paypal' | 'transferencia'>('paypal');
   const [terms, setTerms] = useState(false);
+  const [consentAnswers, setConsentAnswers] = useState<Record<string,Record<string,'si'|'no'>>>({});
+  const [consentAccepted, setConsentAccepted] = useState<Record<string,boolean>>({});
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [transfer, setTransfer] = useState<(HoldResult & { accounts: TransferAccount[] }) | null>(null);
@@ -52,6 +54,16 @@ export default function Reservar() {
   const sig = `${cart.join(',')}|${codes.code}|${codes.gift}`;
   const pricing: Pricing = server && server.sig === sig ? server.pricing : studio.pricing(cart);
   const cat = studio.catalog;
+  const requiredConsentIds = [...new Set(t.items.map(s=>s.consentTemplateId).filter((v):v is string=>!!v))];
+  const consentTemplates = requiredConsentIds.map(id=>cat?.consentTemplates?.find(x=>x.id===id));
+  const consentMissing = consentTemplates.some(temp=>!temp);
+  const blocked = consentTemplates.flatMap(temp=>temp?.preguntas.map(q=>({question:q,answer:consentAnswers[temp.id]?.[q.id]}))||[])
+    .find(row=>row.question.stopOn && row.question.stopOn===row.answer);
+  const consentValid = !consentMissing && !blocked && consentTemplates.every(temp=>temp &&
+    consentAccepted[temp.id] && temp.preguntas.every(q=>['si','no'].includes(consentAnswers[temp.id]?.[q.id])));
+  const consents:ConsentSubmission[] = consentTemplates.filter((v):v is NonNullable<typeof v>=>!!v).map(temp=>({
+    templateId:temp.id,name:Validate.fullName(f.first,f.last),accepted:!!consentAccepted[temp.id],answers:consentAnswers[temp.id]||{},
+  }));
   const transferOn = !!(cat && cat.transfer && cat.transfer.enabled);
   const waitOn = !!(cat && cat.waitlist && cat.waitlist.enabled);
   const dayFull = !!(date && studio.busyAt && studio.isOpenDay(date) && !studio.slots(date, minutes).some((x) => !x.busy));
@@ -79,7 +91,7 @@ export default function Reservar() {
   useFocusEffect(useCallback(() => { refreshBusy(); }, [refreshBusy]));
   useEffect(() => { if (time && date && studio.busyAt && studio.isBusy(date, time, minutes)) setTime(null); }, [app.version]);
   useEffect(() => {
-    setTime(null); setServer(null);
+    setTime(null); setServer(null); setConsentAnswers({}); setConsentAccepted({});
     // Si eligió servicios nuevos después de reservar, empieza una reserva nueva
     if (cart.length && step === 4) { setDone(null); setDate(null); setTerms(false); setStep(0); }
   }, [cart.join(',')]);
@@ -161,12 +173,13 @@ export default function Reservar() {
   }
 
   async function book() {
+    if (!consentValid) { setError('Completa el consentimiento antes de continuar al pago.'); return; }
     if (!terms) { setError('Acepta los términos y la política de cancelación para continuar.'); return; }
     if (!date || !time) { go(1); return; }
     setError(''); setBusy(method === 'paypal' ? 'Preparando el pago…' : 'Apartando tu horario…');
     let h: HoldResult | null = null;
     try {
-      h = await api.hold({ services: cart, date, time, client: clientData(), code: codes.code, giftCode: codes.gift, origen: f.origen, canal: 'app', method });
+      h = await api.hold({ services: cart, date, time, client: clientData(), code: codes.code, giftCode: codes.gift, origen: f.origen, canal: 'app', method, consents });
       if (h.confirmed && h.appointment) { await finish(h.appointment, h); return; }
       if (h.transfer) {
         await app.addGuest({ id: h.id, token: h.manageToken });
@@ -208,7 +221,7 @@ export default function Reservar() {
         {step === 1 ? <Button testID="next-2" full={false} title="Continuar" iconRight="arrow-right" disabled={!date || !time} onPress={() => go(2)} /> : null}
         {step === 2 && waitFor ? <Button full={false} title="Avísame" icon="bell" loading={!!busy} onPress={() => { if (validateData()) joinWait(waitFor); }} /> : null}
         {step === 2 && !waitFor ? <Button testID="next-3" full={false} title="Continuar" iconRight="arrow-right" onPress={() => { if (validateData()) go(3); }} /> : null}
-        {step === 3 ? (
+        {step === 3 && consentValid ? (
           <Button testID="pay" full={false} loading={!!busy} title={method === 'paypal' ? (pricing.depositRD > 0 ? `Pagar ${fmtUSD(pricing.depositUSD)}` : 'Confirmar') : 'Apartar'} icon={method === 'paypal' ? 'card' : 'bank'} onPress={book} />
         ) : null}
       </View>
@@ -299,9 +312,45 @@ export default function Reservar() {
         </View>
       ) : null}
 
-      {/* 4 · Depósito */}
+      {/* Consentimiento previo al pago y después depósito */}
       {step === 3 && date && time ? (
         <View>
+          {requiredConsentIds.length > 0 ? (
+            <View style={{ marginBottom: space.lg }}>
+              <T v="kicker">Antes del pago</T>
+              <T v="h2" style={{ marginTop: 7, marginBottom: 10 }}>Tu bienestar es primero</T>
+              <T v="muted" style={{ marginBottom: space.md }}>Responde con sinceridad. El depósito se habilitará únicamente cuando el consentimiento esté completo.</T>
+              {consentMissing ? <Notice kind="error">El consentimiento requerido no está disponible. Contacta al estudio para poder continuar.</Notice> : null}
+              {consentTemplates.map(temp=>temp ? (
+                <Card key={temp.id} style={{ marginBottom: space.md }}>
+                  <T v="h2">{temp.nombre}</T>
+                  <T v="body" style={{ marginTop: 12, marginBottom: 14 }}>{temp.texto}</T>
+                  {temp.preguntas.map((q,i)=>(
+                    <View key={q.id} style={{ borderTopWidth:1,borderTopColor:colors.line,paddingVertical:14 }}>
+                      <T v="body">{i+1}. {q.text}</T>
+                      <Row gap={10} style={{ marginTop:10 }}>
+                        {(['si','no'] as const).map(value=>(
+                          <Button key={value} small full={false}
+                            kind={consentAnswers[temp.id]?.[q.id]===value?'solid':'outline'}
+                            title={value==='si'?'Sí':'No'}
+                            onPress={()=>setConsentAnswers(prev=>({...prev,[temp.id]:{...(prev[temp.id]||{}),[q.id]:value}}))} />
+                        ))}
+                      </Row>
+                    </View>
+                  ))}
+                  <Check checked={!!consentAccepted[temp.id]}
+                    onChange={value=>setConsentAccepted(prev=>({...prev,[temp.id]:value}))}>
+                    <T v="small">He leído la información, respondido con sinceridad y acepto el consentimiento para este tratamiento. Puedo retirarlo antes de que empiece.</T>
+                  </Check>
+                </Card>
+              ):null)}
+              {blocked ? <Notice kind="error" title="No podemos agendar esta sesión por el momento">
+                {blocked.question.stopMessage || 'Gracias por responder con sinceridad. Para cuidar tu bienestar, esta sesión requiere una valoración previa. No se realizará ningún cargo. Escríbenos para orientarte.'}
+              </Notice> : null}
+              {!consentValid && !blocked ? <Notice>Completa las preguntas y acepta el consentimiento para continuar.</Notice> : null}
+            </View>
+          ) : null}
+          {consentValid ? <View>
           <Card>
             <T v="kicker">Tu cita</T>
             <T v="h2" style={{ marginTop: 6 }}>{whenText(date, time)}</T>
@@ -349,6 +398,7 @@ export default function Reservar() {
             </Check>
           </View>
           {busy ? <T v="muted" style={{ marginTop: 10 }}>{busy}</T> : null}
+          </View> : null}
         </View>
       ) : null}
     </Screen>
