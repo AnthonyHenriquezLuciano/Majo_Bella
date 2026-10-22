@@ -37,6 +37,8 @@ Deno.serve(async (req) => {
       if (len > MAX_BODY) return new Response(JSON.stringify({ ok: false, error: 'El archivo es demasiado grande.' }), { status: 413, headers });
       const text = await req.text();
       data = text ? JSON.parse(text) : {};
+      // PayPal envía eventos sin campo «action». Solo se aceptarán después de verificar su firma en el backend.
+      if (req.headers.get('paypal-transmission-id')) data = {action:'paypalWebhook',event:data};
     } else return new Response(JSON.stringify({ ok: false, error: 'Método no permitido.' }), { status: 405, headers });
   } catch (e) {
     return new Response(JSON.stringify({ ok: false, error: 'Datos no válidos.' }), { status: 400, headers });
