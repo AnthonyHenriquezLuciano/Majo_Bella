@@ -15,6 +15,8 @@ export class Studio {
   services: ServiceInfo[];
   byId: Record<string, ServiceInfo>;
   promos: Promo[] = [];
+  serviceGroups: NonNullable<Catalog['serviceGroups']> = [];
+  catalogCategories: NonNullable<Catalog['categories']> = [];
   payments = { ...CONFIG.payments, cancelHours: CONFIG.policies.changeHours };
   catalog: Catalog | null = null;
   busy: [number, number][] = [];
@@ -31,10 +33,15 @@ export class Studio {
   apply(cat: Catalog) {
     this.catalog = cat;
     const local = Object.fromEntries(SERVICES.map((s) => [s.id, s]));
+    this.serviceGroups = cat.serviceGroups || [];
+    this.catalogCategories = cat.categories || [];
     if (cat.services && cat.services.length) {
       this.services = cat.services.map((r, i) => {
         const base = local[r.id] || { id: r.id, category: r.name, name: r.name, description: '' };
-        return { ...base, name: base.name || r.name, price: r.price, durationMinutes: r.durationMinutes, priceFrom: !!r.priceFrom, depositPercent: r.depositPercent, order: i } as ServiceInfo;
+        return { ...base, name: r.name, category: r.category || base.category, categoryId: r.categoryId || base.categoryId,
+          parentId: r.parentId || '', description: r.description || base.description, price: r.price,
+          durationMinutes: r.durationMinutes, priceFrom: !!r.priceFrom, depositPercent: r.depositPercent,
+          order: r.order ?? i } as ServiceInfo;
       });
       this.byId = Object.fromEntries(this.services.map((s) => [s.id, s]));
     }
@@ -53,7 +60,9 @@ export class Studio {
   }
 
   /* ---- Servicios ---- */
-  categories() { return [...new Set(this.services.map((s) => s.category))]; }
+  categories() { return this.catalogCategories.length ? this.catalogCategories.map((c) => c.name) : [...new Set(this.services.map((s) => s.category))]; }
+  /* Solo para presentar opciones; las reservas siempre usan los IDs de servicios cobrables. */
+  groupsFor(categoryId: string) { return this.serviceGroups.filter((g) => g.categoryId === categoryId); }
   totals(ids: string[]) {
     const items = ids.map((id) => this.byId[id]).filter(Boolean);
     return {
