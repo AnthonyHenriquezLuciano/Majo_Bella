@@ -745,3 +745,5 @@ a.act { display: inline-flex; align-items: center; text-decoration: none; color:
 @media (max-width:1100px) { .aj-cat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:660px) { .aj-cat-grid { grid-template-columns:1fr; } .aj-cat-cover { min-height:175px; } }
 @media (prefers-reduced-motion:reduce) { .aj-cat,.aj-cat-cover { transition:none; } .aj-cat:hover { transform:none; } }
+
+/* El editor visual de servicios vive en css/catalogo.css. */
