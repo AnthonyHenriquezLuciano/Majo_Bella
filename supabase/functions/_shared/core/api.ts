@@ -18,6 +18,7 @@ import {
 } from './booking.ts';
 import { consentInfo_, consentSign_ } from './consent.ts';
 import { publicPlans_, adminSubscriptionData_, adminSaveMembershipPlan_, requestMembership_, myMemberships_, adminMembershipAction_ } from './memberships.ts';
+import { adminSyncPaypalPlan_, startPaypalSubscription_, confirmPaypalSubscription_, cancelPaypalSubscription_, paypalWebhook_, myMembershipPayments_, subscriptionCapability_ } from './subscriptions.ts';
 import { adminSaveConsentTemplate_ } from './consent-templates.ts';
 import { adminWaitlist_, waitlistJoin_ } from './waitlist.ts';
 import {
@@ -45,11 +46,14 @@ N('balanceOrder', balanceOrder_); L('balanceCapture', balanceCapture_); N('myApp
 L('giftOrder', giftOrder_); L('giftCapture', giftCapture_); L('bonoOrder', bonoOrder_); L('bonoCapture', bonoCapture_);
 N('loyalty', loyalty_); N('walletLookup', walletLookup_); L('waitlistJoin', waitlistJoin_); N('consentInfo', consentInfo_);
 L('consentSign', consentSign_); L('transferProof', transferProof_);
-L('requestMembership', requestMembership_); N('myMemberships', myMemberships_); L('reschedule', reschedule_); N('myWallet', myWallet_); L('walletEmail', walletEmail_);
+L('requestMembership', requestMembership_); N('myMemberships', myMemberships_);
+L('startPaypalSubscription', startPaypalSubscription_); L('confirmPaypalSubscription', confirmPaypalSubscription_);
+L('cancelPaypalSubscription', cancelPaypalSubscription_); N('myMembershipPayments', myMembershipPayments_);
+L('paypalWebhook', (d, extra) => paypalWebhook_(d, extra.headers)); L('reschedule', reschedule_); N('myWallet', myWallet_); L('walletEmail', walletEmail_);
 // Panel
 N('adminData', adminData_); N('adminList', adminData_); L('adminUpdate', adminUpdate_); L('adminCreate', adminCreate_);
 L('adminReschedule', adminReschedule_); L('adminBlock', adminBlock_); L('adminDeleteBlock', adminDeleteBlock_);
-L('adminSaveSettings', adminSaveSettings_); L('adminSaveMembershipPlan', adminSaveMembershipPlan_); L('adminMembershipAction', adminMembershipAction_); L('adminSaveConsentTemplate', adminSaveConsentTemplate_); L('adminSaveClient', adminSaveClient_); L('adminUpload', adminUpload_); N('adminFile', adminFile_);
+L('adminSaveSettings', adminSaveSettings_); L('adminSaveMembershipPlan', adminSaveMembershipPlan_); L('adminSyncPaypalPlan', adminSyncPaypalPlan_); L('adminMembershipAction', adminMembershipAction_); L('adminSaveConsentTemplate', adminSaveConsentTemplate_); L('adminSaveClient', adminSaveClient_); L('adminUpload', adminUpload_); N('adminFile', adminFile_);
 L('adminDeleteFile', adminDeleteFile_); L('adminSavePromo', adminSavePromo_); L('adminDeletePromo', adminDeletePromo_);
 L('adminSaveGift', adminSaveGift_); L('adminSaveExpense', adminSaveExpense_); L('adminDeleteExpense', adminDeleteExpense_);
 L('adminPublishGallery', adminPublishGallery_); L('adminSaveGallery', adminSaveGallery_); L('adminDeleteGallery', adminDeleteGallery_);
@@ -135,6 +139,7 @@ export async function handle(deps: Deps, method: string, data: any, headers: Rec
             heartbeat_();
             const out = catalog_();
             out.membershipPlans = publicPlans_();
+            out.subscriptionCapability = subscriptionCapability_();
             await commit(tx);
             return out;
           });
@@ -180,7 +185,7 @@ export async function handle(deps: Deps, method: string, data: any, headers: Rec
         // Verificaciones que necesitan internet, antes de la lógica
         if (data.idToken) { c.userToken = String(data.idToken); c.user = await resolveUser(c.userToken); }
         if (data.captcha) c.captcha = await resolveCaptcha(data, settings_());
-        const extra: any = {};
+        const extra: any = action === 'paypalWebhook' ? { headers } : {};
         if (panel && c.user && adminEmails_().includes(c.user.email)) { extra.folder = await storagePrivacy(); await ensureCron_(tx); }
         const mark = c.ops.length, markOut = c.out.length;
         let out: any;
