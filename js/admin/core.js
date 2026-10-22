@@ -168,9 +168,9 @@
   A.remove = (list, id, key = 'id') => { A.data[list] = (A.data[list] || []).filter((x) => x[key] !== id); };
 
   /* ---------- Navegación por secciones ---------- */
-  A.current = 'agenda';
+  A.current = 'inicio';
   A.go = (name) => {
-    if (!A.sections[name]) name = 'agenda';
+    if (!A.sections[name]) name = 'inicio';
     A.current = name;
     document.querySelectorAll('[data-section]').forEach((s) => { s.hidden = s.dataset.section !== name; });
     document.querySelectorAll('.ad-tabs [data-sec], .ad-bottom [data-sec], .more-list [data-sec]').forEach((b) => { const on = b.dataset.sec === name; b.classList.toggle('is-on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
@@ -303,7 +303,7 @@
     renderUser();
     A.bindInputs();
     Object.values(A.sections).forEach((s) => s.init && s.init());
-    A.current = A.sections[location.hash.slice(1)] ? location.hash.slice(1) : 'agenda';
+    A.current = A.sections[location.hash.slice(1)] ? location.hash.slice(1) : 'inicio';
     await A.load();
     A.loadedAt = Date.now();
     A.go(A.current);
