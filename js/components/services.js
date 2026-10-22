@@ -7,11 +7,10 @@
   M.initServices = function () {
     const tabs = document.getElementById('menu-tabs');
     const list = document.getElementById('services-list');
-    const cats = [...new Set(M.services.map((s) => s.category || 'Servicios'))];
     let active = 'Todos';
-
-    tabs.innerHTML = ['Todos', ...cats].map((c) => `
-      <button type="button" class="menu-tab${c === active ? ' is-active' : ''}" role="tab" aria-selected="${c === active}" data-cat="${M.escapeHtml(c)}">${M.escapeHtml(c)}</button>`).join('');
+    const categories = () => (M.serviceCategories && M.serviceCategories.length)
+      ? M.serviceCategories
+      : [...new Set(M.services.map((s) => s.category || 'Servicios'))].map((name) => ({ id: name, name }));
 
     function details(s) {
       const blocks = [];
@@ -45,7 +44,6 @@
             ${hasDetails ? `<button type="button" class="svc-more" aria-expanded="false" aria-controls="det-${s.id}">Ver detalles</button>` : ''}
           </div>
           <button type="button" class="svc-add" data-add="${s.id}" aria-pressed="${on}">
-            <span class="svc-add-icon" aria-hidden="true"></span>
             <span class="svc-add-label">${on ? 'Añadido' : 'Añadir'}</span>
             <span class="sr-only"> ${M.escapeHtml(s.name)}</span>
           </button>
@@ -55,12 +53,25 @@
 
     M.refreshServices = () => render();
     function render() {
-      const groups = cats
-        .filter((c) => active === 'Todos' || c === active)
-        .map((c) => ({ c, items: M.services.filter((s) => (s.category || 'Servicios') === c) }));
-      list.innerHTML = groups.map(({ c, items }) => `
-        ${items.length > 1 ? `<h3 class="menu-cat">${M.escapeHtml(c)}</h3>` : ''}
-        ${items.map(card).join('')}`).join('');
+      const cats = categories();
+      tabs.innerHTML = ['Todos', ...cats.map((c) => c.name)].map((c) => `
+        <button type="button" class="menu-tab${c === active ? ' is-active' : ''}"
+          role="tab" aria-selected="${c === active}" data-cat="${M.escapeHtml(c)}">${M.escapeHtml(c)}</button>`).join('');
+      const groups = cats.filter((c) => active === 'Todos' || c.name === active)
+        .map((c) => ({ c, items: M.services.filter((s) => s.categoryId === c.id || (!s.categoryId && s.category === c.name)) }));
+      list.innerHTML = groups.map(({ c, items }) => {
+        const parents = (M.serviceGroups || []).filter((g) => g.categoryId === c.id);
+        const direct = items.filter((s) => !s.parentId || !parents.some((g) => g.id === s.parentId));
+        return `<h3 class="menu-cat">${M.escapeHtml(c.name)}</h3>
+          ${parents.map((g) => {
+            const children = items.filter((s) => s.parentId === g.id);
+            return `<details class="menu-service-group"><summary><span>${M.escapeHtml(g.name)}</span>
+              <small>${children.length} ${children.length === 1 ? 'estilo' : 'opciones'} · Ver opciones</small></summary>
+              <div class="menu-service-children">${g.description ? `<p>${M.escapeHtml(g.description)}</p>` : ''}
+                ${children.map(card).join('')}</div></details>`;
+          }).join('')}
+          ${direct.map(card).join('')}`;
+      }).join('');
     }
 
     function toggleDetails(cardEl) {
