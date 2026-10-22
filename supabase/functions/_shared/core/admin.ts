@@ -390,14 +390,44 @@ export function adminSaveExpense_(d) {
   const e = d.expense || {};
   const monto = Math.round(Number(e.montoRD) || 0);
   if (!clean_(e.concepto, 120) || monto <= 0) return { ok: false, error: 'Escribe el concepto y el monto.' };
+  let recurrentId = '';
+  if (e.repetirMensual === true && !e.id) {
+    const rows = readTable_('Ajustes');
+    const pref = rows.find(x => x.clave === 'gastosRecurrentes');
+    let templates: any[] = [];
+    try { const parsed = JSON.parse(String(pref?.valor || '[]')); if (Array.isArray(parsed)) templates = parsed; } catch { /* se recupera sin borrar datos */ }
+    if (templates.length >= 20) throw Error('Máximo 20 gastos recurrentes; desactiva una plantilla antes de crear otra.');
+    recurrentId = uuid().slice(0, 8).replace(/-/g, '').toUpperCase();
+    const dia = Math.min(28, Math.max(1, Number(String(e.fecha || todayKey_()).slice(-2)) || 1));
+    templates.push({ id: recurrentId, concepto: clean_(e.concepto,120), categoria: clean_(e.categoria,40) || 'Otros',
+      montoRD: monto, metodo: clean_(e.metodo,30) || 'efectivo', dia, activo: true });
+    const value = JSON.stringify(templates);
+    if (value.length > 3900) throw Error('Demasiadas plantillas de gastos recurrentes.');
+    if (pref) updateTable_('Ajustes',pref._row,{valor:value});
+    else appendRow_('Ajustes',{clave:'gastosRecurrentes',valor:value,'qué es':'Plantillas de gastos mensuales'});
+  }
   const patch: any = {
-    id: e.id || ('GST-' + uuid().slice(0, 6).toUpperCase()),
+    id: recurrentId ? ('GRE-' + recurrentId + '-' + todayKey_().slice(0,7).replace('-','')) : (e.id || ('GST-' + uuid().slice(0, 6).toUpperCase())),
     fecha: isDateKey_(e.fecha) ? e.fecha : todayKey_(), concepto: clean_(e.concepto, 120),
     categoria: clean_(e.categoria, 40) || 'Otros', montoRD: monto, metodo: clean_(e.metodo, 30) || 'efectivo',
   };
   const r = readTable_('Gastos').filter(function (x) { return x.id === patch.id; })[0];
   if (r) updateTable_('Gastos', r._row, patch); else { patch.creada = new Date().toISOString(); appendRow_('Gastos', patch); }
   return { ok: true, expense: patch };
+}
+
+/* Desactiva una plantilla sin borrar gastos ya registrados. */
+export function adminPauseRecurringExpense_(d) {
+  needAdmin_(d);
+  const rows = readTable_('Ajustes'), pref = rows.find(x=>x.clave==='gastosRecurrentes');
+  if (!pref) return { ok:false,error:'No hay gastos mensuales configurados.' };
+  let templates:any[] = [];
+  try { const v=JSON.parse(String(pref.valor||'[]'));if(Array.isArray(v))templates=v; } catch { return {ok:false,error:'No se pudieron leer las plantillas.'}; }
+  const t=templates.find(x=>x.id===String(d.id));
+  if (!t) return {ok:false,error:'No existe esa plantilla.'};
+  t.activo=false;
+  updateTable_('Ajustes',pref._row,{valor:JSON.stringify(templates)});
+  return {ok:true,plantillas:templates};
 }
 
 export function adminDeleteExpense_(d) {
