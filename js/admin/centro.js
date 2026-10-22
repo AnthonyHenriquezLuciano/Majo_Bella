@@ -58,6 +58,7 @@
     ];
     const pending=rows.filter(r=>r.num>0);
     $('cc-pending-count').textContent=pending.length?`${pending.length} áreas con pendientes`:'Al día';
+    A.badge('.ad-tabs [data-sec="inicio"], .ad-bottom [data-sec="inicio"]', pending.length, `${pending.length} áreas con pendientes`);
     $('cc-task-list').innerHTML=pending.length?pending.map(r=>`<button class="cc-task" data-cc-target="${r.go}" type="button">
       <span class="cc-task-mark ${r.mark}">${r.num}</span>
       <span class="cc-task-copy"><strong>${r.name}</strong><small>${r.detail}</small></span>
@@ -94,6 +95,9 @@
       highlight:d.date===today(),tip:`${d.date}: ${money(d.value)} netos`}));
     A.barChart($('cc-chart'),values,{height:178,money:true,label:'Cobros netos por día, últimos días del periodo',maxLabels:7,empty:'Todavía no hay cobros para el periodo.'});
     $('cc-chart').dataset.rows=JSON.stringify(rows);
+    const negative=rows.filter(d=>d.value<0).length;
+    const note=document.querySelector('#sec-inicio .cc-footnote');
+    if(note) note.textContent='Depósitos, saldos, tarjetas y paquetes cobrados, netos de reembolsos. Las membresías no se incluyen todavía.'+(negative?` ${negative} días tuvieron reembolsos netos y se grafican en cero; sus importes reales figuran en el CSV.`:'');
   }
   function renderServices(x){
     const counts=new Map();
@@ -124,13 +128,15 @@
           <small>${appt?'Cita · '+when(c.next.date):'Última visita · '+when(c.lastVisit)}</small>
           <span>${c.visits===1?'1 visita registrada':c.visits+' visitas registradas'}</span></div>
         ${link?`<a class="cc-contact" href="${esc(link)}" target="_blank" rel="noopener noreferrer" aria-label="Preparar saludo para ${esc(c.name)}">Saludar ↗</a>`:
-        '<button type="button" class="cc-contact" data-cc-target="clientas">Ver ficha →</button>'}
+        '<button type="button" class="cc-contact" data-cc-target="clientas">Ver clientas →</button>'}
       </article>`;
     }).join(''):'<div class="cc-empty"><strong>Cada relación comienza con una cita</strong><p>Aquí aparecerán las próximas clientas y quienes llevan tiempo sin visitarte.</p></div>';
   }
   function render(){
     const x=metrics(),name=A.DEMO?'equipo':String(M.Auth?.user?.name||'equipo').trim().split(/\s+/)[0];
-    $('cc-greeting').textContent=`Bienvenida al estudio`;
+    const hour=Number(new Intl.DateTimeFormat('en-GB',{hour:'2-digit',hourCycle:'h23',timeZone:'America/Santo_Domingo'}).format(new Date()));
+    const greeting=hour<12?'Buenos días':hour<19?'Buenas tardes':'Buenas noches';
+    $('cc-greeting').textContent=`${greeting}, ${name}.`;
     $('cc-hero-sub').textContent='Un espacio para tomar buenas decisiones y cuidar cada experiencia.';
     $('cc-date').textContent=new Intl.DateTimeFormat('es-DO',{dateStyle:'full',timeZone:'America/Santo_Domingo'}).format(new Date());
     $('cc-last-sync').textContent=A.loadedAt?`Última sincronización: ${new Intl.DateTimeFormat('es-DO',{hour:'2-digit',minute:'2-digit',timeZone:'America/Santo_Domingo'}).format(new Date(A.loadedAt))}`:'Datos cargados de la operación';
@@ -145,7 +151,7 @@
     const csv='\ufeff'+data.map(row=>row.map(quote).join(';')).join('\r\n');
     const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
     const a=document.createElement('a');a.href=url;a.download=`MAJOBELLA_reporte_${x.r.from}_${x.r.to}.csv`;
-    a.click();URL.revokeObjectURL(url);
+    a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
   A.sections.inicio={
     render,
