@@ -56,6 +56,7 @@
           ${Number(m.sesionesUsadas)>0?`<button class="chip-btn" data-mb-action="deshacerUso" data-id="${esc(m.id)}">Corregir uso</button>`:''}
           ${active&&!auto?`<button class="chip-btn" data-mb-action="pausar" data-id="${esc(m.id)}">Pausar</button>`:''}
           ${m.estado!=='cancelada'&&!auto?`<button class="chip-btn" data-mb-action="cancelar" data-id="${esc(m.id)}">Cancelar</button>`:''}
+          ${auto?`<button class="chip-btn" data-mb-reconcile="${esc(m.id)}">Verificar cobros en PayPal</button>`:''}
           ${auto&&!['CANCELLED','EXPIRED'].includes(m.paypalEstado)?`<button class="chip-btn" data-mb-auto-cancel="${esc(m.id)}">Cancelar en PayPal</button>`:''}
         </div></article>`;
     }).join(''):'<p class="muted">No hay clientas para este filtro.</p>';
@@ -125,6 +126,13 @@
       A.upsert('memberships',r.membresia);render();A.toast(r.mensaje);
     }catch(err){A.toast(err.message||'No se pudo cancelar en PayPal.');}});
   }
+  async function reconcilePaypal(btn){
+    await A.busy(btn,async()=>{try{
+      const r=await A.call('adminReconcilePaypalSubscription',{id:btn.dataset.mbReconcile});
+      A.toast(r.message||'Verificación completada.');
+      await A.load();
+    }catch(err){A.toast(err.message||'No se pudo consultar el historial de PayPal.');}});
+  }
   A.sections.membresias={
     render,
     init(){
@@ -134,7 +142,10 @@
       $('mb-plan-form').addEventListener('submit',save);
       $('mb-state-filter').addEventListener('change',renderMembers);
       $('mb-search').addEventListener('input',renderMembers);
-      $('mb-member-list').addEventListener('click',e=>{const b=e.target.closest('[data-mb-action],[data-mb-auto-cancel]');if(!b)return;if(b.dataset.mbAutoCancel)cancelAuto(b);else membershipAction(b);});
+      $('mb-member-list').addEventListener('click',e=>{const b=e.target.closest('[data-mb-action],[data-mb-auto-cancel],[data-mb-reconcile]');if(!b)return;
+        if(b.dataset.mbReconcile)reconcilePaypal(b);
+        else if(b.dataset.mbAutoCancel)cancelAuto(b);
+        else membershipAction(b);});
     }
   };
 })(window.MJB);
