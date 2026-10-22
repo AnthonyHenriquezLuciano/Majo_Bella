@@ -36,7 +36,7 @@ const movement=[{date:iso,amount:1500}];
 const moneySummary=(from,to)=>({gross:from<=iso&&iso<=to?1500:0,ref:0,due:from<=iso&&iso<=to?800:0});
 let chosen='',exportCount=0;
 const A={
-  DEMO:true,data,loadedAt:Date.now(),sections:{},money:n=>'RD$ '+n.toLocaleString('es-DO'),moneySummary,
+  DEMO:true,data,loadedAt:Date.now(),sections:{},esc:v=>String(v??'').replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])),money:n=>'RD$ '+n.toLocaleString('es-DO'),moneySummary,
   movements:()=>movement,clients:()=>[{key:'ana',name:'Ana Pérez',phone:'8095551234',visits:2,
    next:{date:iso},lastVisit:dayOffset(iso,-25)}],waLink:()=> 'https://wa.me/18095551234',
   today:iso,addDays:dayOffset,shortDate:v=>v,serviceName:id=>id,badge:()=>{},barChart:(e,ds)=>{e.values=ds;},hbars:()=>'<div>Servicios</div>',
