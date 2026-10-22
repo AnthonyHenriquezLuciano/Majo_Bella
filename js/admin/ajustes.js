@@ -71,25 +71,114 @@
     closed = String(s.diasCerrados || '').split(',').map((x) => x.trim()).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x)).sort();
     renderClosed();
 
-    $('aj-services').innerHTML = (A.data.services || []).map((sv) => serviceRow(sv)).join('');
+    renderCatalog();
   }
 
   function renderClosed() {
     $('aj-closed').innerHTML = closed.length ? closed.map((d) => `<span class="dchip">${A.shortDate(d)}<button type="button" data-closed-del="${d}" aria-label="Quitar ${d}">×</button></span>`).join('') : '<span class="muted">Ninguno</span>';
   }
 
-  function serviceRow(sv) {
-    return `<tr data-id="${esc(sv.id || '')}">
-      <td><input name="nombre" value="${esc(sv.nombre || '')}" aria-label="Nombre" placeholder="Nombre del servicio"></td>
-      <td><input name="duracionMin" type="number" min="5" step="5" value="${esc(sv.duracionMin || 30)}" aria-label="Duración en minutos"></td>
-      <td><input name="precioRD" type="number" min="0" step="50" value="${esc(sv.precioRD || 0)}" aria-label="Precio"></td>
-      <td class="c"><input name="precioDesde" type="checkbox" ${/^s[ií]$/i.test(sv.precioDesde) ? 'checked' : ''} aria-label="Precio desde"></td>
-      <td><input name="depositoPct" type="number" min="0" max="100" step="5" value="${esc(sv.depositoPct === undefined || sv.depositoPct === '' ? (A.settingsMap().porcentajeDeposito || 50) : sv.depositoPct)}" aria-label="Depósito para apartar (%)"></td>
-      <td><input name="volverDias" type="number" min="0" step="1" value="${esc(sv.volverDias || 0)}" aria-label="Vuelve cada (días)"></td>
-      <td><input name="retoqueDias" type="number" min="0" step="1" value="${esc(sv.retoqueDias || 0)}" aria-label="Retoque a los (días)"></td>
-      <td class="c"><input name="consentimiento" type="checkbox" ${/^s[ií]$/i.test(sv.consentimiento) ? 'checked' : ''} aria-label="Pide consentimiento"></td>
-      <td class="c"><input name="activo" type="checkbox" ${/^no$/i.test(sv.activo) ? '' : 'checked'} aria-label="Activo"></td>
-    </tr>`;
+
+  const newId = (prefix) => prefix + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const checked = (v) => /^s[ií]$/i.test(String(v)) ? 'checked' : '';
+  const enabled = (v) => /^no$/i.test(String(v)) ? '' : 'checked';
+
+  function serviceEditor(sv, catId, parentId = '') {
+    const group = sv.tipo === 'grupo';
+    const id = esc(sv.id || newId('servicio'));
+    const name = esc(sv.nombre || '');
+    const desc = esc(sv.descripcion || '');
+    const children = (A.data.services || []).filter((s) => s.padreId === sv.id);
+    return `<details class="aj-svc-editor" data-id="${id}" data-tipo="${group ? 'grupo' : 'servicio'}" data-padre="${esc(parentId)}" open>
+      <summary><span data-svc-title>${name || (group ? 'Nuevo servicio con opciones' : 'Nuevo servicio')}</span>
+        <small>${group ? 'Servicio · despliega opciones' : parentId ? 'Subservicio · reservable' : 'Servicio directo · reservable'}</small></summary>
+      <div class="aj-svc-body">
+        <div class="aj-svc-fields">
+          <label class="wide">Nombre<input name="nombre" value="${name}" maxlength="80" placeholder="${group ? 'Estilos de cejas' : 'Nombre del tratamiento'}"></label>
+          <label class="wide">Descripción<textarea name="descripcion" rows="2" maxlength="500">${desc}</textarea></label>
+          ${group ? '' : `
+          <label>Duración (min)<input name="duracionMin" type="number" min="5" step="5" value="${esc(sv.duracionMin ?? 30)}"></label>
+          <label>Precio (RD$)<input name="precioRD" type="number" min="0" step="50" value="${esc(sv.precioRD ?? 0)}"></label>
+          <label>Depósito (%)<input name="depositoPct" type="number" min="0" max="100" value="${esc(sv.depositoPct ?? 50)}"></label>
+          <label>Vuelve en (días)<input name="volverDias" type="number" min="0" value="${esc(sv.volverDias ?? 30)}"></label>
+          <label>Retoque (días)<input name="retoqueDias" type="number" min="0" value="${esc(sv.retoqueDias ?? 0)}"></label>
+          <label class="switch"><input name="precioDesde" type="checkbox" ${checked(sv.precioDesde)}> Precio «desde»</label>
+          <label class="switch wide"><input name="consentimiento" type="checkbox" ${checked(sv.consentimiento)}> Solicitar consentimiento</label>`}
+          <label class="switch wide"><input name="activo" type="checkbox" ${enabled(sv.activo)}> Visible y activo</label>
+        </div>
+        <div class="aj-svc-actions"><button type="button" data-svc-up>Subir</button><button type="button" data-svc-down>Bajar</button></div>
+        ${group ? `<div class="aj-svc-children">${children.map((child) => serviceEditor(child, catId, id)).join('')}</div>
+          <div class="aj-svc-actions"><button type="button" data-add-child>Añadir subservicio</button></div>` : ''}
+      </div>
+    </details>`;
+  }
+
+  function categoryCard(cat) {
+    const id = esc(cat.id || newId('cat'));
+    const items = (A.data.services || []).filter((s) => (s.categoriaId || (s.id === id ? id : 'otros')) === id);
+    const groups = items.filter((s) => s.tipo === 'grupo');
+    const direct = items.filter((s) => s.tipo !== 'grupo' && (!s.padreId || !groups.some((g) => g.id === s.padreId)));
+    const count = items.filter((s) => s.tipo !== 'grupo').length;
+    return `<article class="aj-cat" data-id="${id}">
+      <div class="aj-cat-cover">
+        <p>MAJOBELLA · ${count} ${count === 1 ? 'opción' : 'opciones'}</p>
+        <h3 data-cat-title>${esc(cat.nombre || 'Nueva categoría')}</h3>
+        <button type="button" data-cat-open aria-expanded="false">Administrar categoría</button>
+      </div>
+      <div class="aj-cat-editor" hidden>
+        <div class="aj-cat-fields">
+          <label>Nombre de la categoría<input name="nombre" value="${esc(cat.nombre || '')}" maxlength="80" placeholder="Cejas, pestañas, faciales…"></label>
+          <label><span><input type="checkbox" name="activo" ${enabled(cat.activo)}> Publicada</span></label>
+        </div>
+        <div class="aj-cat-actions"><button type="button" data-cat-up>Subir</button><button type="button" data-cat-down>Bajar</button></div>
+        <h4>Servicios y subservicios</h4>
+        <div class="aj-cat-groups">${groups.map((g) => serviceEditor(g, id)).join('')}</div>
+        <div class="aj-cat-direct">${direct.map((sv) => serviceEditor(sv, id)).join('')}</div>
+        <div class="aj-cat-actions"><button type="button" data-add-direct>Añadir servicio directo</button>
+          <button type="button" data-add-group>Nuevo servicio con subservicios</button></div>
+      </div>
+    </article>`;
+  }
+
+  function renderCatalog() {
+    let cats = A.data.categories || [];
+    if (!cats.length) { // Compatibilidad con los datos de demostración.
+      const labels = { cejas: 'Cejas', pestanas: 'Pestañas', faciales: 'Faciales', micropigmentacion: 'Micropigmentación', depilacion: 'Depilación' };
+      cats = Object.keys(labels).map((id, orden) => ({ id, nombre: labels[id], orden, activo: 'si' }));
+    }
+    $('aj-services').innerHTML = cats.slice().sort((a, b) => Number(a.orden || 0) - Number(b.orden || 0)).map(categoryCard).join('');
+  }
+
+  function fieldValue(node, key) { return node.querySelector(`[name="${key}"]`)?.value?.trim() || ''; }
+  function fieldCheck(node, key) { return node.querySelector(`[name="${key}"]`)?.checked ? 'si' : 'no'; }
+  function catalogDraft() {
+    const cats = [...$('aj-services').querySelectorAll('.aj-cat')];
+    const categories = cats.map((node, i) => ({
+      id: node.dataset.id, nombre: fieldValue(node.querySelector('.aj-cat-fields'), 'nombre'),
+      orden: i + 1, activo: fieldCheck(node.querySelector('.aj-cat-fields'), 'activo'),
+    }));
+    const services = cats.flatMap((cat) => [...cat.querySelectorAll('.aj-svc-editor')].map((node, i) => {
+      const fields = node.querySelector('.aj-svc-fields');
+      return {
+        id: node.dataset.id, categoriaId: cat.dataset.id, padreId: node.dataset.padre || '',
+        tipo: node.dataset.tipo, orden: i + 1,
+        nombre: fieldValue(fields, 'nombre'), descripcion: fieldValue(fields, 'descripcion'),
+        duracionMin: fieldValue(fields, 'duracionMin') || '30',
+        precioRD: fieldValue(fields, 'precioRD') || '0',
+        precioDesde: fieldCheck(fields, 'precioDesde'),
+        depositoPct: fieldValue(fields, 'depositoPct') || '0',
+        volverDias: fieldValue(fields, 'volverDias') || '0',
+        retoqueDias: fieldValue(fields, 'retoqueDias') || '0',
+        consentimiento: fieldCheck(fields, 'consentimiento'),
+        activo: fieldCheck(fields, 'activo'),
+      };
+    }));
+    return { categories, services };
+  }
+
+  function move(node, way) {
+    if (way < 0 && node.previousElementSibling) node.parentElement.insertBefore(node, node.previousElementSibling);
+    if (way > 0 && node.nextElementSibling) node.parentElement.insertBefore(node.nextElementSibling, node);
   }
 
   async function save(btn) {
@@ -101,18 +190,14 @@
       settings[DAY_KEYS[dow]] = row.querySelector('[data-open]').checked ? `${row.querySelector('[data-from]').value}-${row.querySelector('[data-to]').value}` : 'cerrado';
     });
     settings.diasCerrados = closed.join(', ');
-    const services = [...$('aj-services').querySelectorAll('tr')].map((tr) => ({
-      id: tr.dataset.id, nombre: tr.querySelector('[name=nombre]').value.trim(),
-      duracionMin: tr.querySelector('[name=duracionMin]').value, precioRD: tr.querySelector('[name=precioRD]').value,
-      precioDesde: tr.querySelector('[name=precioDesde]').checked ? 'si' : 'no', volverDias: tr.querySelector('[name=volverDias]').value,
-      depositoPct: tr.querySelector('[name=depositoPct]').value,
-      retoqueDias: tr.querySelector('[name=retoqueDias]').value,
-      consentimiento: tr.querySelector('[name=consentimiento]').checked ? 'si' : 'no',
-      activo: tr.querySelector('[name=activo]').checked ? 'si' : 'no',
-    })).filter((x) => x.nombre);
+    const { categories, services } = catalogDraft();
+    if (categories.some((c) => !c.nombre) || services.some((v) => !v.nombre)) {
+      A.toast('Asigna un nombre a cada categoría, servicio y subservicio antes de guardar.');
+      return;
+    }
     await A.busy(btn, async () => {
       try {
-        const res = await A.call('adminSaveSettings', { settings, services });
+        const res = await A.call('adminSaveSettings', { settings, categories, services });
         A.data = res;
         M.config.schedule.hours = res.schedule.hours;
         M.config.schedule.blockedDates = res.schedule.blocked || [];
@@ -143,9 +228,40 @@
         const b = e.target.closest('[data-closed-del]');
         if (b) { closed = closed.filter((d) => d !== b.dataset.closedDel); renderClosed(); }
       });
-      $('aj-svc-add').addEventListener('click', () => {
-        $('aj-services').insertAdjacentHTML('beforeend', serviceRow({ duracionMin: 60, precioRD: 0, volverDias: 30, depositoPct: 50, retoqueDias: 0, consentimiento: 'no', activo: 'si' }));
-        $('aj-services').lastElementChild.querySelector('input').focus();
+      $('aj-cat-add').addEventListener('click', () => {
+        $('aj-services').insertAdjacentHTML('beforeend', categoryCard({ id: newId('cat'), nombre: '', activo: 'si' }));
+        const el = $('aj-services').lastElementChild;
+        el.querySelector('[data-cat-open]').click();
+        el.querySelector('.aj-cat-fields [name=nombre]').focus();
+      });
+      $('aj-services').addEventListener('input', (e) => {
+        const cat = e.target.closest('.aj-cat');
+        if (cat && e.target.matches('.aj-cat-fields [name=nombre]'))
+          cat.querySelector('[data-cat-title]').textContent = e.target.value || 'Nueva categoría';
+        const svc = e.target.closest('.aj-svc-editor');
+        if (svc && e.target.matches('.aj-svc-fields [name=nombre]'))
+          svc.querySelector('[data-svc-title]').textContent = e.target.value || 'Nuevo servicio';
+      });
+      $('aj-services').addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const cat = btn.closest('.aj-cat'), svc = btn.closest('.aj-svc-editor');
+        if (!cat) return;
+        if (btn.hasAttribute('data-cat-open')) {
+          const panel = cat.querySelector('.aj-cat-editor');
+          panel.hidden = !panel.hidden;
+          btn.setAttribute('aria-expanded', String(!panel.hidden));
+        } else if (btn.hasAttribute('data-cat-up')) move(cat, -1);
+        else if (btn.hasAttribute('data-cat-down')) move(cat, 1);
+        else if (btn.hasAttribute('data-svc-up') && svc) move(svc, -1);
+        else if (btn.hasAttribute('data-svc-down') && svc) move(svc, 1);
+        else if (btn.hasAttribute('data-add-direct')) {
+          cat.querySelector('.aj-cat-direct').insertAdjacentHTML('beforeend', serviceEditor({ id: newId('svc'), activo: 'si' }, cat.dataset.id));
+        } else if (btn.hasAttribute('data-add-group')) {
+          cat.querySelector('.aj-cat-groups').insertAdjacentHTML('beforeend', serviceEditor({ id: newId('grupo'), tipo: 'grupo', activo: 'si' }, cat.dataset.id));
+        } else if (btn.hasAttribute('data-add-child') && svc) {
+          svc.querySelector('.aj-svc-children').insertAdjacentHTML('beforeend', serviceEditor({ id: newId('sub'), activo: 'si' }, cat.dataset.id, svc.dataset.id));
+        }
       });
     },
   };

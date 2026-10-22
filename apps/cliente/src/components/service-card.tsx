@@ -1,8 +1,8 @@
 /* Tarjeta de servicio: nombre, descripción, duración, precio (con promoción) y botón para añadir */
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colors, fmtDurationShort, fmtPrice, fmtServicePrice, space, type ServiceInfo } from '@majobella/core';
-import { Badge, Button, Card, Icon, Row, T } from '@majobella/ui';
+import { fmtDurationShort, fmtPrice, fmtServicePrice, space, type ServiceInfo } from '@majobella/core';
+import { Badge, Button, Card, Row, T } from '@majobella/ui';
 import { useApp } from '@/lib/app-state';
 
 export function ServiceCard({ s, compact }: { s: ServiceInfo; compact?: boolean }) {
@@ -24,12 +24,11 @@ export function ServiceCard({ s, compact }: { s: ServiceInfo; compact?: boolean 
       </Row>
       {!compact && s.description ? <T v="muted" style={{ marginTop: 8 }} numberOfLines={3}>{s.description}</T> : null}
       <Row style={{ marginTop: 14, justifyContent: 'space-between' }}>
-        <Row gap={6}><Icon name="clock" size={16} color={colors.muted} /><T v="muted">{fmtDurationShort(s.durationMinutes)}</T></Row>
+        <T v="muted">{fmtDurationShort(s.durationMinutes)}</T>
         <Button
           testID={`add-${s.id}`}
           small full={false}
           kind={inCart ? 'solid' : 'outline'}
-          icon={inCart ? 'check' : 'plus'}
           title={inCart ? 'Añadido' : 'Añadir'}
           accessibilityLabel={inCart ? `Quitar ${s.name}` : `Añadir ${s.name}`}
           onPress={() => toggleCart(s.id)}

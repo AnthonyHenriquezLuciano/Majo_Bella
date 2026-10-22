@@ -71,11 +71,17 @@ function ensureSeed_() {
   DEFAULT_SETTINGS.filter((x) => have.indexOf(x[0]) < 0).forEach((x) => appendRow_('Ajustes', { clave: x[0], valor: x[1], 'qué es': x[2] }));
   const rows = readTable_('Servicios');
   if (!rows.length) {
-    DEFAULT_SERVICES.forEach((x) => appendRow_('Servicios', { id: x[0], nombre: x[1], duracionMin: x[2], precioRD: x[3], precioDesde: x[4], activo: x[5], volverDias: x[6], depositoPct: x[7], retoqueDias: x[8], consentimiento: x[9] }));
+    DEFAULT_SERVICES.forEach((x) => appendRow_('Servicios', {
+      id: x[0], nombre: x[1], duracionMin: x[2], precioRD: x[3], precioDesde: x[4], activo: x[5],
+      volverDias: x[6], depositoPct: x[7], retoqueDias: x[8], consentimiento: x[9],
+      categoriaId: x[0], tipo: 'servicio', padreId: '', orden: 0, descripcion: '',
+    }));
   } else {
     rows.forEach((r) => {
       const def = DEFAULT_SERVICES.filter((x) => x[0] === r.id)[0];
       const patch: any = {};
+      if (!r.categoriaId) patch.categoriaId = ['faciales', 'cejas', 'pestanas', 'micropigmentacion', 'depilacion'].includes(r.id) ? r.id : 'otros';
+      if (!r.tipo) patch.tipo = 'servicio';
       if (!r.volverDias) patch.volverDias = def ? def[6] : 30;
       if (r.retoqueDias === '') patch.retoqueDias = def ? def[8] : 0;
       if (r.consentimiento === '') patch.consentimiento = def ? def[9] : 'no';
@@ -121,7 +127,7 @@ export async function handle(deps: Deps, method: string, data: any, headers: Rec
       if (method === 'GET') {
         if (action === 'catalog') {
           const body = await sql.begin(async (tx: any) => {
-            await loadTables(tx, { tables: ['Ajustes', 'Servicios', 'Promociones', 'Paquetes', 'Galeria', 'Resenas', 'Cuentas'] });
+            await loadTables(tx, { tables: ['Ajustes', 'Categorias', 'Servicios', 'Promociones', 'Paquetes', 'Galeria', 'Resenas', 'Cuentas'] });
             ensureSeed_();
             heartbeat_();
             const out = catalog_();

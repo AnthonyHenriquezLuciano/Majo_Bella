@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/admin.css?v=20261021v1">
+<link rel="stylesheet" href="css/admin.css?v=20261022v1">
 </head>
 <body>
 <!--MJB:BODY-START-->
@@ -419,14 +419,9 @@
       </div>
     </section>
     <section class="ad-panel" id="aj-p-services">
-      <div class="panel-head"><h2>Servicios</h2><button type="button" class="chip-btn" id="aj-svc-add">+ Añadir servicio</button></div>
-      <p class="panel-note">Precio, duración y depósito que se cobran en la web. «Depósito» es el % que paga la clienta para apartar ese servicio (0 = sin depósito, se confirma al instante). «Vuelve cada» define cuándo aparece en «Por volver». «Retoque a los» envía el aviso de retoque (0 = sin retoque). «Consentimiento» pide firmarlo antes de la cita. Las descripciones de cada servicio se editan en js/data/services.js.</p>
-      <div class="tbl-wrap">
-        <table class="tbl tbl-edit">
-          <thead><tr><th>Servicio</th><th>Duración (min)</th><th>Precio (RD$)</th><th class="c">Precio «desde»</th><th>Depósito (%)</th><th>Vuelve cada (días)</th><th>Retoque a los (días)</th><th class="c">Consenti&shy;miento</th><th class="c">Activo</th></tr></thead>
-          <tbody id="aj-services"></tbody>
-        </table>
-      </div>
+      <div class="panel-head"><h2>Catálogo de servicios</h2><button type="button" class="chip-btn" id="aj-cat-add">Añadir categoría</button></div>
+      <p class="panel-note">Organiza tus tratamientos por categoría, servicio y subservicio. Solo las opciones finales tienen precio y duración, y pueden reservarse. Arrastra el orden con «Subir» y «Bajar»; desactiva una opción para ocultarla sin alterar citas anteriores.</p>
+      <div class="aj-cat-grid" id="aj-services" aria-label="Categorías de servicios"></div>
     </section>
     <div class="ad-cols" id="aj-extra">
       <section class="ad-panel" id="aj-transfer-panel">
@@ -812,26 +807,26 @@
 <div class="ad-toast" id="ad-toast" role="status" hidden></div>
 <!--MJB:BODY-END-->
 
-<script src="js/config.js?v=20261021v1"></script>
-<script src="js/data/services.js?v=20261021v1"></script>
-<script src="js/core/utils.js?v=20261021v1"></script>
-<script src="js/core/validate.js?v=20261021v1"></script>
-<script src="js/integrations/booking-api.js?v=20261021v1"></script>
-<script src="js/integrations/google-auth.js?v=20261021v1"></script>
-<script src="js/admin/core.js?v=20261021v1"></script>
-<script src="js/admin/demo.js?v=20261021v1"></script>
-<script src="js/admin/agenda.js?v=20261021v1"></script>
-<script src="js/admin/clientes.js?v=20261021v1"></script>
-<script src="js/admin/dinero.js?v=20261021v1"></script>
-<script src="js/integrations/giftcard.js?v=20261021v1"></script>
-<script src="js/admin/promos.js?v=20261021v1"></script>
-<script src="js/admin/paquetes.js?v=20261021v1"></script>
-<script src="js/admin/web.js?v=20261021v1"></script>
-<script src="js/admin/correos.js?v=20261021v1"></script>
-<script src="js/admin/ajustes.js?v=20261021v1"></script>
-<script src="js/admin/transferencias.js?v=20261021v1"></script>
-<script src="js/admin/sistema.js?v=20261021v1"></script>
-<script src="js/admin/buscar.js?v=20261021v1"></script>
+<script src="js/config.js?v=20261022v1"></script>
+<script src="js/data/services.js?v=20261022v1"></script>
+<script src="js/core/utils.js?v=20261022v1"></script>
+<script src="js/core/validate.js?v=20261022v1"></script>
+<script src="js/integrations/booking-api.js?v=20261022v1"></script>
+<script src="js/integrations/google-auth.js?v=20261022v1"></script>
+<script src="js/admin/core.js?v=20261022v1"></script>
+<script src="js/admin/demo.js?v=20261022v1"></script>
+<script src="js/admin/agenda.js?v=20261022v1"></script>
+<script src="js/admin/clientes.js?v=20261022v1"></script>
+<script src="js/admin/dinero.js?v=20261022v1"></script>
+<script src="js/integrations/giftcard.js?v=20261022v1"></script>
+<script src="js/admin/promos.js?v=20261022v1"></script>
+<script src="js/admin/paquetes.js?v=20261022v1"></script>
+<script src="js/admin/web.js?v=20261022v1"></script>
+<script src="js/admin/correos.js?v=20261022v1"></script>
+<script src="js/admin/ajustes.js?v=20261022v1"></script>
+<script src="js/admin/transferencias.js?v=20261022v1"></script>
+<script src="js/admin/sistema.js?v=20261022v1"></script>
+<script src="js/admin/buscar.js?v=20261022v1"></script>
 <script>window.MJB.Admin.start();</script>
 </body>
 </html>

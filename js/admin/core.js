@@ -68,10 +68,23 @@
   /* ---------- Datos ---------- */
   A.settingsMap = () => Object.fromEntries(((A.data && A.data.settings) || []).map((s) => [s.key, s.value]));
   A.setting = (k, def) => { const v = A.settingsMap()[k]; const n = Number(String(v || '').replace(',', '.')); return v === undefined || v === '' ? def : (Number.isFinite(n) ? n : v); };
-  A.services = () => ((A.data && A.data.services) || []).filter((s) => !/^no$/i.test(String(s.activo))).map((s) => ({
-    id: s.id, name: s.nombre, durationMinutes: Number(s.duracionMin) || 30, price: Number(s.precioRD) || 0, returnDays: Number(s.volverDias) || 0,
-    retoqueDias: Number(s.retoqueDias) || 0, consentimiento: s.consentimiento || 'no',
-  }));
+  A.services = () => {
+    const all = ((A.data && A.data.services) || []);
+    const cats = new Set(((A.data && A.data.categories) || []).filter((c) => !/^no$/i.test(String(c.activo))).map((c) => c.id));
+    return all.filter((s) => {
+      if (s.tipo === 'grupo' || /^no$/i.test(String(s.activo))) return false;
+      if (cats.size && !cats.has(s.categoriaId || 'otros')) return false;
+      if (s.padreId) {
+        const p = all.find((g) => g.id === s.padreId && g.tipo === 'grupo');
+        if (!p || /^no$/i.test(String(p.activo))) return false;
+      }
+      return true;
+    }).map((s) => ({
+      id: s.id, name: s.nombre, durationMinutes: Number(s.duracionMin) || 30,
+      price: Number(s.precioRD) || 0, returnDays: Number(s.volverDias) || 0,
+      retoqueDias: Number(s.retoqueDias) || 0, consentimiento: s.consentimiento || 'no',
+    }));
+  };
   A.serviceName = (id) => { const s = ((A.data && A.data.services) || []).find((x) => x.id === id); return s ? s.nombre : id; };
 
   function applySchedule() {

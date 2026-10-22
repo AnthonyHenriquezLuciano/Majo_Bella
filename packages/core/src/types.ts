@@ -28,6 +28,8 @@ export interface PublicConfig {
 export interface ServiceInfo {
   id: string;
   category: string;
+  categoryId?: string;
+  parentId?: string;
   name: string;
   description: string;
   durationMinutes: number;
@@ -52,7 +54,9 @@ export interface TransferAccount { id: string; bank: string; type: string; numbe
 
 export interface Catalog {
   ok: boolean;
-  services: { id: string; name: string; durationMinutes: number; price: number; priceFrom: boolean; depositPercent: number | null }[];
+  categories?: { id: string; name: string }[];
+  serviceGroups?: { id: string; name: string; categoryId: string; description?: string; order?: number }[];
+  services: { id: string; name: string; category?: string; categoryId?: string; parentId?: string; description?: string; order?: number; durationMinutes: number; price: number; priceFrom: boolean; depositPercent: number | null }[];
   payments: { usdRate: number; depositPercent: number; holdMinutes: number; cancelHours: number; paypalEnv?: string };
   schedule: Partial<ScheduleConfig>;
   site: {

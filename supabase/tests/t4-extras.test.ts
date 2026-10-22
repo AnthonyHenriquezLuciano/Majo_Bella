@@ -130,7 +130,10 @@ export default async function () {
     console.log('cron result', out);
     const sent = g.mails.slice(before);
     const to = (e) => sent.find((m) => m.to === e);
-    assert.ok(to('manana@example.com') && /(mañana|hoy)/.test(to('manana@example.com').subject), 'reminder');
+    // Los recordatorios están programados solo entre las 7:00 y las 22:00 (hora del estudio).
+    // La CI corre también de madrugada; no exigir envíos fuera de horario.
+    if (hour >= 7 && hour < 22) assert.ok(to('manana@example.com') && /(mañana|hoy)/.test(to('manana@example.com').subject), 'reminder');
+    else assert.equal(out.recordatorios, 0, 'recordatorios fuera del horario');
     assert.equal(out.espera, 1); assert.ok(to('espera@example.com') && to('espera@example.com').htmlBody.includes('p. m.'));
     if (hour >= 8 && hour < 21) {
       assert.ok(to('resena@example.com') && to('resena@example.com').htmlBody.includes('g.page/r/test/review'), 'review');

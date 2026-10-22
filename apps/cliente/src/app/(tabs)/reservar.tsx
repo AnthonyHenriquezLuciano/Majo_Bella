@@ -15,6 +15,7 @@ import { notificationsAllowed } from '@/lib/notify';
 import { WEB_URL } from '@/lib/env';
 import { DayStrip, FirstFree, MonthCalendar, TimeSlots } from '@/components/day-time';
 import { TransferPanel } from '@/components/transfer-panel';
+import { CatalogBrowser } from '@/components/catalog-browser';
 
 type Step = 0 | 1 | 2 | 3 | 4;
 const STEPS = ['Servicios', 'Día y hora', 'Tus datos', 'Depósito'];
@@ -232,23 +233,7 @@ export default function Reservar() {
       {/* 1 · Servicios */}
       {step === 0 ? (
         <View>
-          {studio.services.map((s) => {
-            const on = cart.includes(s.id);
-            const promo = studio.promoFor(s.id);
-            return (
-              <Pressable key={s.id} testID={`pick-${s.id}`} onPress={() => toggleCart(s.id)} accessibilityRole="checkbox" accessibilityState={{ checked: on }} style={({ pressed }) => [S.pick, on && S.pickOn, pressed && { opacity: 0.8 }]}>
-                <View style={[S.box, on && { backgroundColor: colors.paper, borderColor: colors.paper }]}>{on ? <Icon name="check" size={15} stroke={2.2} /> : null}</View>
-                <View style={{ flex: 1 }}>
-                  <T v="h3" style={on ? { color: colors.paper } : undefined}>{s.name}</T>
-                  <T v="muted" style={on ? { color: 'rgba(255,255,255,0.72)' } : undefined}>{fmtDuration(s.durationMinutes)}</T>
-                </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  {promo ? <T v="muted" style={[{ textDecorationLine: 'line-through', fontSize: 12.5 }, on && { color: 'rgba(255,255,255,0.6)' }]}>{fmtPrice(s.price)}</T> : null}
-                  <T v="price" style={on ? { color: colors.paper } : undefined}>{promo ? fmtPrice(s.price - promo.discount) : fmtServicePrice(s)}</T>
-                </View>
-              </Pressable>
-            );
-          })}
+          <CatalogBrowser />
           <Button kind="link" full={false} title="Ver detalles de cada servicio" onPress={() => router.navigate('/servicios')} style={{ alignSelf: 'flex-start', marginTop: 4 }} />
         </View>
       ) : null}
