@@ -30,7 +30,7 @@ import {
   adminBlock_, adminCreate_, adminData_, adminDeleteAccount_, adminDeleteBlock_, adminDeleteExpense_, adminDeleteFile_, adminDeleteGallery_,
   adminDeletePromo_, adminDeleteReview_, adminEmailPreview_, adminEmailTest_, adminFile_, adminPublishGallery_, adminReschedule_,
   adminResolveErrors_, adminSaveAccount_, adminSaveClient_, adminSaveExpense_, adminSaveGallery_, adminSavePromo_, adminSaveReview_,
-  adminSaveSettings_, adminSendReminder_, adminTransferReview_, adminUpdate_, adminUpload_, adminUploadPublic_,
+  adminSaveSettings_, adminPauseRecurringExpense_, adminSendReminder_, adminTransferReview_, adminUpdate_, adminUpload_, adminUploadPublic_,
 } from './admin.ts';
 import { adminRunAutomations_, runAutomations_ } from './automations.ts';
 import { importData_ } from './importer.ts';
@@ -54,7 +54,7 @@ L('paypalWebhook', (d, extra) => paypalWebhook_(d, extra.headers)); L('reschedul
 // Panel
 N('adminData', adminData_); N('adminList', adminData_); L('adminUpdate', adminUpdate_); L('adminCreate', adminCreate_);
 L('adminReschedule', adminReschedule_); L('adminBlock', adminBlock_); L('adminDeleteBlock', adminDeleteBlock_);
-L('adminSaveSettings', adminSaveSettings_); L('adminSaveMembershipPlan', adminSaveMembershipPlan_); L('adminSyncPaypalPlan', adminSyncPaypalPlan_); L('adminMembershipAction', adminMembershipAction_); L('adminSaveConsentTemplate', adminSaveConsentTemplate_); L('adminSaveClient', adminSaveClient_); L('adminUpload', adminUpload_); N('adminFile', adminFile_);
+L('adminSaveSettings', adminSaveSettings_); L('adminPauseRecurringExpense',adminPauseRecurringExpense_); L('adminSaveMembershipPlan', adminSaveMembershipPlan_); L('adminSyncPaypalPlan', adminSyncPaypalPlan_); L('adminMembershipAction', adminMembershipAction_); L('adminSaveConsentTemplate', adminSaveConsentTemplate_); L('adminSaveClient', adminSaveClient_); L('adminUpload', adminUpload_); N('adminFile', adminFile_);
 L('adminDeleteFile', adminDeleteFile_); L('adminSavePromo', adminSavePromo_); L('adminDeletePromo', adminDeletePromo_);
 L('adminSaveGift', adminSaveGift_); L('adminSaveExpense', adminSaveExpense_); L('adminDeleteExpense', adminDeleteExpense_);
 L('adminPublishGallery', adminPublishGallery_); L('adminSaveGallery', adminSaveGallery_); L('adminDeleteGallery', adminDeleteGallery_);
