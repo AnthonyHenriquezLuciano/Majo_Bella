@@ -137,3 +137,7 @@ body.is-in { background:var(--cc-cream); }
 @media(max-width:1040px){.cc-hero{min-height:0;}.cc-layout{grid-template-columns:1fr;}.cc-concierge-grid{grid-template-columns:1fr 1fr;}}
 @media(max-width:680px){.cc-hero{padding:26px 22px;display:block;}.cc-hero::before{background-size:240px auto;opacity:.06;}.cc-hero-side{align-items:flex-start;text-align:left;margin-top:24px;gap:6px;}.cc-kpis{gap:9px;}.cc-kpi{padding:17px 15px;min-height:141px;}.cc-kpi-value{font-size:clamp(21px,5.8vw,30px);}.cc-kpi-info{font-size:11px;}.cc-surface{padding:19px 17px;min-height:0;}.cc-concierge{padding:19px 15px;}.cc-concierge-grid{grid-template-columns:1fr;}.cc-concierge-heading{flex-direction:column;gap:7px;}.cc-panel-head{align-items:flex-start;}.cc-panel-head h2{font-size:22px;}.cc-section-top{align-items:start;}.cc-period{width:100%;}.cc-period button{flex:1;}}
 @media(prefers-reduced-motion:reduce){.ad-main>section{animation:none}.ad-main .btn-dark,.ad-main .chip-btn{transition:none}}
+
+/* KPIs renovaciones: no se convierten a RD$ sin referencia explícita */
+@media(min-width:1251px){.cc-kpis{grid-template-columns:repeat(5,minmax(0,1fr));}}
+.cc-kpi-value{font-size:clamp(22px,2.35vw,33px);}

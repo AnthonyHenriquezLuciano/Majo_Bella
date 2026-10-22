@@ -33,22 +33,65 @@
       return loading;
     },
 
-    /* Dibuja los botones en `el`. handlers: onClick() → false para no abrir PayPal, createOrder() → orderId, onApprove(orderId), onCancel(), onError(err) */
+    /* Checkout elegante y seguro: cuenta PayPal + tarjeta únicamente si la cuenta es elegible.
+       PayPal aloja el ingreso de la tarjeta; MAJOBELLA no captura ni almacena datos PCI. */
     async render(el, handlers) {
-      el.innerHTML = '<p class="pp-loading">Cargando PayPal…</p>';
-      const paypal = await this.load();
-      el.innerHTML = '';
-      const buttons = paypal.Buttons({
-        style: { layout: 'vertical', color: 'black', shape: 'pill', label: 'pay', height: 46, tagline: false },
-        onClick: (data, actions) => (handlers.onClick && handlers.onClick() === false ? actions.reject() : actions.resolve()),
-        createOrder: () => handlers.createOrder(),
-        onApprove: (data) => handlers.onApprove(data.orderID),
-        onCancel: () => handlers.onCancel && handlers.onCancel(),
-        onError: (err) => handlers.onError && handlers.onError(err),
+      el.innerHTML = '<div class="pp-premium-loading" role="status">Preparando tu pago protegido…</div>';
+      const sdk = await this.load();
+      const sources = [
+        {key:'paypal',funding:sdk.FUNDING?.PAYPAL,label:'Pagar con PayPal',hint:'Utiliza el saldo o los métodos asociados a tu cuenta.'},
+        {key:'card',funding:sdk.FUNDING?.CARD,label:'Tarjeta de crédito o débito',hint:'Sin cuenta PayPal, cuando este método está habilitado.'}
+      ].filter(x=>x.funding);
+      const eligible=sources.filter(x=>{
+        try{return sdk.Buttons({fundingSource:x.funding}).isEligible();}catch(e){return false;}
       });
-      if (buttons.isEligible && !buttons.isEligible()) throw new Error('PayPal no está disponible en este navegador.');
-      await buttons.render(el);
-      return buttons;
+      if(!eligible.length)throw new Error('No hay métodos de PayPal habilitados para este navegador o cuenta. Puedes elegir transferencia si está disponible.');
+      const prefix='pp-'+Math.random().toString(36).slice(2,9);
+      el.innerHTML = `<div class="pp-premium" data-paypal-checkout>
+        <p class="pp-premium-eyebrow">PAGO PROTEGIDO · MAJOBELLA</p>
+        <h3>Elige cómo pagar</h3>
+        <div class="pp-premium-methods" role="group" aria-label="Método de pago">
+          ${eligible.map((x,i)=>`<button type="button" class="pp-premium-method${i===0?' is-active':''}" data-pp-mode="${x.key}" aria-pressed="${i===0}"><span class="pp-premium-method-icon" aria-hidden="true">${x.key==='card'?'▣':'P'}</span><span>${x.label}</span><span aria-hidden="true">→</span></button>`).join('')}
+        </div>
+        <div class="pp-premium-hint" aria-live="polite"></div>
+        <div class="pp-premium-frames">${eligible.map((x)=>`<div data-pp-frame="${x.key}"><div id="${prefix}-${x.key}"></div></div>`).join('')}</div>
+        <p class="pp-premium-secure">🔒 Procesado directamente por PayPal · No guardamos tu tarjeta</p>
+        <p class="pp-premium-error" role="alert" hidden></p>
+      </div>`;
+      const root=el.querySelector('[data-paypal-checkout]');
+      const alert=root.querySelector('.pp-premium-error');
+      const hint=root.querySelector('.pp-premium-hint');
+      const active=(key)=>{
+        eligible.forEach(x=>{
+          const on=x.key===key;
+          const btn=root.querySelector('[data-pp-mode="'+x.key+'"]');
+          btn.classList.toggle('is-active',on);btn.setAttribute('aria-pressed',String(on));
+          root.querySelector('[data-pp-frame="'+x.key+'"]').hidden=!on;
+        });
+        hint.textContent=eligible.find(x=>x.key===key)?.hint||'';
+        alert.hidden=true;
+      };
+      root.querySelectorAll('[data-pp-mode]').forEach(btn=>btn.addEventListener('click',()=>active(btn.dataset.ppMode)));
+      for(const x of eligible){
+        const buttons=sdk.Buttons({
+          fundingSource:x.funding,
+          style:{layout:'vertical',color:x.key==='paypal'?'black':'white',shape:'rect',label:'pay',height:48,tagline:false},
+          onClick:(data,actions)=>{
+            alert.hidden=true;
+            return handlers.onClick&&handlers.onClick()===false?actions.reject():actions.resolve();
+          },
+          createOrder:()=>handlers.createOrder(),
+          onApprove:async(data)=>{try{await handlers.onApprove(data.orderID);}catch(err){alert.textContent='El pago necesita verificarse antes de reintentarlo. Consulta tu historial o contacta al estudio.';alert.hidden=false;throw err;}},
+          onCancel:()=>handlers.onCancel?.(),
+          onError:(err)=>{
+            alert.textContent='No logramos comprobar el resultado del pago. Antes de repetirlo, revisa tu actividad de PayPal para evitar cargos duplicados.';
+            alert.hidden=false;handlers.onError?.(err);
+          }
+        });
+        await buttons.render('#'+prefix+'-'+x.key);
+      }
+      active(eligible[0].key);
+      return root;
     },
   };
 })(window.MJB);

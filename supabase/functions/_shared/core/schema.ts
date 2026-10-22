@@ -61,15 +61,21 @@ export const TABLES: Table[] = [
   {
     name: 'PlanesMembresia', table: 'planes_membresia', pk: 'id', comment: 'Planes de membresía mensuales configurados por el estudio.',
     cols: [c('id','text',{notNull:true}),c('nombre'),c('descripcion'),c('precioRD','num'),c('sesionesMes','int'),
-      c('servicios','json'),c('beneficios'),c('estado'),c('orden','int'),c('actualizado','ts')],
+      c('servicios','json'),c('beneficios'),c('estado'),c('orden','int'),c('paypalProductId'),c('paypalPlanId'),c('paypalPrecioUSD','num'),c('paypalPlanVersion','text'),c('actualizado','ts')],
   },
   {
     name: 'Membresias', table: 'membresias', pk: 'id', comment: 'Membresías de clientas y vigencia mensual verificada.',
     cols: [c('id','text',{notNull:true}),c('planId'),c('nombrePlan'),c('clienta'),c('correo'),c('telefono'),
       c('estado'),c('inicio','date'),c('vence','date'),c('sesionesMes','int'),c('sesionesUsadas','int'),
-      c('precioRD','num'),c('servicios','json'),c('metodoPago'),c('pagadoEn','ts'),c('notas'),
+      c('precioRD','num'),c('servicios','json'),c('metodoPago'),c('pagadoEn','ts'),c('notas'),c('paypalSubscriptionId'),c('paypalEstado'),c('paypalPagoId'),c('paypalPagosFallidos','int'),c('paypalPrecioUSD','num'),
       c('creada','ts'),c('actualizada','ts')],
     indexes:['correo','plan_id','estado'],
+  },
+  {
+    name: 'PagosMembresia', table: 'pagos_membresia', pk: 'id',
+    comment: 'Pagos recurrentes verificados y conciliados. Cada transacción de PayPal se procesa una sola vez.',
+    cols: [c('id','text',{notNull:true}),c('membresiaId'),c('paypalSubscriptionId'),c('correo'),c('nombrePlan'),c('montoUSD','num'),c('montoRD','num'),c('moneda'),c('estado'),c('creado','ts')],
+    indexes:['membresia_id','paypal_subscription_id'],
   },
   {
     name: 'Bloqueos', table: 'bloqueos', pk: 'id', comment: 'Horarios bloqueados: una vez, varios días o cada semana.',

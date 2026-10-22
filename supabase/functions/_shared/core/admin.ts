@@ -9,6 +9,7 @@ import { refundPending_ } from './catalog.ts';
 import { paypalEnv_, tryRefund_ } from './paypal.ts';
 import { needAdmin_, securityStatus_ } from './security.ts';
 import { adminSubscriptionData_ } from './memberships.ts';
+import { subscriptionCapability_ } from './subscriptions.ts';
 import { calendarCancel_, calendarCreate_, calendarMove_ } from './google.ts';
 import { confirmPaid_, adminRow_ } from './booking.ts';
 import { notifyWaitlist_ } from './waitlist.ts';
@@ -47,6 +48,8 @@ export function adminData_(d, extra?) {
     reviews: readOpt_('Resenas').map(strip_),
     packages: readOpt_('Paquetes').map(strip_),
     ...adminSubscriptionData_(),
+    membershipPayments: readOpt_('PagosMembresia').map(strip_),
+    subscriptionCapability: subscriptionCapability_(),
     bonos: readOpt_('Bonos').filter(function (b) { return b.estado !== 'pendiente'; }).map(strip_),
     waitlist: readOpt_('Espera').map(strip_),
     emails: readOpt_('Correos').slice(-200).reverse().map(strip_),

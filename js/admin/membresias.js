@@ -6,6 +6,8 @@
   const allMembers=()=>A.data?.memberships||[];
   const money=(n)=>'RD$ '+(Number(n)||0).toLocaleString('es-DO');
   const states={solicitada:'Solicitud pendiente',activa:'Activa',vencida:'Vencida',pausada:'Pausada',cancelada:'Cancelada'};
+  const payMode=()=>A.data?.subscriptionCapability?.enabled;
+  const isAuto=m=>!!m.paypalSubscriptionId;
   function choices(selected=[]){
     const list=A.services();
     $('mb-service-choices').innerHTML=list.length?list.map(s=>`<label class="mb-svc-choice"><input type="checkbox" value="${esc(s.id)}" ${selected.includes(s.id)?'checked':''}><span>${esc(A.serviceName(s.id))}</span></label>`).join(''):'<p>Primero publica servicios reservables en el Catálogo.</p>';
@@ -26,7 +28,10 @@
       <p class="mb-tag">${p.estado==='activo'?'● Publicado':p.estado==='archivado'?'◯ Archivado':'✎ Borrador'}</p>
       <h3>${esc(p.nombre)}</h3><p class="mb-price">${money(p.precioRD)} <small>/mes</small></p>
       <p class="muted">${Number(p.sesionesMes)||1} sesiones al mes</p>
-      <button class="chip-btn" type="button" data-mb-edit="${esc(p.id)}">Editar plan</button></article>`).join(''):'<p class="muted">Todavía no hay planes. Crea tu primera membresía.</p>';
+      ${p.paypalPlanId?`<p class="mb-tag">✓ PayPal Automático · US$ ${Number(p.paypalPrecioUSD).toFixed(2)}/mes</p>`:
+        '<p class="mb-tag">Renovación manual</p>'}
+      <div class="mb-plan-actions"><button class="chip-btn" type="button" data-mb-edit="${esc(p.id)}">Editar plan</button>
+      ${p.estado==='activo'?`<button class="chip-btn" type="button" data-mb-sync="${esc(p.id)}" ${payMode()?'':'disabled title="Configura PayPal Subscriptions en Supabase"'}>${p.paypalPlanId?'Actualizar tarifa PayPal':'Activar suscripciones PayPal'}</button>`:''}</div></article>`).join(''):'<p class="muted">Todavía no hay planes. Crea tu primera membresía.</p>';
   }
   function renderMembers(){
     const state=$('mb-state-filter').value, term=$('mb-search').value.trim().toLowerCase();
@@ -35,25 +40,40 @@
     $('mb-count').textContent=allMembers().length+' registros · '+allMembers().filter(m=>m.estadoEfectivo==='activa').length+' activas';
     $('mb-member-list').innerHTML=list.length?list.slice().reverse().map(m=>{
       const pending=m.estadoEfectivo==='solicitada',active=m.estadoEfectivo==='activa',expired=m.estadoEfectivo==='vencida';
-      const remain=Number(m.disponibles)||0;
+      const remain=Number(m.disponibles)||0,auto=isAuto(m);
       return `<article class="mb-member">
         <div class="mb-member-main"><span class="mb-tag">${esc(states[m.estadoEfectivo]||m.estado)}</span>
           <h3>${esc(m.clienta||m.correo)}</h3>
           <p>${esc(m.correo)} · ${esc(m.nombrePlan||'')}</p>
           <p>${money(m.precioRD)} /mes · ${m.vence?'Vence '+esc(m.vence):'A la espera de pago'}</p>
           <strong>${remain} de ${Number(m.sesionesMes)||0} sesiones disponibles</strong>
+          ${auto?`<p class="mb-auto-state">PayPal Business · ${esc(m.paypalEstado||'Esperando autorización')} · US$ ${Number(m.paypalPrecioUSD||0).toFixed(2)}/mes</p>`:''}
         </div>
         <div class="mb-member-actions">
-          ${pending||m.estado==='pausada'? `<button class="btn-dark sm" data-mb-action="activar" data-id="${esc(m.id)}">Activar con pago</button>`:''}
-          ${active||expired? `<button class="chip-btn" data-mb-action="renovar" data-id="${esc(m.id)}">Renovar con pago</button>`:''}
+          ${!auto&&(pending||m.estado==='pausada')? `<button class="btn-dark sm" data-mb-action="activar" data-id="${esc(m.id)}">Activar con pago</button>`:''}
+          ${!auto&&(active||expired)? `<button class="chip-btn" data-mb-action="renovar" data-id="${esc(m.id)}">Renovar con pago</button>`:''}
           ${active&&remain>0?`<button class="chip-btn" data-mb-action="usar" data-id="${esc(m.id)}">Registrar sesión</button>`:''}
           ${Number(m.sesionesUsadas)>0?`<button class="chip-btn" data-mb-action="deshacerUso" data-id="${esc(m.id)}">Corregir uso</button>`:''}
-          ${active?`<button class="chip-btn" data-mb-action="pausar" data-id="${esc(m.id)}">Pausar</button>`:''}
-          ${m.estado!=='cancelada'?`<button class="chip-btn" data-mb-action="cancelar" data-id="${esc(m.id)}">Cancelar</button>`:''}
+          ${active&&!auto?`<button class="chip-btn" data-mb-action="pausar" data-id="${esc(m.id)}">Pausar</button>`:''}
+          ${m.estado!=='cancelada'&&!auto?`<button class="chip-btn" data-mb-action="cancelar" data-id="${esc(m.id)}">Cancelar</button>`:''}
+          ${auto&&!['CANCELLED','EXPIRED'].includes(m.paypalEstado)?`<button class="chip-btn" data-mb-auto-cancel="${esc(m.id)}">Cancelar en PayPal</button>`:''}
         </div></article>`;
     }).join(''):'<p class="muted">No hay clientas para este filtro.</p>';
   }
-  function render(){renderPlans();renderMembers();}
+  function renderPayments(){
+    const list=(A.data?.membershipPayments||[]).slice().reverse();
+    const completed=list.filter(p=>p.estado==='completado');
+    const usd=completed.reduce((t,p)=>t+Number(p.montoUSD||0),0);
+    const refunded=list.filter(p=>p.estado==='reembolsado').length;
+    $('mb-payment-summary').innerHTML=`<span><b>US$ ${usd.toFixed(2)}</b><small>Cobrado en membresías · historial</small></span>
+      <span><b>${completed.length}</b><small>Cobros completados</small></span>
+      <span><b>${refunded}</b><small>Reembolsos registrados</small></span>`;
+    $('mb-payment-ledger').innerHTML=list.length?list.slice(0,50).map(p=>`<div class="mb-ledger-row">
+      <span><b>${esc(p.nombrePlan||'Membresía')}</b><small>${esc(p.correo||'')} · ${esc(p.id)}</small></span>
+      <span><b>US$ ${Number(p.montoUSD||0).toFixed(2)}</b><small>${esc(p.estado||'')} · ${esc(String(p.creado||'').slice(0,10))}</small></span>
+    </div>`).join(''):'<p class="muted">Los cobros confirmados por PayPal aparecerán aquí automáticamente.</p>';
+  }
+  function render(){renderPlans();renderMembers();renderPayments();}
   async function save(e){
     e.preventDefault();
     const f=e.currentTarget;
@@ -89,16 +109,32 @@
         render();A.toast('Membresía actualizada.');}catch(err){A.toast(err.message);}
     });
   }
+  async function syncPaypal(btn){
+    if(!confirm('PayPal creará un plan de cobro mensual en USD. Las clientas existentes conservan el importe originalmente autorizado. ¿Continuar?'))return;
+    await A.busy(btn,async()=>{try{
+      const r=await A.call('adminSyncPaypalPlan',{planId:btn.dataset.mbSync});
+      const p=allPlans().find(x=>x.id===r.planId);
+      if(p){p.paypalPlanId=r.paypalPlanId;p.paypalPrecioUSD=r.usd;p.paypalPlanVersion=Number(r.usd).toFixed(2);}
+      render();A.toast('Plan PayPal sincronizado. Se cobrará US$ '+Number(r.usd).toFixed(2)+' mensuales.');
+    }catch(err){A.toast(err.message||'No pudimos sincronizar PayPal.');}});
+  }
+  async function cancelAuto(btn){
+    if(!confirm('¿Cancelar en PayPal la renovación automática de esta clienta? El período ya pagado permanece vigente.'))return;
+    await A.busy(btn,async()=>{try{
+      const r=await A.call('cancelPaypalSubscription',{id:btn.dataset.mbAutoCancel});
+      A.upsert('memberships',r.membresia);render();A.toast(r.mensaje);
+    }catch(err){A.toast(err.message||'No se pudo cancelar en PayPal.');}});
+  }
   A.sections.membresias={
     render,
     init(){
       $('mb-new').addEventListener('click',()=>openPlan(''));
       $('mb-close').addEventListener('click',()=>{$('mb-edit-panel').hidden=true;current=null;});
-      $('mb-plan-list').addEventListener('click',e=>{const b=e.target.closest('[data-mb-edit]');if(b)openPlan(b.dataset.mbEdit);});
+      $('mb-plan-list').addEventListener('click',e=>{const b=e.target.closest('[data-mb-edit],[data-mb-sync]');if(!b)return;if(b.dataset.mbEdit)openPlan(b.dataset.mbEdit);else syncPaypal(b);});
       $('mb-plan-form').addEventListener('submit',save);
       $('mb-state-filter').addEventListener('change',renderMembers);
       $('mb-search').addEventListener('input',renderMembers);
-      $('mb-member-list').addEventListener('click',e=>{const b=e.target.closest('[data-mb-action]');if(b)membershipAction(b);});
+      $('mb-member-list').addEventListener('click',e=>{const b=e.target.closest('[data-mb-action],[data-mb-auto-cancel]');if(!b)return;if(b.dataset.mbAutoCancel)cancelAuto(b);else membershipAction(b);});
     }
   };
 })(window.MJB);

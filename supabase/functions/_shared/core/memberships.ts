@@ -30,7 +30,7 @@ export function publicPlans_() { return readTable_('PlanesMembresia').filter(p=>
  .sort((a,b)=>(Number(a.orden)||0)-(Number(b.orden)||0))
  .map(p=>({id:p.id,nombre:p.nombre,descripcion:p.descripcion||'',precioRD:Number(p.precioRD)||0,
    sesionesMes:Number(p.sesionesMes)||1,servicios:jsonIds(p.servicios),
-   beneficios:p.beneficios||'',renovacion:'manual'})); }
+   beneficios:p.beneficios||'',paypalPrecioUSD:p.paypalPlanId?Number(p.paypalPrecioUSD):0,renovacion:p.paypalPlanId?'automatica_disponible':'manual'})); }
 export function adminSubscriptionData_(){
   return {membershipPlans:readTable_('PlanesMembresia').map(planOut),
     memberships:readTable_('Membresias').map(rowOut)};
@@ -51,7 +51,10 @@ export function adminSaveMembershipPlan_(d:any){
   const servicios=jsonIds(p.servicios);
   if(!servicios.length||servicios.some(id=>!valid.has(id)))
     throw Error('Elige por lo menos un servicio reservable y publicado.');
-  const patch={id,nombre,descripcion,beneficios,estado,precioRD:Math.round(precio*100)/100,sesionesMes:sesiones,
+  const existing=plan(id);
+  const paypalReset=existing && Number(existing.precioRD)!==Math.round(precio*100)/100 ?
+    {paypalPlanId:'',paypalPrecioUSD:'',paypalPlanVersion:''} : {};
+  const patch={...paypalReset,id,nombre,descripcion,beneficios,estado,precioRD:Math.round(precio*100)/100,sesionesMes:sesiones,
     servicios:JSON.stringify([...new Set(servicios)]),orden:Math.max(0,Math.round(Number(p.orden)||0)),
     actualizado:new Date().toISOString()};
   const old=plan(id);
@@ -102,6 +105,8 @@ export function adminMembershipAction_(d:any){
   const m=membership(String(d.id||''));
   if(!m)return {ok:false,error:'No encontramos esa membresía.'};
   const action=String(d.change||'');
+  if(m.paypalSubscriptionId && ['activar','renovar','pausar','cancelar'].includes(action))
+    throw Error('La membresía está vinculada a PayPal. Usa Cancelar renovación automática o espera la confirmación de PayPal.');
   const now=new Date().toISOString(),today=todayKey_();
   const patch:any={actualizada:now};
   if(action==='activar'||action==='renovar'){

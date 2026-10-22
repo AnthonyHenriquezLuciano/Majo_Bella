@@ -327,7 +327,7 @@
     ((M.site && M.site.packages) || []).slice(0, 3).forEach((k) => {
       promos.push(`<button type="button" class="promo-card press" data-buy-pkg="${esc(k.id)}" style="border:0;text-align:left"><span>Paquete</span><b>${esc(k.name)}</b><span>${M.fmtPrice(k.price)}${k.savings > 0 ? ` · ahorras ${M.fmtPrice(k.savings)}` : ''}</span></button>`);
     });
-    if (M.membershipPlans && M.membershipPlans.length) promos.push(`<a class="promo-card dark press" href="../regalos.html#membresias"><span>Membresías</span><b>Tu belleza, cada mes</b><span>Consulta nuestros planes mensuales · Sin cobro automático</span></a>`);
+    if (M.membershipPlans && M.membershipPlans.length) promos.push(`<a class="promo-card dark press" href="../regalos.html#membresias"><span>Membresías</span><b>Tu belleza, cada mes</b><span>Consulta nuestros planes mensuales · Renovación según tu elección</span></a>`);
         if (M.site && M.site.giftShop && M.site.giftShop.enabled) promos.push(`<button type="button" class="promo-card press" data-buy-gift style="border:0;text-align:left"><span>Tarjetas de regalo</span><b>Regala un momento para ella</b><span>Llega al instante por correo</span></button>`);
     const svcs = M.services.slice(0, 8).map((s) => {
       const p = M.promoFor ? M.promoFor(s.id) : null;

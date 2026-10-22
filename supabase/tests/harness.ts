@@ -34,7 +34,7 @@ export async function harness(opts: Opts = {}) {
   const mails: any[] = [];
   const events: Record<string, any> = {};
   const files = new Map<string, { bytes: Uint8Array; mime: string }>();
-  const pp = { n: 0, orders: {} as Record<string, any>, captures: {} as Record<string, any>, refunds: [] as string[], failCapture: false };
+  const pp = { n: 0, orders: {} as Record<string, any>, captures: {} as Record<string, any>, refunds: [] as string[], failCapture: false, products: {} as Record<string, any>, plans: {} as Record<string, any>, subscriptions: {} as Record<string, any> };
   const tokens: Record<string, string> = { 'admin-token': 'majo@example.com', 'client-token': 'ana@example.com' };
   const state = { failMail: !!opts.failMail, relayDown: false, calls: 0 };
   const pushes: any[] = [];
@@ -85,6 +85,27 @@ export async function harness(opts: Opts = {}) {
       const list = JSON.parse(body);
       pushes.push(...list);
       return json(200, { data: list.map((x: any) => (String(x.to).includes('Viejo') ? { status: 'error', details: { error: 'DeviceNotRegistered' } } : { status: 'ok', id: 'T' + pushes.length })) });
+    }
+    // PayPal Subscriptions: productos, planes, autorizaciones y firmas de webhook.
+    const subBody = body && method !== 'GET' ? (typeof body === 'string' && body.startsWith('{') ? JSON.parse(body) : {}) : {};
+    if (url.endsWith('/v1/notifications/verify-webhook-signature'))
+      return json(200,{verification_status:subBody.transmission_id==='valid-tid'?'SUCCESS':'FAILURE'});
+    if (url.endsWith('/v1/catalogs/products') && method==='POST') {
+      const id='PROD-MJ'+(++pp.n);pp.products[id]={...subBody,id};return json(201,{id});
+    }
+    if (url.endsWith('/v1/billing/plans') && method==='POST') {
+      const id='P-MJ'+(++pp.n);pp.plans[id]={...subBody,id};return json(201,{id});
+    }
+    if (url.endsWith('/v1/billing/subscriptions') && method==='POST') {
+      const id='I-MJ'+(++pp.n);pp.subscriptions[id]={...subBody,id,status:'APPROVAL_PENDING',links:[{rel:'approve',href:'https://www.sandbox.paypal.com/checkoutnow?token='+id}]};
+      return json(201,{id,status:'APPROVAL_PENDING',links:[{rel:'approve',href:'https://www.sandbox.paypal.com/checkoutnow?token='+id}]});
+    }
+    const sid=url.match(/\/v1\/billing\/subscriptions\/([^/]+)(?:\/(cancel))?$/);
+    if(sid){
+      const sub=pp.subscriptions[sid[1]];
+      if(!sub)return json(404,{message:'No encontrada'});
+      if(sid[2]&&method==='POST'){sub.status='CANCELLED';return json(204,{});}
+      if(method==='GET')return json(200,sub);
     }
     // PayPal
     if (url.endsWith('/v1/oauth2/token')) return json(200, { access_token: 'AT', expires_in: 32000 });
@@ -141,6 +162,7 @@ export async function harness(opts: Opts = {}) {
     sql, env, mails, events, files, pp, tokens, state, deps, pushes,
     get: (params: any) => call('GET', params),
     post: (body: any) => call('POST', body),
+    postSigned: (body:any,headers:Record<string,string>) => call('POST',body,headers),
     cron: (key = env.CRON_KEY) => call('POST', { action: 'cron' }, { 'x-cron-key': key }),
     rows, row, set, setSetting,
     async close() { await sql.end({ timeout: 1 }); try { psql(`-c "drop database if exists ${dbName}"`); } catch (e) { /* nada */ } },

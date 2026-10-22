@@ -1417,3 +1417,72 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .mb-pub-member p {font-size:13px;color:#555;margin:0;}
 .mb-public-empty {grid-column:1/-1;padding:26px;border:1px solid #ddd;border-radius:17px;color:#777;}
 @media(max-width:560px){.mb-public-grid{grid-template-columns:1fr}.mb-pub-card{padding:23px}}
+
+
+/* Checkout premium MAJOBELLA · PayPal / tarjetas elegibles */
+.pp-premium {border:1px solid #e5ded5;border-radius:22px;background:#fff;padding:22px;box-shadow:0 12px 32px rgba(44,28,15,.05);max-width:590px;margin-inline:auto;}
+.pp-premium-eyebrow{font:600 10px/1.4 system-ui,sans-serif;letter-spacing:.2em;color:#837265;margin:0 0 7px;}
+.pp-premium h3{font:400 clamp(21px,3vw,29px)/1.2 Georgia,serif;color:#221b16;margin:0 0 18px;}
+.pp-premium-methods{display:grid;gap:9px;margin-bottom:15px;}
+.pp-premium-method{display:flex;align-items:center;gap:10px;text-align:left;padding:13px 15px;border:1px solid #e6e0da;border-radius:13px;background:#fff;font:500 13px/1.4 system-ui,sans-serif;cursor:pointer;color:#302820;}
+.pp-premium-method>span:nth-child(2){flex:1;}
+.pp-premium-method-icon{display:grid;place-items:center;width:29px;height:29px;border:1px solid #e1dad1;border-radius:9px;font-size:16px;background:#f7f4ef;}
+.pp-premium-method.is-active{background:#f7f4ef;border-color:#866c5a;box-shadow:inset 0 0 0 1px #866c5a;}
+.pp-premium-hint{min-height:17px;margin:0 0 13px;color:#71665d;font:12px/1.4 system-ui,sans-serif;}
+.pp-premium-frames{min-height:46px;}
+.pp-premium-secure{display:flex;align-items:center;gap:5px;border-top:1px solid #e9e4de;padding-top:13px;margin:15px 0 0;color:#716b63;font:11px/1.5 system-ui,sans-serif;}
+.pp-premium-error{margin:13px 0 0;padding:12px 14px;border-radius:12px;background:#fff0ea;color:#893f2a;font:13px/1.5 system-ui,sans-serif;}
+.pp-premium-loading{text-align:center;padding:20px;color:#66584d;}
+.pp-premium button:focus-visible{outline:2px solid #442712;outline-offset:3px;}
+
+/* Membresías · experiencia boutique y comprobante imprimible */
+.mb-pay-card{background:linear-gradient(165deg,#fff,#faf8f5);box-shadow:0 10px 28px rgba(44,27,17,.035);}
+.mb-pay-choice{display:grid;gap:6px;border-top:1px solid #e8dfd5;border-bottom:1px solid #e8dfd5;padding:14px 0;margin:5px 0 3px;width:100%;font:600 13px/1.4 system-ui,sans-serif;color:#402b1d;}
+.mb-pay-choice small{font:11px/1.5 system-ui,sans-serif;color:#75665d;}
+.mb-pay-card .btn{width:100%;text-align:center;justify-content:center;white-space:normal;}
+.mb-pay-small{font:11px/1.5 system-ui,sans-serif;color:#79736b;margin:0;}
+.mb-public-msg[data-state="error"]{padding:14px;background:#fff1ea;border:1px solid #ead5c9;border-radius:12px;color:#903e2c;}
+.mb-public-msg[data-state="ok"]{padding:14px;background:#eef4ec;border:1px solid #d6e3d2;border-radius:12px;color:#3a6343;}
+.mb-member-premium{display:grid;gap:9px;background:linear-gradient(135deg,#252019,#37291e);color:#fff;padding:23px 24px;border-radius:22px;border:0;}
+.mb-member-premium-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.mb-member-premium-top>span:first-child{font:600 10px/1.4 system-ui,sans-serif;letter-spacing:.14em;color:#c8bcb2;}
+.mb-member-pill{font:11px/1.3 system-ui,sans-serif;background:#725b48;color:#fff;border-radius:999px;padding:6px 10px;}
+.mb-member-pill.is-active{background:#d7e9cf;color:#2a4e2f;}
+.mb-member-premium h3{color:#fff;font:400 25px/1.2 Georgia,serif;margin:5px 0;}
+.mb-member-premium>p,.mb-member-premium>small{color:#eee1d2;margin:0;}
+.mb-member-renew{font-size:12px!important;margin-top:8px!important;}
+.mb-member-cancel{justify-self:start;cursor:pointer;margin-top:7px;background:transparent;border:1px solid #b4a497;color:#f8efe5;padding:8px 12px;border-radius:999px;font-size:12px;}
+.mb-member-cancel:hover{background:rgba(255,255,255,.13);}
+.mb-pay-warning{background:rgba(255,230,194,.15);padding:10px 12px;border-radius:10px;color:#f7ddb9!important;}
+.mb-payment-history{display:grid;gap:9px;margin:28px 0;}
+.mb-payment-history h3{font:400 25px Georgia,serif;margin:0 0 8px;}
+.mb-receipt-item{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;gap:12px;padding:14px;border:1px solid #ebe5e0;border-radius:13px;background:#fff;cursor:pointer;}
+.mb-receipt-item>span{display:grid;gap:3px;}
+.mb-receipt-item small{color:#80746a;font-size:12px;}
+.mb-receipt-item strong{font-size:13px;white-space:nowrap;}
+.mb-receipt-dialog{width:min(580px,calc(100vw - 22px));max-height:90dvh;overflow:auto;padding:0;border:0;border-radius:20px;box-shadow:0 18px 80px rgba(0,0,0,.25);}
+.mb-receipt-dialog::backdrop{background:rgba(17,15,13,.7);}
+.mb-receipt-toolbar{display:flex;justify-content:space-between;gap:8px;background:#f7f4f0;padding:14px;}
+.mb-receipt-toolbar button{border:1px solid #d7cabd;border-radius:99px;padding:9px 15px;background:#fff;cursor:pointer;font-size:12px;}
+.mb-receipt-sheet{padding:32px;background:#fff;color:#2b231c;font:14px/1.65 system-ui,sans-serif;}
+.mb-receipt-sheet header{border-bottom:1px solid #d9cfc2;padding-bottom:24px;text-align:center;}
+.mb-receipt-sheet header p{font:400 32px Georgia,serif;letter-spacing:.19em;margin:0;color:#442712;}
+.mb-receipt-sheet header small{font-size:10px;letter-spacing:.24em;color:#766c62;}
+.mb-receipt-top{text-align:center;padding:26px 0;}
+.mb-receipt-top>span{font-size:10px;letter-spacing:.19em;color:#8b7968;}
+.mb-receipt-top h2{font:400 30px Georgia,serif;margin:8px 0;}
+.mb-receipt-top p{font-size:12px;color:#756b63;}
+.mb-receipt-row{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid #ebe7e1;font-size:13px;}
+.mb-receipt-row span{color:#7b7066;}
+.mb-receipt-row strong{font-size:13px;font-weight:600;text-align:right;overflow-wrap:anywhere;}
+.mb-receipt-total{margin:23px 0;padding:20px;background:#f7f3ee;display:grid;grid-template-columns:1fr auto;gap:5px;}
+.mb-receipt-total>strong{font-size:22px;color:#442712;}
+.mb-receipt-total small{grid-column:1/-1;color:#756c64;text-align:right;}
+.mb-receipt-legal{font-size:11px;color:#70685f;line-height:1.65;}
+.mb-receipt-sheet footer{text-align:center;margin-top:25px;padding-top:20px;border-top:1px solid #e7ded5;font-size:10px;letter-spacing:.16em;}
+@media print{
+ body>*:not(.mb-receipt-dialog){display:none!important}
+ .mb-receipt-dialog{display:block!important;position:static!important;width:100%!important;max-height:none!important;border:0!important;box-shadow:none!important;overflow:visible!important;}
+ .mb-receipt-dialog::backdrop,.mb-receipt-toolbar{display:none!important}
+ .mb-receipt-sheet{padding:15mm!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
