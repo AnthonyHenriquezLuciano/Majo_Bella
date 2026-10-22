@@ -4,6 +4,7 @@ import { readTable_, updateTable_, appendRow_ } from './db.ts';
 import { needAdmin_ } from './security.ts';
 import { clean_, safeJson_, uuid } from './util.ts';
 import { adminData_ } from './admin.ts';
+import { services_ } from './data.ts';
 
 const BLOCK_MESSAGE = 'Gracias por compartir esta información con nosotros. Por tu bienestar y para brindarte una atención responsable, en este momento no será posible agendar esta sesión debido a la condición indicada en tu respuesta. Te invitamos a escribirnos para orientarte sobre los próximos pasos y, si corresponde, valorar una nueva fecha. Agradecemos mucho tu comprensión.';
 export function allTemplates_() {
@@ -13,7 +14,7 @@ export function allTemplates_() {
   }));
 }
 export function publicTemplates_() {
-  const used = new Set(readTable_('Servicios').map(s=>String(s.consentTemplateId||'')).filter(Boolean));
+  const used = new Set(services_().map(s=>String(s.consentTemplateId||'')).filter(Boolean));
   return allTemplates_().filter(t=>t.estado==='activo' && used.has(t.id))
     .map(t=>({id:t.id,nombre:t.nombre,descripcion:t.descripcion,texto:t.texto,preguntas:t.preguntas}));
 }
