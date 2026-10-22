@@ -157,6 +157,7 @@
       M.serviceGroups = data.serviceGroups || [];
       M.consentTemplates = data.consentTemplates || [];
       M.membershipPlans = data.membershipPlans || [];
+      M.subscriptionCapability = data.subscriptionCapability || {enabled:false};
       (data.services || []).forEach((r) => {
         const s = M.serviceById[r.id];
         if (s) {
