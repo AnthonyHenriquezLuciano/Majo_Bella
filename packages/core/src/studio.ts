@@ -35,7 +35,7 @@ export class Studio {
     const local = Object.fromEntries(SERVICES.map((s) => [s.id, s]));
     this.serviceGroups = cat.serviceGroups || [];
     this.catalogCategories = cat.categories || [];
-    if (cat.services && cat.services.length) {
+    if (Array.isArray(cat.services)) {
       this.services = cat.services.map((r, i) => {
         const base = local[r.id] || { id: r.id, category: r.name, name: r.name, description: '' };
         return { ...base, name: r.name, category: r.category || base.category, categoryId: r.categoryId || base.categoryId,
