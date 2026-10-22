@@ -115,9 +115,10 @@ export async function adminPaypalRefund_(d:any){
  const kind=str(d.tipo),ref=str(d.referencia);
  if(!['deposito','saldo','tarjeta','paquete'].includes(kind)||!safeId(ref))throw Error('Referencia inválida.');
  const c=findCandidate(kind,ref);
- if(!c||!c.capture||!c.canRefund||c.used)throw Error('No es elegible: solo se pueden reembolsar citas canceladas o productos no usados.');
+ if(!c||!c.capture)throw Error('No encontramos una captura de PayPal asociada.');
  const existing=refunds().find(x=>x.paypalPagoId===c.capture&&x.estado!=='fallido');
  if(existing)return {ok:true,duplicate:true,refund:format(existing),message:'Este cobro ya tiene un reembolso registrado.'};
+ if(!c.canRefund||c.used)throw Error('No es elegible: solo se pueden reembolsar citas canceladas o productos no usados.');
  const capture=await paypal_('get','/v2/payments/captures/'+encodeURIComponent(c.capture),null);
  if(capture.id!==c.capture||capture.status!=='COMPLETED'||
     capture.amount?.currency_code!=='USD'||!(Number(capture.amount.value)>0))
