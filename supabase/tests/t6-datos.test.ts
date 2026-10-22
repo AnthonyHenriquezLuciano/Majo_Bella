@@ -48,7 +48,8 @@ export default async function () {
     assert.equal((await g.get({ action: 'catalog' })).services.find((x) => x.id === 'cejas').price, 950);
     ok(await g.post({ action: 'adminSaveSettings', idToken: A, services: [{ id: 'cejas', nombre: 'Cejas', duracionMin: 45, precioRD: 950, activo: 'no' }] }), 'deactivate service');
     assert.ok(!(await g.get({ action: 'catalog' })).services.find((x) => x.id === 'cejas'), 'servicio desactivado ya no sale');
-    await g.sql`update public.servicios set activo = true where id = 'cejas'`;
+    // El estado editorial es ahora la fuente de verdad para la publicación.
+    await g.sql`update public.servicios set activo = true, estado = 'activo' where id = 'cejas'`;
     assert.ok((await g.get({ action: 'catalog' })).services.find((x) => x.id === 'cejas'), 'editar la base a mano también se ve al instante');
     // Horarios ocupados al día
     assert.equal((await g.get({ action: 'busy', from: D, to: D })).busy.length, 1);
