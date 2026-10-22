@@ -53,7 +53,7 @@
     $('gc-code').textContent = gift.codigo;
     $('gd-code').textContent = gift.codigo;
     $('gd-text').textContent = `Te enviamos la tarjeta de ${M.fmtPrice(gift.montoRD)} a tu correo${order && order.correoPara ? ' y a quien la recibe' : ''}. Se usa escribiendo el código al reservar.${gift.vence ? ` Válida hasta el ${new Intl.DateTimeFormat('es', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${gift.vence}T12:00:00Z`))}.` : ''}`;
-    const web = location.origin + location.pathname;
+    const web = new URL('.', location.href).href;
     const text = `${gift.para ? `${gift.para}, ` : ''}te regalo una experiencia en MAJOBELLA Beauty Studio 🎁\nTarjeta de regalo: ${M.fmtPrice(gift.montoRD)}\nCódigo: ${gift.codigo}${gift.mensaje ? `\n“${gift.mensaje}”` : ''}\nReserva en ${web}reservar.html y escribe el código al confirmar.`;
     $('gd-wa').href = `https://wa.me/?text=${encodeURIComponent(text)}`;
     $('gift-done').focus();
