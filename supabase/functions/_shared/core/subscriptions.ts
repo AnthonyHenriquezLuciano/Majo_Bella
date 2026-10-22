@@ -96,7 +96,11 @@ export async function startPaypalSubscription_(d:any){
  const existing=rows().find(m=>m.planId===p.id&&m.correo===u.email&&['solicitada','activa','pausada'].includes(m.estado));
  if(existing&&isAutopay(existing)) {
    if(existing.estado==='activa')throw Error('Ya tienes una membresía activa de este plan.');
-   return {ok:true,existing:true,membresia:asPublic(existing),approvalUrl:'',mensaje:'Ya tienes una autorización en proceso. Consulta Mis membresías.'};
+   const remote=await paypal_('get','/v1/billing/subscriptions/'+encodeURIComponent(existing.paypalSubscriptionId),null);
+   const approval=(remote.links||[]).find((l:any)=>l.rel==='approve')?.href;
+   if(remote.status==='APPROVAL_PENDING'&&approval&&/^https:\/\//.test(approval))
+     return {ok:true,existing:true,membresiaId:existing.id,approvalUrl:approval};
+   throw Error('Esta solicitud ya existe en PayPal, pero no se puede continuar. Puedes cancelarla desde Mis membresías y crear una nueva.');
  }
  if(existing&&existing.estado==='activa')throw Error('Ya tienes una membresía activa de este plan.');
  const id=existing?.id||'MBS-'+uuid().slice(0,12).toUpperCase();
@@ -129,7 +133,7 @@ async function settle(m:any,sale:any) {
  if(!['COMPLETED','completed'].includes(str(sale.state||sale.status)))throw Error('El cobro todavía no ha sido completado.');
  const today=todayKey_(),initial=!m.pagadoEn;
  const start=m.vence>=today?m.vence:today,vence=plusMonth(initial?today:start);
- const patch:any={estado:'activa',paypalEstado:'ACTIVE',paypalPagoId:saleId,paypalPagosFallidos:0,
+ const patch:any={estado:'activa',paypalEstado:m.paypalEstado==='CANCELLED'?'CANCELLED':'ACTIVE',paypalPagoId:saleId,paypalPagosFallidos:0,
    inicio:initial?today:m.inicio,vence,pagadoEn:new Date().toISOString(),metodoPago:'paypal',actualizada:new Date().toISOString(),
    sesionesUsadas:0};
  updateTable_('Membresias',m._row,patch);
@@ -204,7 +208,8 @@ export async function paypalWebhook_(d:any,headers:Record<string,string>) {
    // Sólo se refleja la autorización; NUNCA se conceden sesiones sin SALE.COMPLETED.
    if(m.paypalEstado!=='ACTIVE')updateTable_('Membresias',m._row,{paypalEstado:'APPROVED_PENDING_PAYMENT'});
  }else if(etype==='PAYMENT.SALE.REFUNDED'||etype==='PAYMENT.SALE.REVERSED'){
-   const p=payments().find(x=>x.id===str(resource.id));
+   const saleRef=str(resource.parent_payment||resource.parent_payment_id||resource.id);
+   const p=payments().find(x=>x.id===saleRef);
    if(p&&p.estado==='completado'){
      updateTable_('PagosMembresia',p._row,{estado:'reembolsado'});
      if(m.paypalPagoId===p.id)updateTable_('Membresias',m._row,{estado:'pausada',paypalEstado:'REFUNDED'});
