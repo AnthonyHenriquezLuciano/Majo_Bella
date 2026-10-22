@@ -50,6 +50,7 @@ export function adminData_(d, extra?) {
     automation: automationStatus_(),
     consentDefault: DEFAULT_CONSENT,
     settings: readTable_('Ajustes').map(function (r) { return { key: r.clave, value: r.valor, help: r['qué es'] || '' }; }),
+    categories: readTable_('Categorias').map(strip_),
     services: readTable_('Servicios').map(strip_),
     schedule: schedule_(s),
     paypalEnv: paypalEnv_(),
@@ -214,14 +215,45 @@ export function adminSaveSettings_(d) {
       else appendRow_('Ajustes', { clave: k, valor: v, 'qué es': '' });
     });
   }
+  if (Array.isArray(d.categories)) {
+    const rows = readTable_('Categorias');
+    const ids = new Set<string>();
+    d.categories.forEach(function (cat) {
+      const id = clean_(cat.id, 40);
+      const nombre = clean_(cat.nombre, 80);
+      if (!id || !nombre || !/^[a-z0-9_-]+$/i.test(id) || ids.has(id)) throw new Error('Cada categoría necesita nombre e identificador único.');
+      ids.add(id);
+      const patch = { id, nombre, orden: Math.max(0, Math.round(Number(cat.orden) || 0)), activo: /^no$/i.test(String(cat.activo)) ? 'no' : 'si' };
+      const old = rows.find((x) => x.id === id);
+      if (old) updateTable_('Categorias', old._row, patch); else appendRow_('Categorias', patch);
+    });
+  }
   if (Array.isArray(d.services)) {
     const rows = readTable_('Servicios');
+    const knownCats = new Set(readTable_('Categorias').map((r) => String(r.id)));
+    const indexed = new Map<string, any>();
+    rows.forEach((r) => indexed.set(String(r.id), r));
+    d.services.forEach((r) => indexed.set(String(r.id), r));
+    const submitted = new Set<string>();
+
     d.services.forEach(function (sv) {
       const name = clean_(sv.nombre, 80);
       if (!name) return;
       const id = clean_(sv.id, 40) || slug_(name);
+      const tipo = sv.tipo === 'grupo' ? 'grupo' : 'servicio';
+      const categoriaId = clean_(sv.categoriaId, 40) || String(indexed.get(id)?.categoriaId || 'otros');
+      const padreId = tipo === 'grupo' ? '' : clean_(sv.padreId, 40);
+      if (!/^[a-z0-9_-]+$/i.test(id) || submitted.has(id)) throw new Error('Identificador de servicio duplicado o inválido.');
+      submitted.add(id);
+      if (!knownCats.has(categoriaId)) throw new Error('Selecciona una categoría válida para ' + name);
+      if (padreId) {
+        const parent = indexed.get(padreId);
+        if (!parent || parent.tipo !== 'grupo' || String(parent.categoriaId || 'otros') !== categoriaId || padreId === id)
+          throw new Error('El grupo del subservicio debe existir en la misma categoría.');
+      }
       const patch: any = {
-        id: id, nombre: name,
+        id: id, nombre: name, categoriaId, padreId, tipo, descripcion: clean_(sv.descripcion, 500),
+        orden: Math.max(0, Math.round(Number(sv.orden) || 0)),
         duracionMin: Math.max(5, Math.round(Number(sv.duracionMin) || 30)),
         precioRD: Math.max(0, Math.round(Number(sv.precioRD) || 0)),
         precioDesde: /^(si|sí|true)$/i.test(String(sv.precioDesde)) ? 'si' : 'no',
