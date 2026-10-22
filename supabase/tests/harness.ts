@@ -34,7 +34,7 @@ export async function harness(opts: Opts = {}) {
   const mails: any[] = [];
   const events: Record<string, any> = {};
   const files = new Map<string, { bytes: Uint8Array; mime: string }>();
-  const pp = { n: 0, orders: {} as Record<string, any>, captures: {} as Record<string, any>, refunds: [] as string[], failCapture: false, products: {} as Record<string, any>, plans: {} as Record<string, any>, subscriptions: {} as Record<string, any> };
+  const pp = { n: 0, orders: {} as Record<string, any>, captures: {} as Record<string, any>, refunds: [] as string[], failCapture: false, products: {} as Record<string, any>, plans: {} as Record<string, any>, subscriptions: {} as Record<string, any>, transactions: {} as Record<string, any[]> };
   const tokens: Record<string, string> = { 'admin-token': 'majo@example.com', 'client-token': 'ana@example.com' };
   const state = { failMail: !!opts.failMail, relayDown: false, calls: 0 };
   const pushes: any[] = [];
@@ -100,6 +100,8 @@ export async function harness(opts: Opts = {}) {
       const id='I-MJ'+(++pp.n);pp.subscriptions[id]={...subBody,id,status:'APPROVAL_PENDING',links:[{rel:'approve',href:'https://www.sandbox.paypal.com/checkoutnow?token='+id}]};
       return json(201,{id,status:'APPROVAL_PENDING',links:[{rel:'approve',href:'https://www.sandbox.paypal.com/checkoutnow?token='+id}]});
     }
+    const txSid=url.match(/\/v1\/billing\/subscriptions\/([^/?]+)\/transactions\?/);
+    if(txSid&&method==='GET')return json(200,{transactions:pp.transactions[txSid[1]]||[]});
     const sid=url.match(/\/v1\/billing\/subscriptions\/([^/]+)(?:\/(cancel))?$/);
     if(sid){
       const sub=pp.subscriptions[sid[1]];
@@ -108,6 +110,7 @@ export async function harness(opts: Opts = {}) {
       if(method==='GET')return json(200,sub);
     }
     // PayPal
+    if (url.includes('/v1/billing/plans?page_size=1') && method === 'GET')return json(200,{plans:[]});
     if (url.endsWith('/v1/oauth2/token')) return json(200, { access_token: 'AT', expires_in: 32000 });
     const b = body ? JSON.parse(body) : null;
     if (url.endsWith('/v2/checkout/orders') && method === 'POST') {
@@ -124,7 +127,16 @@ export async function harness(opts: Opts = {}) {
       pp.captures[o.capture] = o;
       return json(201, { id: o.id, status: 'COMPLETED', purchase_units: [{ payments: { captures: [{ id: o.capture, status: 'COMPLETED', amount: o.amount }] } }] });
     }
-    if ((m = url.match(/captures\/([^/]+)\/refund$/))) { pp.refunds.push(m[1]); return json(201, { id: 'REF' + pp.refunds.length, status: 'COMPLETED' }); }
+    if ((m = url.match(/captures\/([^/]+)$/)) && method === 'GET') {
+      const o=pp.captures[m[1]];
+      return o?json(200,{id:m[1],status:'COMPLETED',amount:o.amount}):json(404,{message:'unknown capture'});
+    }
+    if ((m = url.match(/captures\/([^/]+)\/refund$/))) {
+      if(!pp.captures[m[1]])return json(404,{message:'capture missing'});
+      const index=pp.refunds.indexOf(m[1]);
+      if(index<0)pp.refunds.push(m[1]);
+      return json(201,{id:'REF'+(index<0?pp.refunds.length:index+1),status:'COMPLETED'});
+    }
     if ((m = url.match(/orders\/([^/]+)$/))) { const o = pp.orders[m[1]]; return json(200, { id: o.id, status: o.status, purchase_units: [{ payments: { captures: [{ id: o.capture, status: 'COMPLETED', amount: o.amount }] } }] }); }
     return json(404, { message: 'mock: ' + url });
   }

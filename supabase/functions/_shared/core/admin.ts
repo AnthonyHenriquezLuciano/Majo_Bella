@@ -49,6 +49,7 @@ export function adminData_(d, extra?) {
     packages: readOpt_('Paquetes').map(strip_),
     ...adminSubscriptionData_(),
     membershipPayments: readOpt_('PagosMembresia').map(strip_),
+    paypalRefunds: readOpt_('ReembolsosPaypal').map(strip_),
     subscriptionCapability: subscriptionCapability_(),
     bonos: readOpt_('Bonos').filter(function (b) { return b.estado !== 'pendiente'; }).map(strip_),
     waitlist: readOpt_('Espera').map(strip_),

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Agenda MAJOBELLA</title>
+<title>MAJOBELLA · Administración Pro</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="css/consentimientos.css?v=20261022ct1">
 <link rel="stylesheet" href="css/membresias.css?v=20261022pay1">
 <link rel="stylesheet" href="css/admin-pro.css?v=20261022pay1">
+<link rel="stylesheet" href="css/admin-paypal.css?v=20261022ops1">
 </head>
 <body>
 <!--MJB:BODY-START-->
@@ -314,8 +315,34 @@
         <p class="panel-note" id="mn-fee-note"></p>
       </section>
     </section>
-  </section>
 
+  <!-- PAYPAL OPERACIONES · Consola del estudio (dentro de Dinero) -->
+  <section class="ad-block pp-ops" id="ppop-block">
+    <div class="ad-toolbar pp-ops-head">
+      <div><p class="pp-eyebrow">MAJOBELLA · FINANZAS PRO</p><h2 class="block-h">Centro PayPal</h2>
+      <p class="panel-note">Integración, autorizaciones, cobros auditados, reembolsos y disputas. Los montos en USD no se suman automáticamente a RD$.</p></div>
+      <div class="pp-op-actions"><button class="chip-btn" type="button" id="ppop-refresh">Actualizar estados</button><button type="button" class="btn-dark sm" id="ppop-test">Probar conexión</button></div>
+    </div>
+    <div class="pp-op-status" id="ppop-health" role="status">Conecta Administración para revisar el estado de PayPal.</div>
+    <p id="ppop-notice" class="pp-op-notice" aria-live="polite"></p>
+    <div class="pp-op-grid">
+      <article class="ad-panel">
+        <div class="panel-head"><h3>Reembolsos y transacciones</h3></div>
+        <p class="panel-note">Solo se permite reembolso completo de una cita cancelada o un regalo/paquete sin uso. Las devoluciones parciales y disputas requieren revisión en PayPal.</p>
+        <div id="ppop-payments" class="pp-op-list"></div>
+      </article>
+      <article class="ad-panel">
+        <div class="panel-head"><h3>Historial y alertas</h3></div>
+        <div id="ppop-events" class="pp-op-list"></div>
+        <p class="panel-note">Los eventos deben llegar firmados desde PayPal. Un webhook desconocido no confirma cobros por sí solo.</p>
+      </article>
+    </div>
+    <section class="ad-panel">
+      <div class="panel-head"><h3>Historial de reembolsos</h3></div>
+      <div id="ppop-refunds" class="pp-op-list"></div>
+    </section>
+  </section>
+  </section>
   <!-- PROMOCIONES -->
   <section data-section="promos" id="sec-promos" hidden>
     <header class="sec-head"><h1>Promociones</h1><p>Descuentos, códigos, tarjetas de regalo, paquetes y premio de fidelidad.</p></header>
@@ -974,7 +1001,8 @@
 <script src="js/admin/centro.js?v=20261022pay1"></script>
 <script src="js/admin/agenda.js?v=20261022v3"></script>
 <script src="js/admin/clientes.js?v=20261022v3"></script>
-<script src="js/admin/dinero.js?v=20261022v3"></script>
+<script src="js/admin/paypal-operaciones.js?v=20261022ops1"></script>
+<script src="js/admin/dinero.js?v=20261022ops1"></script>
 <script src="js/integrations/giftcard.js?v=20261022v3"></script>
 <script src="js/admin/promos.js?v=20261022v3"></script>
 <script src="js/admin/paquetes.js?v=20261022v3"></script>
