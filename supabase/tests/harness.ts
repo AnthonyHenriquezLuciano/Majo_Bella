@@ -97,7 +97,7 @@ export async function harness(opts: Opts = {}) {
       const id='P-MJ'+(++pp.n);pp.plans[id]={...subBody,id};return json(201,{id});
     }
     if (url.endsWith('/v1/billing/subscriptions') && method==='POST') {
-      const id='I-MJ'+(++pp.n);pp.subscriptions[id]={...subBody,id,status:'APPROVAL_PENDING'};
+      const id='I-MJ'+(++pp.n);pp.subscriptions[id]={...subBody,id,status:'APPROVAL_PENDING',links:[{rel:'approve',href:'https://www.sandbox.paypal.com/checkoutnow?token='+id}]};
       return json(201,{id,status:'APPROVAL_PENDING',links:[{rel:'approve',href:'https://www.sandbox.paypal.com/checkoutnow?token='+id}]});
     }
     const sid=url.match(/\/v1\/billing\/subscriptions\/([^/]+)(?:\/(cancel))?$/);
