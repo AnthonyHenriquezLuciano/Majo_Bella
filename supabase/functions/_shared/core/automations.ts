@@ -62,6 +62,7 @@ export async function runAutomations_() {
   out.tasaUSD = await updateUsdRate_();
   const rows = rows_();
   const step = function (key, fn) { try { out[key] = fn(); } catch (e) { out[key] = 'error: ' + msg_(e); logError_('automatizacion', key + ': ' + msg_(e), '', ''); } };
+  step('gastosProgramados', scheduleRecurringExpenses_);
   if (on_(s.recordatorioActivo) && hour >= 7 && hour < 22) step('recordatorios', function () { return sendReminders_(rows, s, now); });
   if (daytime && on_(s.resenaActiva) && s.googleResenaUrl) step('resenas', function () { return askReviews_(rows, s, now); });
   if (daytime && on_(s.retoqueActivo)) step('retoques', function () { return retouchNotices_(rows, s); });
@@ -70,6 +71,27 @@ export async function runAutomations_() {
   if (hour >= 8 && hour < 22) step('transferencias', function () { return nagTransfers_(rows, s, now); });
   sysSet('LAST_AUTO', JSON.stringify({ at: now.toISOString(), out: out }));
   return out;
+}
+
+/* Las cuotas fijas se generan como PENDIENTES. No se restan de caja ni de
+   ganancia hasta que una persona confirme que se pagaron. */
+export function scheduleRecurringExpenses_() {
+  let templates:any[] = [];
+  try {const value=JSON.parse(String(settings_().gastosRecurrentes||'[]'));if(Array.isArray(value))templates=value;} catch {return 0;}
+  const today=todayKey_(), month=today.slice(0,7), rows=readTable_('Gastos');
+  let created=0;
+  for (const t of templates.slice(0,20)) {
+    if (t?.activo !== true || !/^[A-Z0-9]{8}$/.test(String(t.id||'')))continue;
+    const day=Math.min(28,Math.max(1,Math.floor(Number(t.dia)||1)));
+    const due=month+'-'+String(day).padStart(2,'0');
+    const id='GRE-'+t.id+'-'+month.replace('-','');
+    const monto=Math.round(Number(t.montoRD)||0);
+    if (due>today || rows.some(r=>r.id===id) || !Number.isFinite(monto) || monto<=0 || monto>10000000)continue;
+    appendRow_('Gastos',{id,fecha:due,concepto:String(t.concepto||'Gasto recurrente').slice(0,120),
+      categoria:String(t.categoria||'Otros').slice(0,40),montoRD:monto,metodo:'pendiente',creada:new Date().toISOString()});
+    created++;
+  }
+  return created;
 }
 
 export function automationStatus_() {
