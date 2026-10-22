@@ -34,7 +34,7 @@ export async function harness(opts: Opts = {}) {
   const mails: any[] = [];
   const events: Record<string, any> = {};
   const files = new Map<string, { bytes: Uint8Array; mime: string }>();
-  const pp = { n: 0, orders: {} as Record<string, any>, captures: {} as Record<string, any>, refunds: [] as string[], failCapture: false, products: {} as Record<string, any>, plans: {} as Record<string, any>, subscriptions: {} as Record<string, any> };
+  const pp = { n: 0, orders: {} as Record<string, any>, captures: {} as Record<string, any>, refunds: [] as string[], failCapture: false, products: {} as Record<string, any>, plans: {} as Record<string, any>, subscriptions: {} as Record<string, any>, transactions: {} as Record<string, any[]> };
   const tokens: Record<string, string> = { 'admin-token': 'majo@example.com', 'client-token': 'ana@example.com' };
   const state = { failMail: !!opts.failMail, relayDown: false, calls: 0 };
   const pushes: any[] = [];
@@ -100,6 +100,8 @@ export async function harness(opts: Opts = {}) {
       const id='I-MJ'+(++pp.n);pp.subscriptions[id]={...subBody,id,status:'APPROVAL_PENDING',links:[{rel:'approve',href:'https://www.sandbox.paypal.com/checkoutnow?token='+id}]};
       return json(201,{id,status:'APPROVAL_PENDING',links:[{rel:'approve',href:'https://www.sandbox.paypal.com/checkoutnow?token='+id}]});
     }
+    const txSid=url.match(/\/v1\/billing\/subscriptions\/([^/?]+)\/transactions\?/);
+    if(txSid&&method==='GET')return json(200,{transactions:pp.transactions[txSid[1]]||[]});
     const sid=url.match(/\/v1\/billing\/subscriptions\/([^/]+)(?:\/(cancel))?$/);
     if(sid){
       const sub=pp.subscriptions[sid[1]];
