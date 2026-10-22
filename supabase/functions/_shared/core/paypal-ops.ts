@@ -87,7 +87,7 @@ function applyFullRefund(kind:string,ref:string,refundId:string){
    const detail=str(c.row.reembolso);
    const text='reembolsado '+refundId+' (COMPLETED)';
    updateTable_(c.table,c.row._row,{reembolso:kind==='saldo'?
-     (detail?detail+' · ':'')+'saldo: '+text:text});
+     (detail?detail+' · ':'')+'saldo: '+text:(detail?text+' · '+detail:text)});
  }else if(kind==='tarjeta'){
    updateTable_(c.table,c.row._row,{estado:'reembolsada',saldoRD:0});
  }else if(kind==='paquete'){
