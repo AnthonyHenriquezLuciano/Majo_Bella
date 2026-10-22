@@ -64,6 +64,8 @@ function Nav() {
       <Stack.Protected guard={!email}>
         <Stack.Screen name="entrar" />
       </Stack.Protected>
+      {/* Ruta pública de retorno OAuth y enlaces de correo. No es un área administrativa. */}
+      <Stack.Screen name="auth" options={{ animation: 'none' }} />
     </Stack>
   );
 }
