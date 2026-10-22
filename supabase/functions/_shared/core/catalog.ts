@@ -29,6 +29,8 @@ export function catalog_(): any {
       enabled: paypalConfigured_(),
       paypalClientId: paypalConfigured_() ? env_('PAYPAL_CLIENT_ID') : '',
       usdRate: num_(s.tasaUSD, 63),
+      fxAutomatic: s.tasaUSDModo === 'automatico',
+      fxUpdatedAt: s.tasaUSDActualizada || '',
       depositPercent: num_(s.porcentajeDeposito, 50),
       holdMinutes: num_(s.minutosRetencion, 15),
       cancelHours: num_(s.horasCancelacion, 24),

@@ -1,5 +1,5 @@
 /* MAJOBELLA · Dashboard: Dinero
-   Cierre de caja del día, ganancia real del mes (ingresos − reembolsos − comisiones de PayPal − gastos)
+   Cierre de caja del día, ganancia estimada del mes (ingresos − reembolsos − comisiones de PayPal − gastos)
    y reporte mensual en PDF con el estilo de la marca. */
 (function (M) {
   const A = M.Admin;
@@ -7,6 +7,18 @@
   const st = { day: M.todayKey(), month: M.todayKey().slice(0, 8) + '01' };
   const METHOD = { efectivo: 'Efectivo', transferencia: 'Transferencia', paypal: 'PayPal', 'tarjeta de regalo': 'Tarjeta de regalo', paquete: 'Paquete', cortesia: 'Cortesía' };
   const CATS = ['Insumos', 'Alquiler', 'Servicios (luz, agua, internet)', 'Publicidad', 'Equipos', 'Sueldos', 'Comisiones', 'Otros'];
+  const expenseCategory = (text) => {
+    const t=String(text||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if (/alquiler|renta|local/.test(t)) return 'Alquiler';
+    if (/luz|electric|agua|internet|wifi|telefono/.test(t)) return 'Servicios (luz, agua, internet)';
+    if (/meta ads|facebook|instagram|publicidad|anuncio|google ads/.test(t)) return 'Publicidad';
+    if (/sueld|nomina|salario|emplead/.test(t)) return 'Sueldos';
+    if (/maquina|equipo|lampara|camilla/.test(t)) return 'Equipos';
+    if (/comision|tarifa|bancari/.test(t)) return 'Comisiones';
+    if (/pigmento|insumo|cera|pestana|algodon|guante|producto/.test(t)) return 'Insumos';
+    return null;
+  };
+  const paidExpenses = (xs) => xs.filter(e => e.metodo !== 'pendiente');
 
   /* ---------- Movimientos de dinero ---------- */
   A.movements = () => {
@@ -65,7 +77,7 @@
     const income = mv.filter((m) => m.amount > 0);
     const refunds = mv.filter((m) => m.amount < 0);
     const fees = A.sum(income.filter((m) => m.method === 'paypal'), (m) => A.paypalFee(m.amount));
-    const expenses = (A.data.expenses || []).filter((e) => e.fecha >= from && e.fecha <= to);
+    const expenses = paidExpenses((A.data.expenses || []).filter((e) => e.fecha >= from && e.fecha <= to));
     const gross = A.sum(income, (m) => m.amount);
     const ref = A.sum(refunds, (m) => m.amount);
     const exp = A.sum(expenses, (e) => e.montoRD);
@@ -122,7 +134,7 @@
       k('Ingresos', A.money(s.gross), delta(s.gross, p.gross)),
       k('Reembolsos y comisiones', A.money(-(s.ref) + s.fees), `${A.money(-s.ref)} devuelto · ≈ ${A.money(s.fees)} PayPal`),
       k('Gastos', A.money(s.exp), A.plural(s.expenses.length, 'gasto')),
-      k('Ganancia real', A.money(s.profit), delta(s.profit, p.profit), 'kpi-strong'),
+      k('Ganancia estimada', A.money(s.profit), delta(s.profit, p.profit), 'kpi-strong'),
     ].join('');
     const done = s.appts.filter((a) => a.status === 'completada');
     const ticket = done.length ? A.sum(done, (a) => a.totalPrice) / done.length : 0;
@@ -146,11 +158,16 @@
     $('mn-cats').innerHTML = A.hbars(Object.entries(cats).sort((a, b) => b[1] - a[1]).map(([c, v]) => ({ label: c, value: v, text: A.money(v) })), 'Sin gastos registrados este mes.');
 
     // Gastos
-    $('mn-exp-list').innerHTML = s.expenses.length ? `
+    let templates=[];
+    try {const v=JSON.parse(String(A.settingsMap().gastosRecurrentes||'[]'));if(Array.isArray(v))templates=v;}catch(e){}
+    $('mn-exp-recurrent').innerHTML=templates.some(t=>t.activo)?'<p class="mn-recurr-head">GASTOS PROGRAMADOS · AUTOMÁTICOS</p>'+templates.filter(t=>t.activo).map(t=>
+      `<div class="mn-recurring-row"><span><b>${esc(t.concepto)}</b><small>Día ${Number(t.dia)} de cada mes · ${A.money(t.montoRD)} · solo se descuenta tras confirmar</small></span><button type="button" data-rec-stop="${esc(t.id)}">Desactivar</button></div>`).join(''):'';
+    const pendingExpenses = (A.data.expenses || []).filter(e => e.fecha >= r.from && e.fecha <= r.to && e.metodo === 'pendiente');
+    $('mn-exp-list').innerHTML = (s.expenses.length || pendingExpenses.length) ? `
       <table class="tbl"><thead><tr><th>Fecha</th><th>Concepto</th><th>Método</th><th class="num">Monto</th><th></th></tr></thead>
-      <tbody>${s.expenses.sort((a, b) => b.fecha.localeCompare(a.fecha)).map((e) => `<tr><td>${A.shortDate(e.fecha)}</td><td>${esc(e.concepto)}<span class="t-sub">${esc(e.categoria)}</span></td><td>${esc(METHOD[e.metodo] || e.metodo)}</td><td class="num">${A.money(e.montoRD)}</td><td class="num"><button type="button" class="link" data-exp-del="${esc(e.id)}">Borrar</button></td></tr>`).join('')}</tbody></table>`
+      <tbody>${[...s.expenses,...pendingExpenses].sort((a, b) => b.fecha.localeCompare(a.fecha)).map((e) => `<tr><td>${A.shortDate(e.fecha)}</td><td>${esc(e.concepto)}<span class="t-sub">${esc(e.categoria)}</span></td><td>${e.metodo==='pendiente'?'Pendiente de confirmar':esc(METHOD[e.metodo] || e.metodo)}</td><td class="num">${A.money(e.montoRD)}</td><td class="num">${e.metodo==='pendiente' ? `<button type="button" class="link" data-exp-confirm="${esc(e.id)}">Marcar pagado</button> ` : ''}<button type="button" class="link" data-exp-del="${esc(e.id)}">Borrar</button></td></tr>`).join('')}</tbody></table>`
       : '<p class="empty">Aún no registras gastos este mes.</p>';
-    $('mn-fee-note').textContent = `Comisión de PayPal estimada con ${A.setting('comisionPaypalPct', 5.4)}% + US$ ${A.setting('comisionPaypalFijoUSD', 0.3)} por cobro y ${A.setting('conversionPct', 3.5)}% de conversión a pesos (se cambian en Ajustes).`;
+    $('mn-fee-note').textContent = `Comisiones y conversión estimadas con ${A.setting('comisionPaypalPct', 5.4)}% + US$ ${A.setting('comisionPaypalFijoUSD', 0.3)} por cobro y ${A.setting('conversionPct', 3.5)}% de conversión a pesos (se cambian en Ajustes).`;
   }
 
   function render() { renderDay(); renderMonth(); A.PayPalOps?.render(); }
@@ -331,18 +348,52 @@
       const f = $('mn-exp-form');
       f.categoria.innerHTML = CATS.map((c) => `<option>${c}</option>`).join('');
       f.fecha.value = M.todayKey();
+      $('mn-exp-presets').addEventListener('click',ev=>{
+        const b=ev.target.closest('[data-exp-preset]');if(!b)return;
+        f.concepto.value=b.dataset.expPreset;
+        f.categoria.value=expenseCategory(f.concepto.value)||'Otros';
+        f.concepto.focus();
+      });
+      f.concepto.addEventListener('input',()=>{const cat=expenseCategory(f.concepto.value);if(cat)f.categoria.value=cat;});
       f.addEventListener('submit', async (e) => {
         e.preventDefault();
         await A.busy(f.querySelector('button[type=submit]'), async () => {
           try {
-            const res = await A.call('adminSaveExpense', { expense: { fecha: f.fecha.value, concepto: f.concepto.value.trim(), categoria: f.categoria.value, montoRD: f.montoRD.value, metodo: f.metodo.value } });
+            const exact=(A.data.expenses||[]).some(x=>x.fecha===f.fecha.value&&
+              String(x.concepto).trim().toLowerCase()===f.concepto.value.trim().toLowerCase()&&
+              Number(x.montoRD)===Number(f.montoRD.value)&&x.metodo!=='pendiente');
+            if(exact&&!confirm('Ya existe un gasto con el mismo concepto, importe y fecha. ¿Registrar otra operación igualmente?'))return;
+            const res = await A.call('adminSaveExpense', { expense: { fecha: f.fecha.value, concepto: f.concepto.value.trim(), categoria: f.categoria.value, montoRD: f.montoRD.value, metodo: f.metodo.value, repetirMensual:f.repetirMensual.checked } });
             A.data.expenses.push(res.expense);
-            f.concepto.value = ''; f.montoRD.value = '';
+            const repeated=f.repetirMensual.checked;
+            f.concepto.value = ''; f.montoRD.value = ''; f.repetirMensual.checked=false;
+            if(repeated)await A.load();
             render(); A.toast('Gasto guardado.');
           } catch (err) { A.toast(err.message); }
         });
       });
       document.addEventListener('click', async (e) => {
+        const stop = e.target.closest('[data-rec-stop]');
+        if(stop) {
+          if(!confirm('¿Desactivar este gasto fijo? Se conservarán los gastos anteriores.'))return;
+          await A.busy(stop,async()=>{try{await A.call('adminPauseRecurringExpense',{id:stop.dataset.recStop});await A.load();render();A.toast('Programación desactivada.');}
+          catch(err){A.toast(err.message);}});
+          return;
+        }
+        const confirmExpense = e.target.closest('[data-exp-confirm]');
+        if (confirmExpense) {
+          const expense=(A.data.expenses||[]).find(x=>x.id===confirmExpense.dataset.expConfirm);
+          if(!expense)return;
+          const method=prompt('¿Con qué se pagó este gasto? efectivo, transferencia, tarjeta o paypal','transferencia');
+          if(method===null)return;
+          if(!['efectivo','transferencia','tarjeta','paypal'].includes(method.trim().toLowerCase())){A.toast('Selecciona un método válido.');return;}
+          if(!confirm('¿Confirmas que ya pagaste '+expense.concepto+' por '+A.money(expense.montoRD)+'?'))return;
+          await A.busy(confirmExpense,async()=>{try{
+            const res=await A.call('adminSaveExpense',{expense:{...expense,metodo:method.trim().toLowerCase()}});
+            A.upsert('expenses',res.expense);render();A.toast('Gasto confirmado y contabilizado.');
+          }catch(err){A.toast(err.message);}});
+          return;
+        }
         const del = e.target.closest('[data-exp-del]');
         const pay = e.target.closest('[data-pay]');
         if (del) {

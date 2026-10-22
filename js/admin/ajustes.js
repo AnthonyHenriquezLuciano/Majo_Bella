@@ -7,7 +7,8 @@
   const DAY_KEYS = ['horario_domingo', 'horario_lunes', 'horario_martes', 'horario_miercoles', 'horario_jueves', 'horario_viernes', 'horario_sabado'];
   const GROUPS = [
     ['Reservas y pagos', [
-      ['tasaUSD', 'Tasa del dólar (RD$ por US$ 1)', 'RD$', 'number'],
+      ['tasaUSDModo', '¿Cómo actualizar el dólar?', '', 'select:manual,automatico'],
+      ['tasaUSD', 'Tasa usada para convertir cobros a dólares', 'RD$/USD', 'number'],
       ['horasCancelacion', 'Reembolso si cancela con al menos', 'horas', 'number'],
       ['minutosRetencion', 'Minutos para pagar antes de liberar el horario', 'min', 'number'],
       ['minAntelacionHoras', 'Antelación mínima para reservar', 'horas', 'number'],
@@ -37,6 +38,36 @@
       ['conversionPct', 'Pérdida al convertir dólares a pesos', '%', 'number'],
     ]],
   ];
+  const HELP = {
+    tasaUSDModo:'Automático consulta una referencia internacional aproximadamente una vez al día. Si falla o varía más de 3 %, conserva la última tasa y genera un aviso.',
+    tasaUSD:'La web cobra en USD y muestra el equivalente. Es una tasa indicativa, NO la tasa oficial de venta del BCRD ni el tipo de cambio que aplica PayPal.',
+    horasCancelacion:'Una clienta que cancela antes de este límite puede recuperar el depósito según la política del estudio.',
+    minutosRetencion:'Evita que dos clientas reserven el mismo horario mientras una está pagando.',
+    minAntelacionHoras:'Tiempo de preparación antes de una cita nueva.',
+    maxDiasAdelante:'Cuántos días del calendario puedes ofrecer.',
+    intervaloMinutos:'Distancia entre los horarios de inicio disponibles; no cambia la duración de un servicio.',
+    cambiosMax:'Límite de cambios de fecha que la clienta puede realizar sin asistencia.',
+    correoAvisos:'Aquí llegan las confirmaciones y alertas del estudio.',
+    calendarioId:'Usa "primary" para el calendario principal. Requiere vincular Google Calendar; vacío lo desactiva.',
+    invitarClienta:'Envía a la clienta una invitación de su cita.',
+    direccion:'Aparece en las confirmaciones y enlaces de agenda.',
+    mapsUrl:'Enlace para que la clienta abra la ubicación.',
+    whatsapp:'Incluye el código de país y solo números.',
+    webUrl:'Se utiliza en correos y enlaces de confirmación.',
+    negocioNombre:'Nombre comercial visible en tus documentos.',
+    negocioRnc:'Dato fiscal opcional. No genera comprobantes fiscales NCF por sí solo.',
+    negocioCorreo:'Contacto para privacidad, condiciones y datos personales.',
+    comisionPaypalPct:'Porcentaje orientativo. El importe real de la comisión se confirma en la cuenta PayPal.',
+    comisionPaypalFijoUSD:'Cargo fijo estimado por operación PayPal.',
+    conversionPct:'Costo estimado de conversión al retirar USD; puede cambiar en PayPal.'
+  };
+  const GROUP_HELP = {
+    'Reservas y pagos':'Configura cómo se cobra y cuándo se puede reservar o cancelar.',
+    'Avisos y calendario':'Notificaciones y eventos que se envían automáticamente.',
+    'Datos del estudio':'Información pública que verán tus clientas.',
+    'Datos del negocio (términos y privacidad)':'Datos utilizados en las políticas y comprobantes.',
+    'Comisiones (para la ganancia real)':'Estimaciones para reportes: no sustituyen el estado real de PayPal.'
+  };
   A.settingsGroups = GROUPS;
   let closed = [];
 
@@ -44,16 +75,22 @@
     let input;
     if (type.startsWith('select:')) {
       const opts = type.slice(7).split(',');
-      input = `<select name="${key}">${opts.map((o) => `<option value="${o}"${String(value) === o ? ' selected' : ''}>${o === 'si' ? 'Sí' : o === 'no' ? 'No' : o}</option>`).join('')}</select>`;
+      input = `<select name="${key}">${opts.map((o) => `<option value="${o}"${String(value) === o ? ' selected' : ''}>${o === 'si' ? 'Sí' : o === 'no' ? 'No' : o === 'automatico' ? 'Automático · recomendado' : o === 'manual' ? 'Manual' : o}</option>`).join('')}</select>`;
     } else {
-      input = `<input name="${key}" type="${type === 'number' ? 'number' : type}" ${type === 'number' ? 'step="any" min="0"' : ''} value="${esc(value || '')}">`;
+      input = `<input name="${key}" type="${type === 'number' ? 'number' : type}" ${type === 'number' ? 'step="any" min="0"' : ''} value="${esc(value ?? '')}">`;
     }
-    return `<label class="set"><span class="set-l">${label}</span><span class="set-i">${input}${unit ? `<em>${unit}</em>` : ''}</span></label>`;
+    return `<label class="set set-explained"><span class="set-l">${label}</span><span class="set-i">${input}${unit ? `<em>${unit}</em>` : ''}</span><small class="set-help">${esc(HELP[key] || '')}</small></label>`;
   }
 
   function render() {
     const s = A.settingsMap();
-    $('aj-general').innerHTML = GROUPS.map(([title, fields]) => `<fieldset class="aj-group"><legend>${title}</legend>${fields.map((f) => field(f, s[f[0]])).join('')}</fieldset>`).join('');
+    $('aj-general').innerHTML = `<div class="aj-welcome"><span>CONFIGURACIÓN INTELIGENTE</span><h3>Tu estudio, sin complicaciones.</h3><p>Los ajustes esenciales están primero. Abre solo la categoría que deseas modificar; guarda al terminar.</p></div>`+
+      GROUPS.map(([title, fields], index) => `<details class="aj-accordion" ${index === 0 ? 'open' : ''}><summary><span><strong>${esc(title === 'Comisiones (para la ganancia real)' ? 'Comisiones estimadas' : title)}</strong><small>${esc(GROUP_HELP[title])}</small></span><span class="aj-chevron" aria-hidden="true">⌄</span></summary><fieldset class="aj-group">${fields.map((f) => field(f, s[f[0]])).join('')}${index === 0 ? `<div class="aj-fx-status" role="status"><strong>Referencia USD/DOP:</strong> ${s.tasaUSDActualizada ? `última cotización ${esc(String(s.tasaUSDActualizada).replace('T',' ').slice(0,16))} UTC` : 'sin actualizaciones automáticas todavía'} · <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Rates By Exchange Rate API</a><br><small>Fuente de mercado informativa, no tasa oficial del Banco Central ni liquidación PayPal. Las órdenes creadas no cambian de precio.</small></div>` : ''}</fieldset></details>`).join('');
+    const mode = $('aj-general').querySelector('[name=tasaUSDModo]');
+    const rate = $('aj-general').querySelector('[name=tasaUSD]');
+    const update = () => { rate.disabled = mode.value === 'automatico'; rate.closest('.set').classList.toggle('is-automatic',rate.disabled); };
+    mode.addEventListener('change', update);
+    update();
 
     $('aj-hours').innerHTML = DAYS.map(([dow, name]) => {
       const m = String(s[DAY_KEYS[dow]] || '').match(/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/);

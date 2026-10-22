@@ -148,7 +148,7 @@
   const sheetHead = (title, sub) => `<div class="sheet-head"><div><h2 id="sheet-title">${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div><button type="button" class="sheet-x" data-close aria-label="Cerrar">${I.x}</button></div>`;
 
   /* ---------- Navegación ---------- */
-  const TITLES = { inicio: 'Inicio', reservar: 'Reservar', citas: 'Mis citas', billetera: 'Billetera', perfil: 'Perfil' };
+  const TITLES = { inicio: 'Inicio', servicios: 'Servicios', reservar: 'Reservar', citas: 'Mis citas', billetera: 'Billetera', perfil: 'Cuenta' };
   function route() {
     const raw = (location.hash || '#inicio').slice(1);
     const [tab, sub] = raw.split('/');
@@ -158,7 +158,7 @@
     const changed = next !== app.tab;
     app.tab = next;
     document.querySelectorAll('.screen').forEach((s) => { s.hidden = s.dataset.screen !== next; });
-    document.querySelectorAll('#tabbar [data-tab]').forEach((t) => { const on = t.dataset.tab === next; t.classList.toggle('on', on); if (on) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
+    document.querySelectorAll('#tabbar [data-tab]').forEach((t) => { const on = t.dataset.tab === next || (next === 'billetera' && t.dataset.tab === 'perfil'); t.classList.toggle('on', on); if (on) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
     $('tb-title').textContent = TITLES[next];
     if (next === 'reservar') bk.setStepFromHash(sub);
     render(next);
@@ -172,7 +172,15 @@
     setActionbar('');
     setTopAction(null);
     $('tb-back').hidden = true; $('tb-mark').hidden = false;
-    ({ inicio: renderInicio, reservar: () => bk.render(), citas: renderCitas, billetera: renderBilletera, perfil: renderPerfil })[tab]();
+    ({ inicio: renderInicio, servicios: renderServicios, reservar: () => bk.render(), citas: renderCitas, billetera: renderBilletera, perfil: renderPerfil })[tab]();
+    // La billetera es una subpantalla de Cuenta en Android: conservar ruta
+    // antigua por compatibilidad pero ofrecer navegación de regreso visible.
+    if(tab === 'billetera') {
+      $('tb-mark').hidden = true;
+      const back = $('tb-back');
+      back.hidden = false;
+      back.onclick = () => { location.hash = '#perfil'; };
+    }
   }
   function onScroll() { $('topbar').classList.toggle('is-scrolled', window.scrollY > 40); }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -291,6 +299,30 @@
   /* ======================================================================
      INICIO
      ====================================================================== */
+  /* Misma taxonomía y acciones de servicio que Android; aprovecha el
+     catálogo sincronizado de Supabase y la reserva existente. */
+  function renderServicios() {
+    const cats=(M.serviceCategories||[]).filter(c=>M.services.some(s=>s.categoryId===c.id));
+    const categories=cats.length?cats:[...new Set(M.services.map(s=>s.category))].map(name=>({id:name,name}));
+    const selected=app.catalogCategory||'todos';
+    const list=selected==='todos'?M.services:M.services.filter(s=>s.categoryId===selected||s.category===selected);
+    $('s-servicios').innerHTML=`<div class="head"><p class="kicker">NUESTROS TRATAMIENTOS</p>
+      <h1 class="large-title">Lo que hacemos.</h1>
+      <p class="lead">Elige el cuidado ideal para ti. Puedes consultar los detalles antes de reservar.</p></div>
+      <div class="cat-chips service-filter" role="group" aria-label="Filtrar por categoría">
+        <button type="button" class="chip ${selected==='todos'?'on':''}" data-catalog-cat="todos" aria-pressed="${selected==='todos'}">Todos</button>
+        ${categories.map(c=>`<button type="button" class="chip ${selected===c.id?'on':''}" data-catalog-cat="${esc(c.id)}" aria-pressed="${selected===c.id}">${esc(c.name)}</button>`).join('')}
+      </div>
+      <div class="service-catalog" id="pwa-service-catalog">
+        ${list.length?list.map(s=>{const p=M.promoFor?M.promoFor(s.id):null;const price=p?s.price-p.discount:s.price;
+          return `<article class="service-catalog-card"><div class="service-catalog-copy"><p class="kicker">${esc(s.category||'MAJOBELLA')}</p><h2>${esc(s.name)}</h2>
+            <p>${M.fmtDurationShort(s.durationMinutes)} · ${s.priceFrom?'desde ':''}${M.fmtPrice(price)}</p></div>
+            <div class="service-catalog-actions"><button type="button" data-svc-info="${esc(s.id)}">Ver detalles</button>
+            <button type="button" class="service-catalog-book" data-quick-svc="${esc(s.id)}">Reservar →</button></div></article>`;
+        }).join(''):'<p class="empty">Todavía no hay servicios en esta categoría.</p>'}
+      </div>`;
+  }
+
   function renderInicio() {
     const u = M.Auth.user;
     const name = firstName((u && (u.firstName || u.name)) || profile().name);
@@ -335,7 +367,7 @@
     }).join('');
     const wa = waUrl();
     $('s-inicio').innerHTML = `
-      <div class="head"><p class="kicker">${esc(M.weekdayName(today))} ${esc(longDate(today))}</p><h1 class="large-title">${name ? `Hola, ${esc(name)}` : 'Hola'}</h1></div>
+      <div class="head native-hero"><p class="kicker">${name ? `Hola, ${esc(name)}` : 'Estética y belleza'}</p><h1 class="large-title">Más yo,<br>más bella.</h1><p class="lead">Cejas, pestañas, faciales y micropigmentación pensados para tu rostro. Realzamos lo que ya es tuyo.</p><div class="native-hero-actions"><a class="btn" href="#reservar">Reservar</a><a class="btn btn-ghost" href="#servicios">Ver servicios</a></div></div>
       ${installBanner()}
       ${hero}
       <div class="quick">
@@ -346,7 +378,7 @@
       </div>
       ${app.loyal && app.loyal.enabled ? `<div class="sec-title"><h2>Tu fidelidad</h2></div>${loyaltyCard()}` : ''}
       ${promos.length ? `<div class="sec-title"><h2>Para ti</h2></div><div class="hscroll">${promos.join('')}</div>` : ''}
-      <div class="sec-title"><h2>Reserva rápida</h2><a href="#reservar">Ver todo</a></div>
+      <div class="sec-title"><h2>Lo que hacemos</h2><a href="#servicios">Ver todos</a></div>
       <div class="hscroll">${svcs}</div>
       <div class="sec-title"><h2>El estudio</h2></div>
       <div class="list">
@@ -736,7 +768,7 @@
       const sigNow = JSON.stringify([this.ids, this.date, this.time, a.client.email]);
       openSheet(sheetHead('Paga tu depósito', 'Con PayPal: tarjeta o cuenta.') + `
         <div class="surface" style="padding:16px"><dl class="lines" style="margin:0;padding:0;border:0">
-          <div><dt>Depósito hoy</dt><dd>${M.fmtPrice(pr.depositRD)}<small>${M.fmtUSD(pr.depositUSD)} · tasa RD$ ${esc(C.payments.usdRate)}</small></dd></div>
+          <div><dt>Depósito hoy</dt><dd>${M.fmtPrice(pr.depositRD)}<small>${M.fmtUSD(pr.depositUSD)} · tasa RD$ ${esc(C.payments.usdRate)}${C.payments.fxAutomatic ? ' · <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Referencia ExchangeRate-API</a>' : ''}</small></dd></div>
           <div><dt>Al terminar</dt><dd>${M.fmtPrice(pr.balanceRD)}</dd></div></dl></div>
         <p class="note"><span class="timer" id="pay-timer">${I.clock}<span>Te apartamos el horario mientras pagas.</span></span></p>
         <div class="pp-box" id="pp-box"></div>
@@ -1312,6 +1344,7 @@
       ${M.Auth.configured() && !u ? `<div class="surface"><b style="font-family:var(--serif);font-weight:400;font-size:19px">Tus citas en cualquier celular</b><p class="muted" style="margin:4px 0 0;font-size:14.5px">Inicia sesión con Google para ver todas tus citas y tu tarjeta de fidelidad.</p><div class="gbtn" data-google-button></div></div>` : ''}
       <div class="sec-title"><h2>Cuenta</h2></div>
       <div class="list">
+        <a class="row" href="#billetera"><span class="ri">${I.wallet}</span><span class="rt">Mi billetera<small>Tarjetas de regalo, paquetes y códigos</small></span>${I.chev}</a>
         <button type="button" class="row" data-edit-profile><span class="ri">${I.user}</span><span class="rt">Mis datos<small>${esc([p.phone, p.birthday ? 'cumpleaños guardado' : ''].filter(Boolean).join(' · ') || 'Nombre, teléfono, correo y cumpleaños')}</small></span>${I.chev}</button>
         ${M.Install.available() ? `<button type="button" class="row" data-install><span class="ri">${I.phone}</span><span class="rt">Instalar la app<small>En tu pantalla de inicio</small></span>${I.chev}</button>` : ''}
         ${u ? `<button type="button" class="row" data-signout><span class="ri">${I.out}</span><span class="rt">Cerrar sesión<small>${esc(u.email)}</small></span>${I.chev}</button>` : ''}
@@ -1392,6 +1425,7 @@
     if ((el = t('[data-appt]'))) { apptSheet(el.dataset.appt); return; }
     if ((el = t('[data-quick-svc]'))) { bk.ids = [el.dataset.quickSvc]; bk.date = null; bk.time = null; bk.go(2); return; }
     if ((el = t('[data-promo-svc]'))) { const ids = el.dataset.promoSvc.split(',').filter((x) => M.serviceById[x]); if (ids.length) { e.preventDefault(); bk.ids = ids; bk.date = null; bk.time = null; bk.go(2); } return; }
+    if ((el = t('[data-catalog-cat]'))) { app.catalogCategory=el.dataset.catalogCat; renderServicios(); return; }
     if ((el = t('[data-cat]'))) { bk.cat = el.dataset.cat; bk.renderServices(); return; }
     if ((el = t('[data-svc-info]'))) { e.stopPropagation(); bk.infoSheet(el.dataset.svcInfo); return; }
     if ((el = t('[data-svc-add]'))) { bk.toggle(el.dataset.svcAdd); closeSheet(); bk.renderServices(); return; }

@@ -1486,3 +1486,5 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
  .mb-receipt-dialog::backdrop,.mb-receipt-toolbar{display:none!important}
  .mb-receipt-sheet{padding:15mm!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
+
+.footer-fx-credit{font-size:11px;line-height:1.5;color:var(--muted);max-width:280px}.footer-fx-credit a{color:inherit;text-underline-offset:2px}

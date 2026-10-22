@@ -11,14 +11,58 @@ import { adminTo_, layout_, mailBirthday_, mailRetouch_, mailReminder_, mailRevi
 import { TZ } from './constants.ts';
 import { addDaysKey_, clientKey_, esc_, fmtDate, monthDay_, money_, msg_, num_, on_, randCode_, safeJson_, strip_, todayKey_, uuid, whenText_ } from './util.ts';
 
-export function runAutomations_() {
+/* Cotización informativa: no es la tasa oficial de venta del BCRD ni la liquidación PayPal.
+   Solo modifica el precio publicado si el estudio activó explícitamente el modo automático.
+   Máximo una consulta por día, con controles de antigüedad y cambio brusco. */
+export async function updateUsdRate_() {
+  const s = settings_();
+  if (String(s.tasaUSDModo || 'manual') !== 'automatico') return { estado: 'manual' };
+  const now = Date.now(), last = Number(sysGet('FX_LAST_ATTEMPT') || 0);
+  if (Number.isFinite(last) && last > 0 && now - last < 22 * 3600000) return { estado: 'sin_cambios', motivo: 'Ya se consultó hoy' };
+  sysSet('FX_LAST_ATTEMPT', String(now));
+  try {
+    const response = await cx().deps.fetch('https://open.er-api.com/v6/latest/USD', {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) throw Error('La fuente USD/DOP respondió HTTP ' + response.status);
+    const data = await response.json();
+    const rate = Number(data?.rates?.DOP);
+    const dated = Number(data?.time_last_update_unix) * 1000;
+    if (data?.result !== 'success' || data?.base_code !== 'USD' ||
+        !Number.isFinite(rate) || rate < 30 || rate > 200 ||
+        !Number.isFinite(dated) || dated > now + 3600000 || now - dated > 72 * 3600000)
+      throw Error('La cotización USD/DOP está incompleta, fuera de rango o desactualizada');
+    const old = Number(s.tasaUSD);
+    if (Number.isFinite(old) && old > 0 && Math.abs(rate / old - 1) > .03)
+      throw Error('La variación supera 3% respecto a la tasa publicada: requiere revisión manual');
+    const rounded = (Math.round(rate * 100) / 100).toFixed(2);
+    const values = { tasaUSD: rounded, tasaUSDFuente: 'ExchangeRate-API · referencial', tasaUSDActualizada: new Date(dated).toISOString() };
+    const rows = readTable_('Ajustes');
+    for (const [key, value] of Object.entries(values)) {
+      const r = rows.find(x => x.clave === key);
+      if (r) updateTable_('Ajustes', r._row, { valor: value });
+      else appendRow_('Ajustes', { clave: key, valor: value, 'qué es': 'Actualizado automáticamente' });
+    }
+    sysSet('FX_LAST_SUCCESS', JSON.stringify({ at: now, sourceAt: dated, rate: rounded }));
+    return { estado: 'actualizada', tasa: rounded, fecha: new Date(dated).toISOString() };
+  } catch (error) {
+    const reason = msg_(error);
+    logError_('automatizacion', 'Tasa USD automática: ' + reason, '', '');
+    return { estado: 'error', motivo: reason, tasaActualConservada: true };
+  }
+}
+
+export async function runAutomations_() {
   const s = settings_();
   const now = new Date();
   const hour = Number(fmtDate(now, TZ, 'H'));
   const daytime = hour >= 8 && hour < 21;
   const out: any = { recordatorios: 0, resenas: 0, retoques: 0, cumpleanos: 0, espera: 0 };
+  out.tasaUSD = await updateUsdRate_();
   const rows = rows_();
   const step = function (key, fn) { try { out[key] = fn(); } catch (e) { out[key] = 'error: ' + msg_(e); logError_('automatizacion', key + ': ' + msg_(e), '', ''); } };
+  step('gastosProgramados', scheduleRecurringExpenses_);
   if (on_(s.recordatorioActivo) && hour >= 7 && hour < 22) step('recordatorios', function () { return sendReminders_(rows, s, now); });
   if (daytime && on_(s.resenaActiva) && s.googleResenaUrl) step('resenas', function () { return askReviews_(rows, s, now); });
   if (daytime && on_(s.retoqueActivo)) step('retoques', function () { return retouchNotices_(rows, s); });
@@ -27,6 +71,27 @@ export function runAutomations_() {
   if (hour >= 8 && hour < 22) step('transferencias', function () { return nagTransfers_(rows, s, now); });
   sysSet('LAST_AUTO', JSON.stringify({ at: now.toISOString(), out: out }));
   return out;
+}
+
+/* Las cuotas fijas se generan como PENDIENTES. No se restan de caja ni de
+   ganancia hasta que una persona confirme que se pagaron. */
+export function scheduleRecurringExpenses_() {
+  let templates:any[] = [];
+  try {const value=JSON.parse(String(settings_().gastosRecurrentes||'[]'));if(Array.isArray(value))templates=value;} catch {return 0;}
+  const today=todayKey_(), month=today.slice(0,7), rows=readTable_('Gastos');
+  let created=0;
+  for (const t of templates.slice(0,20)) {
+    if (t?.activo !== true || !/^[A-Z0-9]{8}$/.test(String(t.id||'')))continue;
+    const day=Math.min(28,Math.max(1,Math.floor(Number(t.dia)||1)));
+    const due=month+'-'+String(day).padStart(2,'0');
+    const id='GRE-'+t.id+'-'+month.replace('-','');
+    const monto=Math.round(Number(t.montoRD)||0);
+    if (due>today || rows.some(r=>r.id===id) || !Number.isFinite(monto) || monto<=0 || monto>10000000)continue;
+    appendRow_('Gastos',{id,fecha:due,concepto:String(t.concepto||'Gasto recurrente').slice(0,120),
+      categoria:String(t.categoria||'Otros').slice(0,40),montoRD:monto,metodo:'pendiente',creada:new Date().toISOString()});
+    created++;
+  }
+  return created;
 }
 
 export function automationStatus_() {
@@ -138,8 +203,8 @@ export function nagTransfers_(rows, s, now) {
   return pending.length;
 }
 
-export function adminRunAutomations_(d) {
+export async function adminRunAutomations_(d) {
   needAdmin_(d);
-  const out = runAutomations_();
+  const out = await runAutomations_();
   return { ok: true, result: out, automation: automationStatus_(), emails: readOpt_('Correos').slice(-200).reverse().map(strip_) };
 }

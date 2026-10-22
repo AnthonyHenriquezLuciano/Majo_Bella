@@ -2,13 +2,13 @@
    - Páginas: primero la red (siempre lo más nuevo) y, sin conexión, la copia guardada.
    - Archivos con ?v= (CSS, JS): se guardan y se sirven al instante; cambian de nombre al actualizar.
    - No toca nada de otros dominios (Google, PayPal, reservas). */
-const VERSION = 'mjb-20261022pay1';
+const VERSION = 'mjb-20261022ux1';
 const SHELL = [
-  './app/', './app/app.css?v=20261022pay1', './app/app.js?v=20261022pay1',
-  './js/config.js?v=20261022pay1', './js/data/services.js?v=20261022pay1', './js/core/utils.js?v=20261022pay1', './js/core/validate.js?v=20261022pay1',
-  './js/integrations/whatsapp.js?v=20261022pay1', './js/integrations/calendar.js?v=20261022pay1', './js/integrations/booking-api.js?v=20261022pay1',
-  './js/integrations/paypal.js?v=20261022pay1', './js/integrations/google-auth.js?v=20261022pay1', './js/integrations/appointments.js?v=20261022pay1',
-  './js/integrations/giftcard.js?v=20261022pay1', './js/integrations/install.js?v=20261022pay1', './js/integrations/captcha.js?v=20261022pay1', './js/integrations/manage.js?v=20261022pay1',
+  './app/', './app/app.css?v=20261022ux1', './app/app.js?v=20261022ux1',
+  './js/config.js?v=20261022ux1', './js/data/services.js?v=20261022ux1', './js/core/utils.js?v=20261022ux1', './js/core/validate.js?v=20261022ux1',
+  './js/integrations/whatsapp.js?v=20261022ux1', './js/integrations/calendar.js?v=20261022ux1', './js/integrations/booking-api.js?v=20261022ux1',
+  './js/integrations/paypal.js?v=20261022ux1', './js/integrations/google-auth.js?v=20261022ux1', './js/integrations/appointments.js?v=20261022ux1',
+  './js/integrations/giftcard.js?v=20261022ux1', './js/integrations/install.js?v=20261022ux1', './js/integrations/captcha.js?v=20261022ux1', './js/integrations/manage.js?v=20261022ux1',
   './assets/logo-majobella.png', './assets/monograma.png', './assets/icon-192.png', './assets/favicon.png',
 ];
 
@@ -25,7 +25,15 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  const versioned = url.searchParams.has('v') || /\.(png|jpg|jpeg|webp|svg|woff2?|otf)$/.test(url.pathname);
+  const versioned = /\.(png|jpg|jpeg|webp|svg|woff2?|otf)$/.test(url.pathname);
+  // JS y CSS: red primero para evitar una PWA anclada a una versión antigua.
+  if (/\.(js|css)$/.test(url.pathname)) {
+    e.respondWith(fetch(req).then(res=>{
+      if(res.ok){const copy=res.clone();caches.open(VERSION).then(cache=>cache.put(req,copy));}
+      return res;
+    }).catch(()=>caches.match(req)));
+    return;
+  }
   if (versioned) {
     e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => {
       if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); }

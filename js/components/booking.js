@@ -454,7 +454,7 @@
       const dep = M.Pricing.current(t.items);
       const base = dep.totalRD - (dep.giftAppliedRD || 0);
       const pctLabel = M.depositPctLabel(t.items);
-      pay.info.innerHTML = `Hoy pagas <strong>${M.fmtUSD(dep.depositUSD)}</strong> (${M.fmtPrice(dep.depositRD)}${pctLabel ? `, el ${pctLabel} de ${M.fmtPrice(base)}` : ` de ${M.fmtPrice(base)}`}). Al terminar pagas ${M.fmtPrice(dep.balanceRD)} en efectivo, transferencia o PayPal. <span class="pay-rate">Tasa: RD$ ${PAY.usdRate} por US$ 1.</span>`;
+      pay.info.innerHTML = `Hoy pagas <strong>${M.fmtUSD(dep.depositUSD)}</strong> (${M.fmtPrice(dep.depositRD)}${pctLabel ? `, el ${pctLabel} de ${M.fmtPrice(base)}` : ` de ${M.fmtPrice(base)}`}). Al terminar pagas ${M.fmtPrice(dep.balanceRD)} en efectivo, transferencia o PayPal. <span class="pay-rate">Tasa: RD$ ${PAY.usdRate} por US$ 1. ${PAY.fxAutomatic ? '<a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Referencia de mercado · ExchangeRate-API</a>' : 'Establecida por MAJOBELLA.'}</span>`;
       pay.box.innerHTML = '';
       const opened = sig();
       try {

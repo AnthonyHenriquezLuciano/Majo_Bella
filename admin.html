@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/admin.css?v=20261022v3">
+<link rel="stylesheet" href="css/admin.css?v=20261022ux1">
 <link rel="stylesheet" href="css/catalogo.css?v=20261022v3">
 <link rel="stylesheet" href="css/consentimientos.css?v=20261022ct1">
 <link rel="stylesheet" href="css/membresias.css?v=20261022pay1">
@@ -303,14 +303,24 @@
       </div>
       <section class="ad-panel">
         <div class="panel-head"><h2>Gastos del mes</h2></div>
+        <p class="panel-note">Elige un gasto frecuente y el sistema rellenará la categoría. Los gastos fijos pueden repetirse cada mes como <b>pendientes de confirmar</b>, nunca como pagos bancarios verificados.</p>
+        <div class="exp-presets" id="mn-exp-presets" role="group" aria-label="Gastos frecuentes">
+          <button type="button" data-exp-preset="Alquiler">Alquiler</button>
+          <button type="button" data-exp-preset="Electricidad">Electricidad</button>
+          <button type="button" data-exp-preset="Internet">Internet</button>
+          <button type="button" data-exp-preset="Insumos">Insumos</button>
+          <button type="button" data-exp-preset="Publicidad">Publicidad</button>
+        </div>
         <form class="exp-form" id="mn-exp-form">
           <label>Fecha<input type="date" name="fecha" required></label>
-          <label class="grow">Concepto<input name="concepto" placeholder="Pigmentos, alquiler, publicidad…" maxlength="120" required></label>
+          <label class="grow">Concepto<input name="concepto" placeholder="Ej. Alquiler del local" maxlength="120" required autocomplete="off"></label>
           <label>Categoría<select name="categoria"></select></label>
           <label>Monto (RD$)<input type="number" name="montoRD" min="1" step="1" required></label>
           <label>Pagado con<select name="metodo"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="tarjeta">Tarjeta</option><option value="paypal">PayPal</option></select></label>
-          <button type="submit" class="btn-dark">Agregar gasto</button>
+          <label class="exp-repeat"><input type="checkbox" name="repetirMensual"> Repetir automáticamente cada mes <small>Generará un pendiente para revisar, sin restarlo de caja.</small></label>
+          <button type="submit" class="btn-dark">Registrar gasto</button>
         </form>
+        <div id="mn-exp-recurrent" class="mn-recurring" aria-live="polite"></div>
         <div class="tbl-wrap" id="mn-exp-list"></div>
         <p class="panel-note" id="mn-fee-note"></p>
       </section>
@@ -1002,7 +1012,7 @@
 <script src="js/admin/agenda.js?v=20261022v3"></script>
 <script src="js/admin/clientes.js?v=20261022v3"></script>
 <script src="js/admin/paypal-operaciones.js?v=20261022ops1"></script>
-<script src="js/admin/dinero.js?v=20261022ops1"></script>
+<script src="js/admin/dinero.js?v=20261022ux1"></script>
 <script src="js/integrations/giftcard.js?v=20261022v3"></script>
 <script src="js/admin/promos.js?v=20261022v3"></script>
 <script src="js/admin/paquetes.js?v=20261022v3"></script>
@@ -1011,7 +1021,7 @@
 <script src="js/admin/membresias.js?v=20261022pay1"></script>
 <script src="js/admin/consentimientos.js?v=20261022ct1"></script>
 <script src="js/admin/catalogo.js?v=20261022ct1"></script>
-<script src="js/admin/ajustes.js?v=20261022v3"></script>
+<script src="js/admin/ajustes.js?v=20261022ux1"></script>
 <script src="js/admin/transferencias.js?v=20261022v3"></script>
 <script src="js/admin/sistema.js?v=20261022v3"></script>
 <script src="js/admin/buscar.js?v=20261022v3"></script>
