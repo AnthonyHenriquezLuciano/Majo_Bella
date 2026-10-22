@@ -18,7 +18,7 @@ import {
 } from './booking.ts';
 import { consentInfo_, consentSign_ } from './consent.ts';
 import { publicPlans_, adminSubscriptionData_, adminSaveMembershipPlan_, requestMembership_, myMemberships_, adminMembershipAction_ } from './memberships.ts';
-import { adminSyncPaypalPlan_, startPaypalSubscription_, confirmPaypalSubscription_, cancelPaypalSubscription_, paypalWebhook_, myMembershipPayments_, subscriptionCapability_ } from './subscriptions.ts';
+import { adminSyncPaypalPlan_, startPaypalSubscription_, confirmPaypalSubscription_, cancelPaypalSubscription_, paypalWebhook_, myMembershipPayments_, subscriptionCapability_, adminReconcilePaypalSubscription_ } from './subscriptions.ts';
 import { adminPaypalOperations_, adminPaypalConnectionTest_, adminPaypalRefund_ } from './paypal-ops.ts';
 import { adminSaveConsentTemplate_ } from './consent-templates.ts';
 import { adminWaitlist_, waitlistJoin_ } from './waitlist.ts';
@@ -65,6 +65,7 @@ N('adminEmailPreview', adminEmailPreview_); N('adminEmailTest', adminEmailTest_)
 L('adminSaveAccount', adminSaveAccount_); L('adminDeleteAccount', adminDeleteAccount_); L('adminTransferReview', adminTransferReview_);
 N('adminPaypalOperations',adminPaypalOperations_);N('adminPaypalConnectionTest',adminPaypalConnectionTest_);
 L('adminPaypalRefund',adminPaypalRefund_);
+L('adminReconcilePaypalSubscription',adminReconcilePaypalSubscription_);
 L('adminResolveErrors', adminResolveErrors_); L('adminImport', importData_);
 // Apps
 N('pushRegister', pushRegister_); N('pushUnregister', pushUnregister_);
