@@ -327,7 +327,8 @@
     ((M.site && M.site.packages) || []).slice(0, 3).forEach((k) => {
       promos.push(`<button type="button" class="promo-card press" data-buy-pkg="${esc(k.id)}" style="border:0;text-align:left"><span>Paquete</span><b>${esc(k.name)}</b><span>${M.fmtPrice(k.price)}${k.savings > 0 ? ` · ahorras ${M.fmtPrice(k.savings)}` : ''}</span></button>`);
     });
-    if (M.site && M.site.giftShop && M.site.giftShop.enabled) promos.push(`<button type="button" class="promo-card press" data-buy-gift style="border:0;text-align:left"><span>Tarjetas de regalo</span><b>Regala un momento para ella</b><span>Llega al instante por correo</span></button>`);
+    if (M.membershipPlans && M.membershipPlans.length) promos.push(`<a class="promo-card dark press" href="../regalos.html#membresias"><span>Membresías</span><b>Tu belleza, cada mes</b><span>Consulta nuestros planes mensuales · Sin cobro automático</span></a>`);
+        if (M.site && M.site.giftShop && M.site.giftShop.enabled) promos.push(`<button type="button" class="promo-card press" data-buy-gift style="border:0;text-align:left"><span>Tarjetas de regalo</span><b>Regala un momento para ella</b><span>Llega al instante por correo</span></button>`);
     const svcs = M.services.slice(0, 8).map((s) => {
       const p = M.promoFor ? M.promoFor(s.id) : null;
       return `<button type="button" class="svc-card press" data-quick-svc="${esc(s.id)}"><b>${esc(s.name)}</b><span>${M.fmtDurationShort(s.durationMinutes)}</span><em>${p ? `<s style="color:var(--faint);font-weight:400">${M.fmtPrice(s.price)}</s> ` : ''}${s.priceFrom ? 'Desde ' : ''}${M.fmtPrice(p ? s.price - p.discount : s.price)}</em></button>`;
@@ -1089,6 +1090,8 @@
     $('s-billetera').innerHTML = `
       <div class="head"><h1 class="large-title">Billetera</h1><p class="lead">Tus tarjetas de regalo, paquetes y premio de fidelidad.</p></div>
       ${loyaltyCard()}
+      <div class="sec-title"><h2>Membresías</h2></div>
+      <a class="buy-tile" href="../regalos.html#membresias" style="text-decoration:none">${I.spark}<b>Planes mensuales</b><span>Conoce los planes y consulta tu membresía</span></a>
       <div class="sec-title"><h2>Tarjetas y paquetes</h2></div>
       ${cards}
       <button type="button" class="add-code" data-add-code>${I.plus} Agregar un código</button>
