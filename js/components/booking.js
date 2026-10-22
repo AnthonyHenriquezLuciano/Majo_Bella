@@ -63,6 +63,7 @@
     let slotReq = 0, fastReq = 0, firstSlot = null;
     let hold = null, holdTimer = null, paying = false, takenNotice = false;
     let payMethod = 'paypal';
+    let consentPayload = [];
 
     /* ---- Modo de reserva ---- */
     let canPayPal = false, canTransfer = false, mode = 'none', sandbox = false;
@@ -352,7 +353,7 @@
         start: start.toISOString(), end: end.toISOString(),
         durationMinutes: t.minutes, totalPrice: t.price, currency: M.config.currency.symbol,
         client: { name: fullName(), firstName: V.properName(fields.first.value), lastName: V.properName(fields.last.value), phone: V.phone(fields.phone.value).value, email: fields.email.value.trim().toLowerCase(), notes: fields.notes.value.trim(), birthday: birthday() },
-        origen: $('bk-origen').value,
+        origen: $('bk-origen').value, consents: consentPayload,
       };
     }
 
@@ -787,10 +788,16 @@
     // "¿Cómo nos conociste?" sugerido por el enlace con el que llegó
     if (M.Origin.guess() && !$('bk-origen').value) $('bk-origen').value = M.Origin.guess();
 
-    confirmBtn.addEventListener('click', () => {
+    confirmBtn.addEventListener('click', async () => {
       if (missingList().length) return;
       const a = appointment();
       result.hidden = true;
+      try {
+        const prepared = M.Consent ? await M.Consent.prepare(a.services.map(s=>s.id),a.client.name) : [];
+        if (prepared === null) return;
+        consentPayload = prepared;
+        a.consents = prepared;
+      } catch (err) { M.toast ? M.toast(err.message) : alert(err.message); return; }
       if (mode === 'pay' && M.Pricing.current(M.totals().items).depositRD <= 0) {
         confirmWithGift(a);
       } else if (mode === 'pay') {
