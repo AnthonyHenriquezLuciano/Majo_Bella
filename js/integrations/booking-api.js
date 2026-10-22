@@ -160,7 +160,7 @@
         if (s) {
           s.name = r.name; s.category = r.category || s.category;
           s.categoryId = r.categoryId || ''; s.parentId = r.parentId || '';
-          s.description = r.description || s.description;
+          s.description = r.description === undefined ? s.description : r.description;
           s.price = r.price; s.durationMinutes = r.durationMinutes;
           s.priceFrom = !!r.priceFrom; s.depositPercent = r.depositPercent;
         }
