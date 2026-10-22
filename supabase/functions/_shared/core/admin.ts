@@ -217,6 +217,11 @@ export function adminSaveSettings_(d) {
     const rows = readTable_('Ajustes');
     Object.keys(d.settings).forEach(function (k) {
       if (SETTING_KEYS.indexOf(k) < 0) return;
+      // El modo automático es la autoridad de la cotización. Guardar otras opciones
+      // del panel no debe reemplazar accidentalmente la tasa obtenida en segundo plano.
+      if (k === 'tasaUSD' && String(d.settings.tasaUSDModo || 'manual') === 'automatico') return;
+      if (k === 'tasaUSDModo' && !['manual','automatico'].includes(String(d.settings[k]))) throw Error('Elige una modalidad de tasa válida.');
+      if (k === 'tasaUSD' && (!(Number(d.settings[k]) >= 30 && Number(d.settings[k]) <= 200))) throw Error('La tasa USD debe estar entre RD$30 y RD$200.');
       const v = clean_(d.settings[k], LONG_SETTINGS.indexOf(k) >= 0 ? 4000 : 300);
       const r = rows.filter(function (x) { return x.clave === k; })[0];
       if (r) updateTable_('Ajustes', r._row, { valor: v });
