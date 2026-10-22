@@ -40,10 +40,15 @@ export const TABLES: Table[] = [
     cols: [c('clave', 'text', { notNull: true }), c('valor'), { key: 'qué es', col: 'descripcion', type: 'text' }],
   },
   {
+    name: 'Categorias', table: 'categorias', pk: 'id', comment: 'Categorías visuales del catálogo público.',
+    cols: [c('id', 'text', { notNull: true }), c('nombre'), c('orden', 'int'), c('activo', 'bool')],
+  },
+  {
     name: 'Servicios', table: 'servicios', pk: 'id', comment: 'Servicios: precio, duración, depósito y avisos.',
     cols: [
       c('id', 'text', { notNull: true }), c('nombre'), c('duracionMin', 'int'), c('precioRD', 'num'), c('precioDesde', 'bool'), c('activo', 'bool'),
       c('volverDias', 'int'), c('depositoPct', 'num'), c('retoqueDias', 'int'), c('consentimiento', 'bool'),
+      c('categoriaId'), c('padreId'), c('tipo'), c('orden', 'int'), c('descripcion'),
     ],
   },
   {
