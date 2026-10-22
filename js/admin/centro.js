@@ -36,7 +36,9 @@
       tile('Cobros netos',money(x.s.gross+x.s.ref),'Citas, regalos y paquetes cobrados','cc-kpi-feature'),
       tile('Citas gestionadas',String(entries),labels[period]+' · confirmadas o atendidas'),
       tile('Citas realizadas',String(done),entries?`${Math.round(100*done/entries)}% de las gestionadas`:'Aún no se registran citas terminadas'),
-      tile('Saldos pendientes',money(x.s.due),'De citas confirmadas y completadas')
+      tile('Saldos pendientes',money(x.s.due),'De citas confirmadas y completadas'),
+      tile('Membresías cobradas', 'US$ '+((A.data.membershipPayments||[]).filter(p=>p.estado==='completado'&&String(p.creado||'').slice(0,10)>=x.r.from&&String(p.creado||'').slice(0,10)<=x.r.to)
+        .reduce((t,p)=>t+Number(p.montoUSD||0),0)).toFixed(2),'Cobros recurrentes confirmados · USD')
     ];
     $('cc-kpis').innerHTML=show.join('');
   }
@@ -49,11 +51,13 @@
       Number(a.payment?.balanceRD)>0 && a.payment?.balanceStatus!=='pagado');
     const refunds=all.filter(a=>a.refundPending);
     const enroll=(A.data.memberships||[]).filter(m=>m.estado==='solicitada'||m.estadoEfectivo==='solicitada');
+    const failed=(A.data.memberships||[]).filter(m=>m.paypalEstado==='PAYMENT_FAILED'&&m.estadoEfectivo!=='cancelada');
     const rows=[
       {name:'Transferencias por validar',num:transfer.length,detail:'Verifica los comprobantes antes de confirmar citas.',go:'agenda',mark:'payment'},
       {name:'Consentimientos pendientes',num:unsigned.length,detail:'Asegura la documentación de próximas citas.',go:'agenda',mark:'consent'},
       {name:'Saldos del día',num:unpaid.length,detail:'Revisa los importes que faltan por recibir.',go:'dinero',mark:'finance'},
       {name:'Membresías por activar',num:enroll.length,detail:'Confirma el pago de cada nueva solicitud.',go:'membresias',mark:'member'},
+      {name:'Cobros recurrentes por revisar',num:failed.length,detail:'Ayuda a las clientas a recuperar su método de pago.',go:'membresias',mark:'payment'},
       {name:'Reembolsos por resolver',num:refunds.length,detail:'Revisa los casos que requieren seguimiento.',go:'dinero',mark:'refund'}
     ];
     const pending=rows.filter(r=>r.num>0);
