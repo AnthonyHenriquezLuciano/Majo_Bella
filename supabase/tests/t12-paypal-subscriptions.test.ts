@@ -63,6 +63,17 @@ export default async function(){
   assert.equal((await g.rows('PagosMembresia')).length,2);
   const balance=ok(await g.post({action:'myMemberships',idToken:client}),'ver sesiones');
   assert.equal(balance.memberships[0].disponibles,2);
+  g.pp.transactions[sid]=[
+    {id:'SALE-TEST0000003',status:'COMPLETED',time:new Date().toISOString(),
+      amount_with_breakdown:{gross_amount:{value:Number(m.paypalPrecioUSD).toFixed(2),currency_code:'USD'}}},
+    {id:'SALE-FAILED000001',status:'FAILED',time:new Date().toISOString(),
+      amount_with_breakdown:{gross_amount:{value:Number(m.paypalPrecioUSD).toFixed(2),currency_code:'USD'}}}
+  ];
+  fail(await g.post({action:'adminReconcilePaypalSubscription',id:m.id,idToken:client}),'conciliación sólo administrador');
+  const recovered=ok(await g.post({action:'adminReconcilePaypalSubscription',id:m.id,idToken:admin}),'recuperar webhook perdido');
+  assert.equal(recovered.added,1);
+  assert.equal((await g.rows('PagosMembresia')).length,3);
+  assert.equal(ok(await g.post({action:'adminReconcilePaypalSubscription',id:m.id,idToken:admin}),'conciliación repetida').added,0);
   const failure={id:'WH-FAIL1',event_type:'BILLING.SUBSCRIPTION.PAYMENT.FAILED',resource:{id:sid}};
   ok(await g.postSigned({action:'paypalWebhook',event:failure},headers()),'pago fallido registrado');
   const emails=g.mails.filter(x=>String(x.subject).includes('Un detalle pendiente'));
