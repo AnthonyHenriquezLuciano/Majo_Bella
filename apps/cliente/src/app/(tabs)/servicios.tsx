@@ -1,8 +1,9 @@
 /* Servicios: por categoría, con precio, duración y promociones; se añaden para reservar varios a la vez */
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 import { space } from '@majobella/core';
-import { Header, Notice, Screen, T } from '@majobella/ui';
+import { WEB_URL } from '@/lib/env';
+import { Button, Header, Notice, Screen, T } from '@majobella/ui';
 import { useApp } from '@/lib/app-state';
 import { CatalogBrowser } from '@/components/catalog-browser';
 import { CartBar } from '@/components/cart-bar';
@@ -16,6 +17,7 @@ export default function Servicios() {
         <Header kicker="Menú" title="Servicios" />
         <T v="muted" style={{ marginTop: -12, marginBottom: space.md }}>Añade uno o varios servicios y reserva todo en la misma cita.</T>
         {catalogError && !studio.catalog ? <Notice kind="warn" style={{ marginBottom: space.md }}>Mostrando precios de referencia. Revisa tu conexión para ver los precios del día.</Notice> : null}
+        <Button kind="outline" title="Conoce nuestras membresías mensuales" icon="external" style={{ marginBottom: space.md }} onPress={() => Linking.openURL(`${WEB_URL}regalos.html#membresias`)} />
         <CatalogBrowser />
       </Screen>
       <CartBar />

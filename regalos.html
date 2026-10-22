@@ -32,7 +32,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261022v2">
+<link rel="stylesheet" href="css/styles.css?v=20261022mb1">
 </head>
 <body data-page="regalos">
 <!--MJB:BODY-START-->
@@ -57,6 +57,7 @@
         <li data-nav-for="resenas" hidden><a href="./#resenas">Opiniones</a></li>
         <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos" aria-current="page">Regalos</a></li>
         <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
+        <li><a href="regalos.html#membresias">Membresías</a></li>
         <li><a href="aplicacion.html" class="nav-app" data-nav="aplicacion">Aplicación</a></li>
       </ul>
     </nav>
@@ -93,6 +94,7 @@
       <li data-nav-for="resultados" hidden><a href="./#resultados">Resultados</a></li>
       <li data-nav-for="resenas" hidden><a href="./#resenas">Opiniones</a></li>
       <li><a href="reservar.html" data-nav="reservar">Reservar</a></li>
+      <li><a href="regalos.html#membresias">Membresías</a></li>
       <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
       <li data-nav-for="regalos" hidden><a href="regalos.html" data-nav="regalos" aria-current="page">Regalos y paquetes</a></li>
       <li><a href="./#contacto">Contacto</a></li>
@@ -160,6 +162,19 @@
           <button type="button" class="btn btn-quiet" id="gd-again">Comprar otra</button>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- MEMBRESÍAS -->
+  <section id="membresias" class="section mb-public" hidden>
+    <div class="container">
+      <div class="section-head"><div><p class="label">MAJOBELLA · MEMBRESÍAS</p><h2 class="display">Belleza que te acompaña cada mes</h2></div>
+        <div class="section-head-side"><p>Planes de sesiones mensuales para disfrutar tus tratamientos favoritos. Solicítalos en línea y activa tus beneficios con nuestro equipo.</p></div></div>
+      <div class="mb-public-grid" id="mb-public-list"></div>
+      <p class="mb-public-terms">Las membresías requieren confirmación de pago por parte del estudio. <strong>No se realizan cobros ni renovaciones automáticas.</strong> Las sesiones no usadas vencen al terminar el período mensual; cada cita requiere disponibilidad y el consentimiento que corresponda al servicio.</p>
+      <p class="mb-public-msg" id="mb-public-msg" role="status" aria-live="polite"></p>
+      <div class="mb-public-account"><h3>Mis membresías</h3><div id="mb-mine"><p>Inicia sesión para consultar tus planes.</p></div>
+        <button type="button" class="btn btn-ghost" data-open-auth>Iniciar sesión</button></div>
     </div>
   </section>
 
@@ -286,7 +301,7 @@
 <script src="js/core/validate.js?v=20261022v2"></script>
 <script src="js/integrations/whatsapp.js?v=20261022v2"></script>
 <script src="js/integrations/calendar.js?v=20261022v2"></script>
-<script src="js/integrations/booking-api.js?v=20261022v2"></script>
+<script src="js/integrations/booking-api.js?v=20261022mb1"></script>
 <script src="js/integrations/paypal.js?v=20261022v2"></script>
 <script src="js/integrations/google-auth.js?v=20261022v2"></script>
 <script src="js/integrations/appointments.js?v=20261022v2"></script>
@@ -306,10 +321,11 @@
 <script src="js/components/site.js?v=20261022v2"></script>
 <script src="js/components/giftshop.js?v=20261022v2"></script>
 <script src="js/components/packages.js?v=20261022v2"></script>
+<script src="js/components/membresias.js?v=20261022mb1"></script>
 <script src="js/integrations/install.js?v=20261022v2"></script>
 <script src="js/components/getapp.js?v=20261022v2"></script>
 <script src="js/components/appinfo.js?v=20261022v2"></script>
 <script src="js/components/reveal.js?v=20261022v2"></script>
-<script src="js/main.js?v=20261022v2"></script>
+<script src="js/main.js?v=20261022mb1"></script>
 </body>
 </html>

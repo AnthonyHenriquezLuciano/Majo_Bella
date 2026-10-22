@@ -12,6 +12,8 @@
   const today = M.todayKey();
   const nowIso = () => new Date().toISOString();
 
+  const membershipPlans = [];
+  const memberships = [];
   const categories = [['cejas','Cejas'],['pestanas','Pestañas'],['faciales','Faciales'],['micropigmentacion','Micropigmentación'],['depilacion','Depilación'],['otros','Otros']].map(([id,nombre],i)=>({ id,nombre,estado:'activo',activo:'si',orden:i+1 }));
   const consentTemplates = [
     { id:'ejemplo-cejas',nombre:'Consentimiento de diseño de cejas',descripcion:'Ejemplo de prueba',estado:'borrador',
@@ -203,7 +205,7 @@
   const uploaded = {};
 
   const db = () => ({
-    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, categories, services, consentTemplates, gallery, reviews, packages, bonos, waitlist, emails, accounts, errors, security,
+    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, categories, services, consentTemplates, gallery, reviews, packages, bonos, membershipPlans, memberships, waitlist, emails, accounts, errors, security,
     automation: { trigger: true, quota: 96, lastRun: { at: new Date(Date.now() - 22 * 60000).toISOString(), out: {} } },
     consentDefault: 'Declaro que la información que di sobre mi salud es verdadera y completa…\n\n(Texto general de ejemplo.)',
     schedule: { hours: M.config.schedule.hours, blocked: ['2026-12-25', '2027-01-01'], minNotice: 3, maxDays: 60, step: 30 },
@@ -256,6 +258,24 @@
           return { ok: true, block: clone(b) };
         }
         case 'adminDeleteBlock': { const i = blocks.findIndex((b) => b.id === d.id); if (i >= 0) blocks.splice(i, 1); return { ok: true }; }
+        case 'adminSaveMembershipPlan': {
+          const p=clone(d.plan), row=membershipPlans.find(x=>x.id===p.id);
+          if(!p.id)p.id=uid('plan').toLowerCase();
+          if(row)Object.assign(row,p);else membershipPlans.push(p);
+          return {ok:true,plan:clone(p)};
+        }
+        case 'adminMembershipAction': {
+          const m=memberships.find(x=>x.id===d.id);
+          if(!m)throw Error('No encontramos esa membresía de ejemplo.');
+          if(['activar','renovar'].includes(d.change)&&!d.pagoConfirmado)throw Error('Confirma el pago primero.');
+          if(['activar','renovar'].includes(d.change)){
+            m.estado='activa';m.inicio=today;m.vence=A.addDays(today,30);
+            m.sesionesUsadas=0;m.disponibles=Number(m.sesionesMes);m.estadoEfectivo='activa';
+          } else if(d.change==='usar'){m.sesionesUsadas++;m.disponibles=Math.max(0,m.sesionesMes-m.sesionesUsadas);}
+          else if(d.change==='deshacerUso'){m.sesionesUsadas=Math.max(0,m.sesionesUsadas-1);m.disponibles=m.sesionesMes-m.sesionesUsadas;}
+          else {m.estado=d.change==='cancelar'?'cancelada':'pausada';m.estadoEfectivo=m.estado;m.disponibles=0;}
+          return {ok:true,membresia:clone(m)};
+        }
         case 'adminSaveConsentTemplate': {
           const x=clone(d.template),i=consentTemplates.findIndex(t=>t.id===x.id);
           if(i>=0)consentTemplates[i]=x;else consentTemplates.push(x);

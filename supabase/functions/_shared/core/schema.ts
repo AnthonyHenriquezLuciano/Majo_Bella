@@ -59,6 +59,19 @@ export const TABLES: Table[] = [
     ],
   },
   {
+    name: 'PlanesMembresia', table: 'planes_membresia', pk: 'id', comment: 'Planes de membresía mensuales configurados por el estudio.',
+    cols: [c('id','text',{notNull:true}),c('nombre'),c('descripcion'),c('precioRD','num'),c('sesionesMes','int'),
+      c('servicios','json'),c('beneficios'),c('estado'),c('orden','int'),c('actualizado','ts')],
+  },
+  {
+    name: 'Membresias', table: 'membresias', pk: 'id', comment: 'Membresías de clientas y vigencia mensual verificada.',
+    cols: [c('id','text',{notNull:true}),c('planId'),c('nombrePlan'),c('clienta'),c('correo'),c('telefono'),
+      c('estado'),c('inicio','date'),c('vence','date'),c('sesionesMes','int'),c('sesionesUsadas','int'),
+      c('precioRD','num'),c('servicios','json'),c('metodoPago'),c('pagadoEn','ts'),c('notas'),
+      c('creada','ts'),c('actualizada','ts')],
+    indexes:['correo','plan_id','estado'],
+  },
+  {
     name: 'Bloqueos', table: 'bloqueos', pk: 'id', comment: 'Horarios bloqueados: una vez, varios días o cada semana.',
     cols: [
       c('id', 'text', { notNull: true }), c('tipo', 'text', { check: inList(['unico', 'rango', 'semanal']) }), c('dias'),

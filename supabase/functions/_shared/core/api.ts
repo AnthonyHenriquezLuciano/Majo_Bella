@@ -17,6 +17,7 @@ import {
   balanceCapture_, balanceOrder_, cancel_, capture_, hold_, lookup_, myAppointments_, release_, reschedule_, transferProof_,
 } from './booking.ts';
 import { consentInfo_, consentSign_ } from './consent.ts';
+import { publicPlans_, adminSubscriptionData_, adminSaveMembershipPlan_, requestMembership_, myMemberships_, adminMembershipAction_ } from './memberships.ts';
 import { adminSaveConsentTemplate_ } from './consent-templates.ts';
 import { adminWaitlist_, waitlistJoin_ } from './waitlist.ts';
 import {
@@ -43,11 +44,12 @@ N('checkCode', checkCode_); L('hold', hold_); L('capture', capture_); L('release
 N('balanceOrder', balanceOrder_); L('balanceCapture', balanceCapture_); N('myAppointments', myAppointments_); N('lookup', lookup_);
 L('giftOrder', giftOrder_); L('giftCapture', giftCapture_); L('bonoOrder', bonoOrder_); L('bonoCapture', bonoCapture_);
 N('loyalty', loyalty_); N('walletLookup', walletLookup_); L('waitlistJoin', waitlistJoin_); N('consentInfo', consentInfo_);
-L('consentSign', consentSign_); L('transferProof', transferProof_); L('reschedule', reschedule_); N('myWallet', myWallet_); L('walletEmail', walletEmail_);
+L('consentSign', consentSign_); L('transferProof', transferProof_);
+L('requestMembership', requestMembership_); N('myMemberships', myMemberships_); L('reschedule', reschedule_); N('myWallet', myWallet_); L('walletEmail', walletEmail_);
 // Panel
 N('adminData', adminData_); N('adminList', adminData_); L('adminUpdate', adminUpdate_); L('adminCreate', adminCreate_);
 L('adminReschedule', adminReschedule_); L('adminBlock', adminBlock_); L('adminDeleteBlock', adminDeleteBlock_);
-L('adminSaveSettings', adminSaveSettings_); L('adminSaveConsentTemplate', adminSaveConsentTemplate_); L('adminSaveClient', adminSaveClient_); L('adminUpload', adminUpload_); N('adminFile', adminFile_);
+L('adminSaveSettings', adminSaveSettings_); L('adminSaveMembershipPlan', adminSaveMembershipPlan_); L('adminMembershipAction', adminMembershipAction_); L('adminSaveConsentTemplate', adminSaveConsentTemplate_); L('adminSaveClient', adminSaveClient_); L('adminUpload', adminUpload_); N('adminFile', adminFile_);
 L('adminDeleteFile', adminDeleteFile_); L('adminSavePromo', adminSavePromo_); L('adminDeletePromo', adminDeletePromo_);
 L('adminSaveGift', adminSaveGift_); L('adminSaveExpense', adminSaveExpense_); L('adminDeleteExpense', adminDeleteExpense_);
 L('adminPublishGallery', adminPublishGallery_); L('adminSaveGallery', adminSaveGallery_); L('adminDeleteGallery', adminDeleteGallery_);
@@ -128,10 +130,11 @@ export async function handle(deps: Deps, method: string, data: any, headers: Rec
       if (method === 'GET') {
         if (action === 'catalog') {
           const body = await sql.begin(async (tx: any) => {
-            await loadTables(tx, { tables: ['Ajustes', 'Categorias', 'Servicios', 'Promociones', 'Paquetes', 'Galeria', 'Resenas', 'Cuentas', 'PlantillasConsentimiento'] });
+            await loadTables(tx, { tables: ['Ajustes', 'Categorias', 'Servicios', 'Promociones', 'Paquetes', 'Galeria', 'Resenas', 'Cuentas', 'PlantillasConsentimiento', 'PlanesMembresia'] });
             ensureSeed_();
             heartbeat_();
             const out = catalog_();
+            out.membershipPlans = publicPlans_();
             await commit(tx);
             return out;
           });

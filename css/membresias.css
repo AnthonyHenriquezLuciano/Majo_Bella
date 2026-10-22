@@ -1,0 +1,26 @@
+/* MAJOBELLA · Membresías: diseño limpio de administración */
+.mb-plan-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:16px 0;}
+.mb-plan-card {border:1px solid #ddd;border-radius:22px;padding:21px;background:#fff;}
+.mb-plan-card h3 {font:400 25px/1.2 'Source Serif 4',Georgia,serif;margin:12px 0;}
+.mb-plan-card p {margin:8px 0;}
+.mb-plan-card .mb-price {font-size:22px;color:#111;font-weight:600;}
+.mb-price small {font-size:12px;font-weight:400;color:#777;}
+.mb-tag {font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#666;font-weight:600;}
+.mb-form {display:grid;gap:14px;}
+.mb-form label {display:grid;gap:7px;color:#555;font-size:13px;}
+.mb-form input,.mb-form textarea,.mb-form select,.mb-filters input,.mb-filters select {border:1px solid #cfcfcf;border-radius:11px;padding:11px;color:#111;background:#fff;width:100%;}
+.mb-services {border:1px solid #ddd;border-radius:15px;padding:15px;}
+.mb-services legend {padding:0 6px;font-size:13px;font-weight:600;}
+#mb-service-choices {display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;}
+.mb-svc-choice {display:flex!important;align-items:center;gap:8px;padding:8px;}
+.mb-svc-choice input {width:auto!important;accent-color:#111;}
+.mb-filters {display:flex;flex-wrap:wrap;gap:12px;margin:16px 0;}
+.mb-filters label {display:grid;gap:5px;font-size:12px;min-width:190px;flex:1;}
+.mb-member-list {display:grid;gap:12px;}
+.mb-member {display:flex;justify-content:space-between;align-items:flex-start;gap:22px;border:1px solid #e3e3e3;border-radius:18px;padding:18px;}
+.mb-member h3 {font:400 23px/1.2 'Source Serif 4',Georgia,serif;margin:6px 0;}
+.mb-member p {font-size:13px;color:#666;margin:5px 0;}
+.mb-member strong {font-size:13px;}
+.mb-member-actions {display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;max-width:400px;}
+.mb-note {font-size:12px;color:#666;margin:16px 0;line-height:1.5;}
+@media(max-width:700px){.mb-member{flex-direction:column}.mb-member-actions{justify-content:flex-start;max-width:none}}
