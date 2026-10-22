@@ -1224,3 +1224,26 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .menu-service-group > summary:hover::before { filter:invert(1); opacity:.12; }
 .menu-service-children { border-top:1px solid rgba(0,0,0,.14); padding:12px 16px 18px; }
 .menu-service-children > p { color:#555; margin:0 0 16px; }
+
+/* MAJOBELLA · Categories like "Tu próxima cita": deep black, hidden monogram.
+   Service and subservice cards remain purely typographic. */
+.menu-category-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; padding:12px 0 24px; }
+.menu-category-tile { position:relative; isolation:isolate; display:flex; min-height:210px; flex-direction:column; align-items:flex-start; overflow:hidden;
+  text-align:left; padding:28px 24px; background:#111; color:#fff; border:1px solid #111; border-radius:26px; cursor:pointer; }
+.menu-category-tile::before { content:''; position:absolute; z-index:-1; width:250px; height:250px; right:-58px; bottom:-75px; background:url('../assets/monograma.png') center / contain no-repeat; filter:invert(1); opacity:.11; pointer-events:none; }
+.menu-category-tile:hover { background:#202020; }
+.menu-category-caption { font-size:10px; font-weight:700; letter-spacing:.17em; color:#aaa; }
+.menu-category-tile strong { font:400 clamp(27px,3.4vw,39px)/1.1 'Source Serif 4',Georgia,serif; margin:14px 0 8px; }
+.menu-category-tile small { font-size:13px; color:#c5c5c5; }
+.menu-category-cta { margin-top:auto; border:1px solid rgba(255,255,255,.7); border-radius:999px; padding:8px 16px; font-size:12px; }
+.menu-category-heading { margin:5px 0 20px; }
+.menu-category-heading p { margin:0 0 6px; font-size:11px; letter-spacing:.14em; color:#777; }
+.menu-category-heading h3 { font:400 clamp(30px,4vw,48px)/1.12 'Source Serif 4',Georgia,serif; margin:0; }
+.menu-service-group { background:#fff; border-radius:20px; box-shadow:none; border:1px solid #dedede; }
+.menu-service-group > summary { font-size:24px; padding:22px; min-height:90px; }
+.menu-service-group > summary::before { display:none; }
+.menu-service-group > summary:hover { background:#f8f8f8; color:#111; }
+.menu-service-group > summary:hover small { color:#666; }
+.menu-service-children { background:#fff; }
+#services-list .svc-card { border-radius:18px; box-shadow:none; background:#fff; }
+@media(max-width:650px){ .menu-category-grid { grid-template-columns:1fr; gap:11px; } .menu-category-tile { min-height:159px; padding:21px 23px; } .menu-category-tile strong { margin-top:10px; } }
