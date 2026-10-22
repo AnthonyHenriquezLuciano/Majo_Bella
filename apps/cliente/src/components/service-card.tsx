@@ -11,7 +11,7 @@ export function ServiceCard({ s, compact }: { s: ServiceInfo; compact?: boolean 
   const promo = studio.promoFor(s.id);
   const inCart = cart.includes(s.id);
   return (
-    <Card testID={`svc-${s.id}`} style={{ marginBottom: space.md, padding: 18 }} onPress={() => router.push({ pathname: '/servicio/[id]', params: { id: s.id } })}>
+    <Card testID={`svc-${s.id}`} style={{ marginBottom: space.md, padding: 18 }}>
       <Row style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <View style={{ flex: 1 }}>
           {promo ? <View style={{ marginBottom: 8 }}><Badge label={promo.kind === 'monto' ? `−${fmtPrice(promo.value)}` : `−${promo.value}%`} /></View> : null}
@@ -25,14 +25,24 @@ export function ServiceCard({ s, compact }: { s: ServiceInfo; compact?: boolean 
       {!compact && s.description ? <T v="muted" style={{ marginTop: 8 }} numberOfLines={3}>{s.description}</T> : null}
       <Row style={{ marginTop: 14, justifyContent: 'space-between' }}>
         <T v="muted">{fmtDurationShort(s.durationMinutes)}</T>
-        <Button
-          testID={`add-${s.id}`}
-          small full={false}
-          kind={inCart ? 'solid' : 'outline'}
-          title={inCart ? 'Añadido' : 'Añadir'}
-          accessibilityLabel={inCart ? `Quitar ${s.name}` : `Añadir ${s.name}`}
-          onPress={() => toggleCart(s.id)}
-        />
+        <Row gap={8} style={{ alignItems: 'center' }}>
+          <Button
+            testID={`detail-${s.id}`}
+            small full={false}
+            kind="link"
+            title="Ver detalle"
+            accessibilityLabel={`Ver detalle de ${s.name}`}
+            onPress={() => router.push({ pathname: '/servicio/[id]', params: { id: s.id } })}
+          />
+          <Button
+            testID={`add-${s.id}`}
+            small full={false}
+            kind={inCart ? 'solid' : 'outline'}
+            title={inCart ? '✓' : '+'}
+            accessibilityLabel={inCart ? `Quitar ${s.name}` : `Añadir ${s.name}`}
+            onPress={() => toggleCart(s.id)}
+          />
+        </Row>
       </Row>
     </Card>
   );

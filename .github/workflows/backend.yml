@@ -13,7 +13,7 @@ on:
     branches: [main]
     paths: ['supabase/**', '.github/workflows/backend.yml']
   pull_request:
-    paths: ['supabase/**', 'js/config.js', 'js/components/booking.js', 'js/integrations/booking-api.js', '.github/workflows/backend.yml']
+    paths: ['supabase/**', 'js/config.js', 'js/components/booking.js', 'js/components/services.js', 'js/admin/catalogo.js', 'app/app.js', 'js/integrations/booking-api.js', '.github/workflows/backend.yml']
   workflow_dispatch:
 
 jobs:
