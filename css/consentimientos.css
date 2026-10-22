@@ -1,0 +1,56 @@
+/* MAJOBELLA · Gestión documental premium / solo negro, blanco y grises */
+#sec-consentimientos{--ct-line:#dedede;color:#111}
+.ct-eyebrow{font-size:10px;letter-spacing:.21em;font-weight:700;color:#747474;margin:0 0 9px;text-transform:uppercase}
+.ct-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.ct-heading h1{font:400 clamp(32px,4vw,45px)/1.08 'Source Serif 4',Georgia,serif;margin:0 0 9px}
+.ct-heading p:last-child{max-width:70ch}
+.ct-layout{display:grid;grid-template-columns:minmax(230px,325px) minmax(0,1fr);gap:20px;align-items:start;margin-top:20px}
+.ct-sidebar,.ct-work{background:#fff;border:1px solid var(--ct-line);border-radius:24px;padding:23px}
+.ct-sidebar{position:sticky;top:89px}
+.ct-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ct-head h2{margin:0;font:400 25px/1.1 'Source Serif 4',Georgia,serif}
+.ct-head small{font-size:12px;color:#777}
+.ct-search{display:grid;gap:7px;font-size:12px;color:#666;margin:20px 0 14px}
+.ct-search input,.ct-form input,.ct-form textarea,.ct-form select,.ct-question input,.ct-question textarea,.ct-question select{font:inherit;width:100%;background:#fff;color:#111;border:1px solid #d2d2d2;border-radius:12px;padding:12px;min-width:0}
+.ct-search input:focus,.ct-form input:focus,.ct-form textarea:focus,.ct-form select:focus,.ct-question input:focus,.ct-question textarea:focus,.ct-question select:focus{outline:2px solid #999;outline-offset:1px}
+.ct-list{display:grid;gap:9px}
+.ct-entry{text-align:left;background:#fafafa;border:1px solid #e5e5e5;border-radius:16px;padding:16px;width:100%;cursor:pointer;display:grid;gap:7px}
+.ct-entry:hover{border-color:#888}
+.ct-entry.is-selected{background:#111;color:#fff;border-color:#111}
+.ct-entry strong{font:400 19px/1.2 'Source Serif 4',Georgia,serif}
+.ct-entry small{font-size:12px;opacity:.67}
+.ct-tag{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.ct-help{font-size:12px;color:#777;line-height:1.55;margin:20px 0 0}
+.ct-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #eaeaea;padding-bottom:18px;margin-bottom:22px}
+.ct-toolbar h2{font:400 27px/1.1 'Source Serif 4',Georgia,serif;margin:0}
+.ct-indicator{font-size:12px;color:#333}
+.ct-empty{background:#fafafa;border:1px dashed #ccc;border-radius:22px;padding:40px;text-align:center}
+.ct-empty h3{font:400 26px/1.2 'Source Serif 4',Georgia,serif}
+.ct-empty p{font-size:14px;color:#777}
+.ct-form{display:grid;gap:19px}
+.ct-form label{display:grid;gap:7px;font-size:12px;color:#555;font-weight:600}
+.ct-form textarea{resize:vertical;min-height:95px;line-height:1.5;font-size:14px;font-weight:400}
+.ct-form input,.ct-form select{font-size:14px;font-weight:400}
+.ct-form .ct-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px}
+.ct-section{padding:22px 0;border-top:1px solid #eee}
+.ct-section h3{font:400 25px/1.2 'Source Serif 4',Georgia,serif;margin:0 0 6px}
+.ct-section > p{font-size:13px;color:#777;line-height:1.5;margin:0 0 17px}
+.ct-question{border:1px solid #e4e4e4;background:#fcfcfc;border-radius:18px;padding:17px;margin-bottom:11px;display:grid;gap:12px}
+.ct-q-head{display:flex;align-items:center;justify-content:space-between}
+.ct-q-head strong{font-size:12px;letter-spacing:.07em}
+.ct-q-head > div{display:flex;gap:6px}
+.ct-q-head button{background:#fff;border:1px solid #ddd;border-radius:999px;padding:5px 10px;cursor:pointer}
+.ct-q-head button:hover{border-color:#111}
+.ct-question .ct-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.ct-tip{padding:15px 17px;border-radius:14px;background:#f4f4f4;color:#565656;font-size:12px;line-height:1.55}
+.ct-template-preview{border:1px solid #ddd;border-radius:20px;padding:27px 24px;background:#fff}
+.ct-template-preview .ct-preview-brand{letter-spacing:.25em;font-size:12px;color:#555}
+.ct-template-preview h3{font:400 30px/1.15 'Source Serif 4',Georgia,serif;margin:15px 0}
+.ct-template-preview p{white-space:pre-wrap;font-size:14px;color:#444;line-height:1.7}
+.ct-preview-question{padding:14px 0;border-top:1px solid #ececec;font-size:13px}
+.ct-preview-question small{display:block;color:#777;margin-top:5px}
+.ct-savebar{position:sticky;bottom:15px;z-index:8;margin-top:20px;background:#fff;border:1px solid #dedede;box-shadow:0 10px 26px rgba(0,0,0,.09);border-radius:18px;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;gap:13px}
+.ct-savebar span{font-size:12px;color:#666}
+.ct-savebar button:disabled{opacity:.42}
+@media(max-width:920px){.ct-layout{grid-template-columns:1fr}.ct-sidebar{position:static}.ct-savebar{bottom:calc(70px + env(safe-area-inset-bottom))}}
+@media(max-width:600px){.ct-sidebar,.ct-work{padding:17px}.ct-form .ct-row,.ct-question .ct-row{grid-template-columns:1fr}.ct-template-preview{padding:18px}}
