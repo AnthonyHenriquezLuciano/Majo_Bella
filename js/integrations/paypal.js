@@ -54,7 +54,7 @@
           ${eligible.map((x,i)=>`<button type="button" class="pp-premium-method${i===0?' is-active':''}" data-pp-mode="${x.key}" aria-pressed="${i===0}"><span class="pp-premium-method-icon" aria-hidden="true">${x.key==='card'?'▣':'P'}</span><span>${x.label}</span><span aria-hidden="true">→</span></button>`).join('')}
         </div>
         <div class="pp-premium-hint" aria-live="polite"></div>
-        <div class="pp-premium-frames">${eligible.map((x,i)=>`<div data-pp-frame="${x.key}" ${i?'hidden':''}><div id="${prefix}-${x.key}"></div></div>`).join('')}</div>
+        <div class="pp-premium-frames">${eligible.map((x)=>`<div data-pp-frame="${x.key}"><div id="${prefix}-${x.key}"></div></div>`).join('')}</div>
         <p class="pp-premium-secure">🔒 Procesado directamente por PayPal · No guardamos tu tarjeta</p>
         <p class="pp-premium-error" role="alert" hidden></p>
       </div>`;
