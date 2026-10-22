@@ -169,7 +169,7 @@ export async function handle(deps: Deps, method: string, data: any, headers: Rec
           await tx`delete from public.cache where vence < now()`;
           await loadTables(tx);
           ensureSeed_();
-          const out = runAutomations_();
+          const out = await runAutomations_();
           await commit(tx);
           return { ok: true, result: out };
         });
