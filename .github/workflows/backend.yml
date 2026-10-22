@@ -44,6 +44,9 @@ jobs:
           node --check ../js/config.js
           node --check ../js/components/booking.js
           node --check ../js/integrations/booking-api.js
+          node --check ../js/components/services.js
+          node --check ../js/admin/catalogo.js
+          node --check ../js/admin/ajustes.js
           node --check ../js/main.js
           node --check ../app/app.js
       - run: npm run typecheck
