@@ -1,7 +1,7 @@
 /* MAJOBELLA · Catálogo público: servicios, horario, contenido de la web, promociones y formas de pago */
 import { env_ } from './ctx.ts';
 import { readOpt_ } from './db.ts';
-import { servicesMap_, services_, settings_ } from './data.ts';
+import { categories_, serviceGroups_, servicesMap_, services_, settings_ } from './data.ts';
 import { schedule_ } from './schedule.ts';
 import { promos_ } from './pricing.ts';
 import { paypalEnv_, paypalConfigured_ } from './paypal.ts';
@@ -14,7 +14,13 @@ export function catalog_(): any {
   const today = todayKey_();
   return {
     ok: true,
-    services: services_().map(function (x) { return { id: x.id, name: x.name, durationMinutes: x.durationMinutes, price: x.price, priceFrom: x.priceFrom, depositPercent: x.depositPercent }; }),
+    categories: categories_(),
+    serviceGroups: serviceGroups_(),
+    services: services_().map(function (x) {
+      return { id: x.id, name: x.name, categoryId: x.categoryId, category: x.category,
+        parentId: x.parentId, description: x.description, order: x.order,
+        durationMinutes: x.durationMinutes, price: x.price, priceFrom: x.priceFrom, depositPercent: x.depositPercent };
+    }),
     payments: {
       // No ofrecer PayPal hasta que la API tenga un par de credenciales configurado.
       enabled: paypalConfigured_(),
