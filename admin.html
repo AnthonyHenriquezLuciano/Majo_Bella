@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/admin.css?v=20261022v3">
 <link rel="stylesheet" href="css/catalogo.css?v=20261022v3">
 <link rel="stylesheet" href="css/consentimientos.css?v=20261022ct1">
+<link rel="stylesheet" href="css/membresias.css?v=20261022mb1">
 </head>
 <body>
 <!--MJB:BODY-START-->
@@ -32,6 +33,7 @@
     <p class="nav-group">Crecer</p>
     <button type="button" data-sec="promos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.5V4.5h8l9 9-8 8z"/><circle cx="8" cy="9" r="1.4"/></svg><span class="tab-t"><span class="tab-l">Promociones</span><small>Códigos, tarjetas y paquetes</small></span></button>
     <button type="button" data-sec="catalogo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="8" height="8" rx="2"/><rect x="13" y="4" width="8" height="8" rx="2"/><rect x="3" y="14" width="8" height="7" rx="2"/><rect x="13" y="14" width="8" height="7" rx="2"/></svg><span class="tab-t"><span class="tab-l">Servicios</span><small>Catálogo, opciones y publicaciones</small></span></button>
+    <button type="button" data-sec="membresias"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4M8 3v3M16 3v3"/></svg><span class="tab-t"><span class="tab-l">Membresías</span><small>Planes, renovaciones y sesiones</small></span></button>
     <button type="button" data-sec="consentimientos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span class="tab-t"><span class="tab-l">Consentimientos</span><small>Plantillas y criterios de seguridad</small></span></button>
     <button type="button" data-sec="web"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.6 5.4 3.6 8.5s-1.1 5.9-3.6 8.5c-2.5-2.6-3.6-5.4-3.6-8.5s1.1-5.9 3.6-8.5z"/></svg><span class="tab-t"><span class="tab-l">Web</span><small>Galería, reseñas y anuncio</small></span></button>
     <button type="button" data-sec="correos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6.5L20.5 7"/></svg><span class="tab-t"><span class="tab-l">Correos</span><small>Automáticos y consentimiento</small></span></button>
@@ -50,7 +52,7 @@
   <button type="button" data-sec="clientas"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg><span>Clientas</span></button>
   <button type="button" data-sec="dinero"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6.5" width="18" height="11" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 9.5v5M17.5 9.5v5"/></svg><span>Dinero</span></button>
   <button type="button" data-sec="promos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.5V4.5h8l9 9-8 8z"/><circle cx="8" cy="9" r="1.4"/></svg><span>Promos</span></button>
-  <button type="button" id="ad-more" data-more-for="catalogo consentimientos web correos ajustes"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18.5" cy="12" r="1.4"/></svg><span>Más</span></button>
+  <button type="button" id="ad-more" data-more-for="catalogo membresias consentimientos web correos ajustes"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18.5" cy="12" r="1.4"/></svg><span>Más</span></button>
 </nav>
 
 <div class="ad-banner" id="ad-banner" hidden></div>
@@ -393,6 +395,33 @@
         <label class="filter"><span>Tipo</span><select id="ml-filter"><option value="">Todos</option></select></label></div>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Tipo</th><th>Para</th><th>Asunto</th><th>Estado</th></tr></thead><tbody id="ml-log"></tbody></table></div>
     </section>
+  </section>
+
+  <!-- MEMBRESÍAS · planes editables y renovaciones confirmadas -->
+  <section data-section="membresias" id="sec-membresias" hidden>
+    <header class="sec-head"><h1>Membresías</h1><p>Planes mensuales y seguimiento de clientas. La renovación se registra solo cuando confirmas el pago; no hay débitos automáticos.</p></header>
+    <div class="ad-panel">
+      <div class="panel-head"><h2>Planes del estudio</h2><button class="btn-dark sm" id="mb-new" type="button">+ Crear plan</button></div>
+      <p class="panel-note">Borrador, publicado o archivado. El precio y las sesiones se guardan como condiciones de cada membresía al solicitarla.</p>
+      <div class="mb-plan-grid" id="mb-plan-list"></div>
+    </div>
+    <div class="ad-panel" id="mb-edit-panel" hidden>
+      <div class="panel-head"><h2 id="mb-editor-title">Editar plan</h2><button type="button" class="chip-btn" id="mb-close">Cerrar</button></div>
+      <form id="mb-plan-form" class="mb-form">
+        <div class="row2"><label>Nombre del plan<input name="nombre" required maxlength="90"></label><label>Estado<select name="estado"><option value="borrador">Borrador</option><option value="activo">Publicado</option><option value="archivado">Archivado</option></select></label></div>
+        <label>Descripción<textarea name="descripcion" rows="2" maxlength="450"></textarea></label>
+        <div class="row3"><label>Precio mensual (RD$)<input name="precioRD" type="number" min="1" max="200000" step="1" required></label><label>Sesiones por mes<input name="sesionesMes" type="number" min="1" max="30" step="1" required></label><label>Orden<input name="orden" type="number" min="0" step="1"></label></div>
+        <fieldset class="mb-services"><legend>Servicios incluidos (elige al menos uno)</legend><div id="mb-service-choices"></div></fieldset>
+        <label>Beneficios y condiciones<textarea name="beneficios" rows="3" maxlength="900" placeholder="Ej. Sesiones personales, con cita previa; no acumulables."></textarea></label>
+        <button class="btn-dark" type="submit" id="mb-save">Guardar plan</button>
+      </form>
+    </div>
+    <div class="ad-panel">
+      <div class="panel-head"><h2>Clientas inscritas</h2><span id="mb-count" class="muted"></span></div>
+      <div class="mb-filters"><label>Filtrar estado<select id="mb-state-filter"><option value="">Todos</option><option value="solicitada">Solicitadas</option><option value="activa">Activas</option><option value="vencida">Vencidas</option><option value="pausada">Pausadas</option><option value="cancelada">Canceladas</option></select></label><label>Buscar<input type="search" id="mb-search" placeholder="Clienta, correo o plan"></label></div>
+      <div class="mb-member-list" id="mb-member-list"></div>
+    </div>
+    <p class="mb-note">Importante: registrar el uso de una sesión aquí no sustituye la reserva ni el consentimiento obligatorio antes de pagar. Comprueba la cita y sus condiciones.</p>
   </section>
 
   <!-- CONSENTIMIENTOS · Editor empresarial de formularios previos al pago -->
@@ -838,6 +867,7 @@
     <div class="dlg-head"><h2 id="more-h">Más</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">×</button></div>
     <div class="more-list">
       <button type="button" data-sec="catalogo" data-close="dlg-more"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="8" height="8" rx="2"/><rect x="13" y="4" width="8" height="8" rx="2"/><rect x="3" y="14" width="8" height="7" rx="2"/><rect x="13" y="14" width="8" height="7" rx="2"/></svg><span><b>Servicios</b><small>Catálogo, estados y orden</small></span></button>
+      <button type="button" data-sec="membresias" data-close="dlg-more"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg><span><b>Membresías</b><small>Planes y renovaciones mensuales</small></span></button>
       <button type="button" data-sec="consentimientos" data-close="dlg-more"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span><b>Consentimientos</b><small>Plantillas y preguntas de seguridad</small></span></button>
       <button type="button" data-sec="web" data-close="dlg-more"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.6 5.4 3.6 8.5s-1.1 5.9-3.6 8.5c-2.5-2.6-3.6-5.4-3.6-8.5s1.1-5.9 3.6-8.5z"/></svg><span><b>Web</b><small>Galería, reseñas y anuncio</small></span></button>
       <button type="button" data-sec="correos" data-close="dlg-more"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6.5L20.5 7"/></svg><span><b>Correos</b><small>Automáticos y consentimiento</small></span></button>
@@ -881,6 +911,7 @@
 <script src="js/admin/paquetes.js?v=20261022v3"></script>
 <script src="js/admin/web.js?v=20261022v3"></script>
 <script src="js/admin/correos.js?v=20261022v3"></script>
+<script src="js/admin/membresias.js?v=20261022mb1"></script>
 <script src="js/admin/consentimientos.js?v=20261022ct1"></script>
 <script src="js/admin/catalogo.js?v=20261022ct1"></script>
 <script src="js/admin/ajustes.js?v=20261022v3"></script>
