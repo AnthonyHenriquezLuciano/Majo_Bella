@@ -74,6 +74,14 @@ export default async function(){
   assert.equal(recovered.added,1);
   assert.equal((await g.rows('PagosMembresia')).length,3);
   assert.equal(ok(await g.post({action:'adminReconcilePaypalSubscription',id:m.id,idToken:admin}),'conciliación repetida').added,0);
+  const partial={id:'WH-PARTIAL1',event_type:'PAYMENT.SALE.REFUNDED',resource:{
+    id:second.id,billing_agreement_id:sid,amount:{total:'0.01',currency:'USD'},state:'COMPLETED'
+  }};
+  const review=ok(await g.postSigned({action:'paypalWebhook',event:partial},headers()),'reembolso parcial requiere revisión');
+  assert.equal(review.review,true);
+  assert.equal((await g.row('Membresias',m.id)).estado,'activa','no revocar beneficios sin reembolso íntegro');
+  assert.equal((await g.rows('PagosMembresia')).find((x:any)=>x.id===second.id).estado,'completado');
+  assert.equal((await g.rows('EventosPaypal')).find((x:any)=>x.id==='WH-PARTIAL1').estado,'requiere_revision');
   const failure={id:'WH-FAIL1',event_type:'BILLING.SUBSCRIPTION.PAYMENT.FAILED',resource:{id:sid}};
   ok(await g.postSigned({action:'paypalWebhook',event:failure},headers()),'pago fallido registrado');
   const emails=g.mails.filter(x=>String(x.subject).includes('Un detalle pendiente'));
