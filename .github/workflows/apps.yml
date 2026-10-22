@@ -46,6 +46,21 @@ jobs:
         run: |
           node --check apps/cliente/app.config.js
           node --check apps/estudio/app.config.js
+      - name: Verificar las rutas de retorno OAuth de las apps
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          for (const app of ['cliente','estudio']) {
+            const dir = `apps/${app}`;
+            const cfg = JSON.parse(fs.readFileSync(`${dir}/app.json`, 'utf8'));
+            const route = fs.readFileSync(`${dir}/src/app/auth.tsx`, 'utf8');
+            const layout = fs.readFileSync(`${dir}/src/app/_layout.tsx`, 'utf8');
+            const helper = fs.readFileSync(`${dir}/src/lib/supabase.ts`, 'utf8');
+            if (cfg.expo.scheme !== (app === 'cliente' ? 'majobella' : 'majobella-estudio')) throw Error(`OAuth scheme incorrecto en ${app}`);
+            if (!route.includes('finishOAuthCode(code)') || !layout.includes('<Stack.Screen name="auth"') || !helper.includes('oauthCodeRequests')) throw Error(`Falta ruta/canje PKCE en ${app}`);
+            console.log(`OAuth deep link preparado: ${cfg.expo.scheme}:///auth`);
+          }
+          NODE
       - name: Validar perfiles EAS para Clientas y Estudio
         run: |
           node - <<'NODE'

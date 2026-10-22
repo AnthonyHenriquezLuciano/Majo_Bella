@@ -102,6 +102,19 @@ Ambas apps utilizan exclusivamente Supabase. Tienen como respaldo el URL y la cl
 
 Para firmar los `.apk` siempre con la misma llave, el repositorio necesita los secretos `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` y `ANDROID_KEY_PASSWORD` (solo viven en GitHub). Se crean una vez desde tu computadora con `bash tools/android-keystore.sh` (necesita Java y GitHub CLI). Mientras no existan, los `.apk` salen firmados con la llave de prueba de React Native (la misma en cada versión, así que se actualizan bien, pero es pública): conviene crear la propia antes de repartir la app. Al pasar de la llave de prueba a la propia (o si algún día se cambia), las apps instaladas tendrán que desinstalarse una vez.
 
+### Google OAuth en Android: retorno a la aplicación
+
+Las apps usan PKCE con Supabase y **registran una ruta real** `src/app/auth.tsx` para evitar el error de Expo Router **Unmatched Route**. No basta con habilitar Google en Supabase: la URL `majobella-estudio:///auth?code=…` (o `majobella:///auth?code=…`) debe llegar a una pantalla de la app, que canjee el código una sola vez y complete el inicio de sesión.
+
+En Supabase → **Authentication → URL Configuration → Redirect URLs**, permitir estos esquemas de retorno (con forma de tres barras utilizada por Expo Linking):
+
+- Estudio: `majobella-estudio://**` (o la dirección exacta `majobella-estudio:///auth`)
+- Clientas: `majobella://**` (o la dirección exacta `majobella:///auth`)
+
+El proveedor Google en Supabase requiere un cliente OAuth **Web application** en Google Cloud con callback `https://thpjpsogcmqkemlxajcm.supabase.co/auth/v1/callback`. La cuenta del estudio además debe figurar en `ADMIN_EMAILS`. Nunca agregar a la app el **Client Secret** de Google.
+
+**Prueba manual después de la nueva compilación:** instalar el APK de pruebas **nuevo**, elegir «Continuar con Google» desde la app, completar la selección de cuenta y verificar que se regresa al estudio, sin pantalla «Unmatched Route». El código OAuth anterior es de un solo uso: no abrir de nuevo el enlace de la captura. Para diagnosticar fallos posteriores, revisar Auth logs en Supabase sin copiar códigos ni tokens.
+
 ### Inicio de sesión (Supabase → Authentication)
 
 1. **Sign In / Providers → Email**: activo. En **Email Templates**, en **Magic Link** y en **Confirm signup**, añade el código para que llegue en el correo: `Tu código de MAJOBELLA: {{ .Token }}` (la app pide ese código de 6 dígitos; la primera vez llega «Confirm signup» y después «Magic Link»).

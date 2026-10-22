@@ -6,7 +6,7 @@ import * as Linking from 'expo-linking';
 import { createApi, type Appointment } from '@majobella/core';
 import { API_URL, SCHEME } from './env';
 import { KEYS, deviceId, store } from './storage';
-import { supabase } from './supabase';
+import { finishOAuthCode, supabase } from './supabase';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -81,7 +81,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     const handle = async (url: string | null) => {
       if (!url || !/\/\/auth/.test(url)) return;
       const { queryParams } = Linking.parse(url);
-      if (queryParams && typeof queryParams.code === 'string') { try { await supabase!.auth.exchangeCodeForSession(queryParams.code); } catch (e) { /* vencido */ } }
+      if (queryParams && typeof queryParams.code === 'string') await finishOAuthCode(queryParams.code).catch(() => { /* la ruta /auth muestra el error */ });
     };
     Linking.getInitialURL().then(handle);
     const s = Linking.addEventListener('url', (e) => handle(e.url));
@@ -137,8 +137,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     if (res.type !== 'success') return false;
     const { queryParams } = Linking.parse(res.url);
     if (!queryParams || typeof queryParams.code !== 'string') throw new Error('Google no completó el inicio de sesión.');
-    const ex = await supabase.auth.exchangeCodeForSession(queryParams.code);
-    if (ex.error) throw new Error('No se pudo iniciar sesión con Google.');
+    await finishOAuthCode(queryParams.code);
     return true;
   }, []);
   const signOut = useCallback(async () => {
