@@ -708,3 +708,40 @@ a.act { display: inline-flex; align-items: center; text-decoration: none; color:
 @media (max-width: 720px) {
   .set-i input[type=number], .set-i select[name="intervaloMinutos"] { width: 140px; flex: none; }
 }
+
+
+/* Catálogo MAJOBELLA · monocromo, bordes suaves y logo como marca de agua */
+.aj-cat-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:18px; }
+.aj-cat { min-width:0; border:1px solid #d5d5d5; border-radius:28px; overflow:hidden; background:#fff; transition:border-color .22s,transform .22s,box-shadow .22s; }
+.aj-cat:hover { border-color:#111; transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.07); }
+.aj-cat-cover { position:relative; isolation:isolate; min-height:205px; display:flex; flex-direction:column; justify-content:space-between; padding:24px; overflow:hidden; background:#f7f7f7; transition:background .25s,color .25s; }
+.aj-cat-cover::before { content:''; position:absolute; z-index:-1; inset:10px; background:url('../assets/logo-majobella.png') center / 85% auto no-repeat; opacity:.065; pointer-events:none; }
+.aj-cat:hover .aj-cat-cover { background:#111; color:#fff; }
+.aj-cat:hover .aj-cat-cover::before { filter:invert(1); opacity:.13; }
+.aj-cat-cover p { font-size:12px; letter-spacing:.19em; text-transform:uppercase; margin:0; }
+.aj-cat-cover h3 { font-weight:400; font-size:clamp(24px,2.5vw,34px); line-height:1.15; margin:8px 0; overflow-wrap:anywhere; }
+.aj-cat-cover button { align-self:flex-start; border:1px solid currentColor; color:inherit; border-radius:999px; background:transparent; padding:9px 16px; cursor:pointer; font-size:13px; }
+.aj-cat-cover button:hover { background:#fff; color:#000; }
+.aj-cat-editor { padding:18px; border-top:1px solid #e1e1e1; }
+.aj-cat-editor[hidden] { display:none; }
+.aj-cat-fields { display:grid; gap:10px; }
+.aj-cat-fields label,.aj-svc-fields label { display:grid; gap:4px; color:#444; font-size:12px; }
+.aj-cat-fields input:not([type=checkbox]),.aj-svc-fields input:not([type=checkbox]),.aj-svc-fields textarea { width:100%; min-width:0; padding:8px 10px; background:#fff; color:#111; border:1px solid #ccc; border-radius:12px; font-size:14px; }
+.aj-cat-actions,.aj-svc-actions { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
+.aj-cat-actions button,.aj-svc-actions button { border:1px solid #333; border-radius:999px; background:#fff; color:#111; padding:7px 11px; cursor:pointer; font-size:12px; }
+.aj-cat-actions button:hover,.aj-svc-actions button:hover { background:#111; color:#fff; }
+.aj-cat-editor h4 { font-size:13px; font-weight:600; margin:16px 0 10px; }
+.aj-svc-editor { margin:8px 0; border:1px solid #d5d5d5; border-radius:17px; overflow:hidden; background:#fff; }
+.aj-svc-editor > summary { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px; list-style:none; padding:12px 14px; cursor:pointer; font-size:14px; font-weight:600; }
+.aj-svc-editor > summary::-webkit-details-marker { display:none; }
+.aj-svc-editor > summary small { color:#777; font-size:11px; font-weight:400; }
+.aj-svc-body { padding:12px 14px 15px; border-top:1px solid #eee; }
+.aj-svc-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.aj-svc-fields label.wide { grid-column:1/-1; }
+.aj-svc-fields label.switch { display:flex; align-items:center; gap:8px; }
+.aj-svc-fields input[type=checkbox] { width:17px; height:17px; }
+.aj-svc-children { border-left:2px solid #111; padding-left:12px; margin:12px 0 0; }
+.aj-svc-children .aj-svc-editor { border-radius:13px; }
+@media (max-width:1100px) { .aj-cat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:660px) { .aj-cat-grid { grid-template-columns:1fr; } .aj-cat-cover { min-height:175px; } }
+@media (prefers-reduced-motion:reduce) { .aj-cat,.aj-cat-cover { transition:none; } .aj-cat:hover { transform:none; } }
