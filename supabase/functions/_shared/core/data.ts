@@ -13,16 +13,21 @@ export function settings_(): Record<string, string> {
 export function settingsCached_() { const c = cx(); if (!c.settings) c.settings = settings_(); return c.settings; }
 export function resetCaches_() { const c = cx(); c.settings = null; c.svc = null; }
 
+/* Un borrador se guarda en Administración pero no se expone en web, PWA ni app. */
+export function published_(row: any) {
+  const estado = String(row.estado || '').toLowerCase();
+  return (estado ? estado === 'activo' : !/^no$/i.test(String(row.activo))) && !/^no$/i.test(String(row.activo));
+}
 /* Los grupos son contenedores, nunca opciones cobrables ni reservables. */
 export function categories_() {
-  return readTable_('Categorias').filter((r) => !/^no$/i.test(String(r.activo)))
+  return readTable_('Categorias').filter(published_)
     .sort((a, b) => (Number(a.orden) || 0) - (Number(b.orden) || 0))
     .map((r) => ({ id: String(r.id), name: String(r.nombre || r.id) }));
 }
 export function serviceGroups_() {
   const cats = new Set(categories_().map((c) => c.id));
   return readTable_('Servicios')
-    .filter((r) => r.tipo === 'grupo' && !/^no$/i.test(String(r.activo)) && cats.has(String(r.categoriaId || 'otros')))
+    .filter((r) => r.tipo === 'grupo' && published_(r) && cats.has(String(r.categoriaId || 'otros')))
     .sort((a, b) => (Number(a.orden) || 0) - (Number(b.orden) || 0))
     .map((r) => ({ id: String(r.id), name: String(r.nombre), categoryId: String(r.categoriaId || 'otros'), description: String(r.descripcion || ''), order: Number(r.orden) || 0 }));
 }
@@ -33,7 +38,7 @@ export function services_() {
   const groupsById = Object.fromEntries(groups.map((g) => [g.id, g]));
   return readTable_('Servicios')
     .filter((r) => {
-      if (/^no$/i.test(String(r.activo)) || r.tipo === 'grupo') return false;
+      if (!published_(r) || r.tipo === 'grupo') return false;
       const cid = String(r.categoriaId || 'otros');
       if (!catNames[cid]) return false;
       const parent = String(r.padreId || '');
@@ -55,7 +60,7 @@ export function servicesMap_(): Record<string, any> {
   if (!c.svc) {
     c.svc = {};
     readTable_('Servicios').filter((r) => r.tipo !== 'grupo').forEach((r) => {
-      c.svc[String(r.id).trim()] = { id: String(r.id).trim(), name: String(r.nombre).trim(), price: Number(r.precioRD) || 0, retoqueDays: Number(r.retoqueDias) || 0, consent: /^s[ií]$/i.test(String(r.consentimiento)), active: !/^no$/i.test(String(r.activo)) };
+      c.svc[String(r.id).trim()] = { id: String(r.id).trim(), name: String(r.nombre).trim(), price: Number(r.precioRD) || 0, retoqueDays: Number(r.retoqueDias) || 0, consent: /^s[ií]$/i.test(String(r.consentimiento)), active: published_(r) };
     });
   }
   return c.svc;

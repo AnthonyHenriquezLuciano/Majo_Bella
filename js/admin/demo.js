@@ -12,6 +12,7 @@
   const today = M.todayKey();
   const nowIso = () => new Date().toISOString();
 
+  const categories = [['cejas','Cejas'],['pestanas','Pestañas'],['faciales','Faciales'],['micropigmentacion','Micropigmentación'],['depilacion','Depilación'],['otros','Otros']].map(([id,nombre],i)=>({ id,nombre,estado:'activo',activo:'si',orden:i+1 }));
   const services = [
     { id: 'faciales', nombre: 'Faciales', duracionMin: '60', precioRD: '2500', precioDesde: 'no', activo: 'si', volverDias: '30', depositoPct: '50', retoqueDias: '0', consentimiento: 'si' },
     { id: 'cejas', nombre: 'Cejas', duracionMin: '45', precioRD: '900', precioDesde: 'no', activo: 'si', volverDias: '28', depositoPct: '50', retoqueDias: '0', consentimiento: 'no' },
@@ -197,7 +198,7 @@
   const uploaded = {};
 
   const db = () => ({
-    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, services, gallery, reviews, packages, bonos, waitlist, emails, accounts, errors, security,
+    ok: true, user: 'demo', items, blocks, clients, files, promos, gifts, expenses, settings, categories, services, gallery, reviews, packages, bonos, waitlist, emails, accounts, errors, security,
     automation: { trigger: true, quota: 96, lastRun: { at: new Date(Date.now() - 22 * 60000).toISOString(), out: {} } },
     consentDefault: 'Declaro que la información que di sobre mi salud es verdadera y completa…\n\n(Texto general de ejemplo.)',
     schedule: { hours: M.config.schedule.hours, blocked: ['2026-12-25', '2027-01-01'], minNotice: 3, maxDays: 60, step: 30 },
@@ -252,11 +253,11 @@
         case 'adminDeleteBlock': { const i = blocks.findIndex((b) => b.id === d.id); if (i >= 0) blocks.splice(i, 1); return { ok: true }; }
         case 'adminSaveSettings': {
           Object.entries(d.settings || {}).forEach(([k, v]) => { const s = settings.find((x) => x.key === k); if (s) s.value = v; });
-          (d.services || []).forEach((s) => {
-            const id = s.id || s.nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-');
-            const row = services.find((x) => x.id === id);
-            const v = { id, nombre: s.nombre, duracionMin: String(s.duracionMin), precioRD: String(s.precioRD), precioDesde: s.precioDesde, activo: s.activo, volverDias: String(s.volverDias), depositoPct: String(s.depositoPct) };
-            if (row) Object.assign(row, v); else services.push(v);
+          (d.categories || []).forEach((cat) => { const row = categories.find(x=>x.id===cat.id); if(row)Object.assign(row,cat); else categories.push(cat); });
+          (d.services || []).forEach((svc) => {
+            const id = svc.id;
+            const row = services.find(x=>x.id===id);
+            if(row)Object.assign(row,svc); else services.push({...svc});
           });
           const map = Object.fromEntries(settings.map((s) => [s.key, s.value]));
           const keys = ['horario_domingo', 'horario_lunes', 'horario_martes', 'horario_miercoles', 'horario_jueves', 'horario_viernes', 'horario_sabado'];

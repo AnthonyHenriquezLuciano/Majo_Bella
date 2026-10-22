@@ -398,29 +398,34 @@
     renderServices() {
       const categories = (M.serviceCategories && M.serviceCategories.length)
         ? M.serviceCategories
-        : [...new Set(M.services.map((s) => s.category))].map((name) => ({ id: name, name }));
-      const cats = ['Todas', ...categories.map((c) => c.name)];
-      const list = M.services.filter((s) => this.cat === 'Todas' || s.category === this.cat);
-      const renderGroup = (c) => {
-        const items = list.filter((s) => s.category === c.name || s.categoryId === c.id);
-        const parents = (M.serviceGroups || []).filter((g) => g.categoryId === c.id);
-        const direct = items.filter((s) => !s.parentId || !parents.some((g) => g.id === s.parentId));
-        return `<section class="bk-category"><h2 class="bk-category-title">${esc(c.name)}</h2>
-          ${parents.map((g) => {
-            const children = items.filter((s) => s.parentId === g.id);
-            return `<details class="bk-service-group" data-group="${esc(g.id)}" ${this.expandedGroup === g.id ? 'open' : ''}><summary>${esc(g.name)}<small>Ver ${children.length} opciones</small></summary>
-              <div>${children.map((s) => this.svcItem(s)).join('')}</div></details>`;
-          }).join('')}
-          ${direct.map((s) => this.svcItem(s)).join('')}</section>`;
-      };
-      $('s-reservar').innerHTML = `
-        <div class="head">${this.stepper()}<p class="kicker">Paso 1 de 3</p><h1 class="large-title">¿Qué te hacemos hoy?</h1><p class="lead">Puedes elegir varios servicios.</p></div>
-        ${cats.length > 2 ? `<div class="cat-chips">${cats.map((c) => `<button type="button" class="chip${c === this.cat ? ' on' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : ''}
-        <div id="bk-list">${categories.filter((c) => this.cat === 'Todas' || this.cat === c.name).map(renderGroup).join('')}</div>`;
-      $('bk-list').addEventListener('click', (e) => {
-        const summary = e.target.closest('summary');
-        const details = summary && summary.closest('details[data-group]');
-        if (details) this.expandedGroup = details.open ? '' : details.dataset.group;
+        : [...new Set(M.services.map(s=>s.category))].map(name=>({id:name,name}));
+      const cat = categories.find(c=>c.name===this.cat);
+      if (!cat) {
+        this.cat='Todas';
+        $('s-reservar').innerHTML = `<div class="head">${this.stepper()}<p class="kicker">PASO 1 DE 3</p><h1 class="large-title">Reserva tu momento</h1><p class="lead">Elige la categoría que mejor se adapte a ti.</p></div>
+          <div id="bk-list" class="bk-categories">${categories.map(c=>{
+            const count=M.services.filter(s=>s.categoryId===c.id||s.category===c.name).length;
+            return `<button type="button" class="bk-category-tile" data-cat="${esc(c.name)}">
+              <span>MAJOBELLA · CATEGORÍA</span><b>${esc(c.name)}</b><small>${count} ${count===1?'servicio':'opciones'}</small><em>Explorar →</em>
+            </button>`;
+          }).join('')}</div>`;
+        this.servicesBar(); return;
+      }
+      const items=M.services.filter(s=>s.categoryId===cat.id||s.category===cat.name);
+      const groups=(M.serviceGroups||[]).filter(g=>g.categoryId===cat.id);
+      const direct=items.filter(s=>!s.parentId||!groups.some(g=>g.id===s.parentId));
+      $('s-reservar').innerHTML = `<div class="head">${this.stepper()}<p class="kicker">PASO 1 DE 3 · ${esc(cat.name)}</p>
+        <h1 class="large-title">${esc(cat.name)}</h1><p class="lead">Elige los servicios que deseas reservar.</p></div>
+        <button type="button" class="bk-back" data-cat="Todas">← Todas las categorías</button>
+        <div id="bk-list">${groups.map(g=>{
+          const children=items.filter(s=>s.parentId===g.id);
+          return `<details class="bk-service-group" data-group="${esc(g.id)}" ${this.expandedGroup===g.id?'open':''}>
+            <summary><strong>${esc(g.name)}</strong><small>${children.length} opciones · Ver opciones</small></summary>
+            <div>${children.map(s=>this.svcItem(s)).join('')}</div></details>`;
+        }).join('')}${direct.map(s=>this.svcItem(s)).join('')}</div>`;
+      $('bk-list').addEventListener('click', e=>{
+        const details=e.target.closest('summary')?.closest('details[data-group]');
+        if(details)this.expandedGroup=details.open?'':details.dataset.group;
       });
       this.servicesBar();
     },

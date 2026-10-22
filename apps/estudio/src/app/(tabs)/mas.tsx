@@ -21,7 +21,8 @@ export default function Mas() {
         {upcomingBlocks.length ? <ListRow icon="info" title={`${upcomingBlocks.length} ${upcomingBlocks.length === 1 ? 'bloqueo activo' : 'bloqueos activos'}`} sub="Se ven en la agenda de cada día" /> : null}
       </Section>
       <Section kicker="Panel completo">
-        <ListRow icon="external" title="Abrir el panel web" sub="Servicios, precios, promociones, correos y ajustes" onPress={() => Linking.openURL(`${WEB_URL}admin.html`)} />
+        <ListRow icon="external" title="Administrar servicios" sub="Categorías, subservicios, estados y orden" onPress={() => Linking.openURL(`${WEB_URL}admin.html#catalogo`)} />
+        <ListRow icon="external" title="Abrir el panel web" sub="Promociones, correos y ajustes" onPress={() => Linking.openURL(`${WEB_URL}admin.html`)} />
         <ListRow icon="external" title="Ver la web" onPress={() => Linking.openURL(WEB_URL)} />
         <ListRow icon="whatsapp" title="WhatsApp del estudio" sub={CONFIG.whatsapp.display} />
       </Section>

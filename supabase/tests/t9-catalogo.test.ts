@@ -49,5 +49,36 @@ export default async function () {
     assert.ok(cat.services.some((s: any) => s.id === 'cejas'), 'otro servicio de la categoría sigue visible');
     const data = ok(await g.post({ action: 'adminData', idToken: A }), 'citas anteriores intactas');
     assert.ok(data.items.some((a: any) => a.services.some((s: any) => s.id === 'cejas-organicas')));
+
+    // Tres estados editoriales: borrador y desactivado nunca aparecen ni son reservables.
+    ok(await g.post({ action:'adminSaveSettings', idToken:A,
+      categories:[{id:'nueva-cat',nombre:'Nueva colección',estado:'borrador',orden:6}],
+      services:[{id:'nuevo-svc',nombre:'Opción privada',categoriaId:'nueva-cat',
+        tipo:'servicio',estado:'activo',duracionMin:40,precioRD:800,orden:1}] }), 'guardar categoría borrador');
+    cat = ok(await g.get({action:'catalog'}), 'comprobar borrador');
+    assert.ok(!cat.categories.some((c:any)=>c.id==='nueva-cat'));
+    assert.ok(!cat.services.some((s:any)=>s.id==='nuevo-svc'));
+    fail(await g.post({action:'hold',services:['nuevo-svc'],date:nextTuesday(),time:'15:00',
+      client:{name:'Ana Pérez',phone:'8095551111',email:'ana@example.com'}}),'borrador no reservable');
+
+    ok(await g.post({action:'adminSaveSettings',idToken:A,
+      categories:[{id:'nueva-cat',nombre:'Nueva colección',estado:'activo'}],
+      services:[{id:'nuevo-svc',nombre:'Opción privada',categoriaId:'nueva-cat',
+        tipo:'servicio',estado:'borrador',duracionMin:40,precioRD:800}] }),'publicar categoría sin publicar subservicio');
+    cat = ok(await g.get({action:'catalog'}),'categoría sin servicios públicos');
+    assert.ok(!cat.services.some((s:any)=>s.id==='nuevo-svc'));
+    ok(await g.post({action:'adminSaveSettings',idToken:A,
+      services:[{id:'nuevo-svc',nombre:'Opción pública',categoriaId:'nueva-cat',
+        tipo:'servicio',estado:'activo',duracionMin:40,precioRD:800}]}),'activar opción');
+    cat=ok(await g.get({action:'catalog'}),'catálogo con opción activa');
+    assert.ok(cat.services.some((s:any)=>s.id==='nuevo-svc'));
+    ok(await g.post({action:'adminSaveSettings',idToken:A,
+      services:[{id:'nuevo-svc',nombre:'Opción pública',categoriaId:'nueva-cat',
+        tipo:'servicio',estado:'desactivado',duracionMin:40,precioRD:800}]}),'desactivar opción');
+    cat=ok(await g.get({action:'catalog'}),'catálogo con opción desactivada');
+    assert.ok(!cat.services.some((s:any)=>s.id==='nuevo-svc'));
+    const admin=ok(await g.post({action:'adminData',idToken:A}),'editor conserva borradores');
+    assert.equal(admin.services.find((s:any)=>s.id==='nuevo-svc').estado,'desactivado');
+    assert.equal(admin.categories.find((c:any)=>c.id==='nueva-cat').estado,'activo');
   } finally { await g.close(); }
 }
