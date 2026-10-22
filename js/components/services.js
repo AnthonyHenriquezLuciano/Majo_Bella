@@ -54,24 +54,34 @@
     M.refreshServices = () => render();
     function render() {
       const cats = categories();
-      tabs.innerHTML = ['Todos', ...cats.map((c) => c.name)].map((c) => `
-        <button type="button" class="menu-tab${c === active ? ' is-active' : ''}"
-          role="tab" aria-selected="${c === active}" data-cat="${M.escapeHtml(c)}">${M.escapeHtml(c)}</button>`).join('');
-      const groups = cats.filter((c) => active === 'Todos' || c.name === active)
-        .map((c) => ({ c, items: M.services.filter((s) => s.categoryId === c.id || (!s.categoryId && s.category === c.name)) }));
-      list.innerHTML = groups.map(({ c, items }) => {
-        const parents = (M.serviceGroups || []).filter((g) => g.categoryId === c.id);
-        const direct = items.filter((s) => !s.parentId || !parents.some((g) => g.id === s.parentId));
-        return `<h3 class="menu-cat">${M.escapeHtml(c.name)}</h3>
-          ${parents.map((g) => {
-            const children = items.filter((s) => s.parentId === g.id);
-            return `<details class="menu-service-group"><summary><span>${M.escapeHtml(g.name)}</span>
-              <small>${children.length} ${children.length === 1 ? 'estilo' : 'opciones'} · Ver opciones</small></summary>
-              <div class="menu-service-children">${g.description ? `<p>${M.escapeHtml(g.description)}</p>` : ''}
-                ${children.map(card).join('')}</div></details>`;
-          }).join('')}
-          ${direct.map(card).join('')}`;
-      }).join('');
+      const cat = cats.find(c => c.name === active);
+      if (!cat) {
+        active = 'Todos';
+        tabs.innerHTML = '';
+        list.innerHTML = `<div class="menu-category-grid">${cats.map((c) => {
+          const n = M.services.filter((s) => s.categoryId === c.id || (!s.categoryId && s.category === c.name)).length;
+          return `<button type="button" class="menu-category-tile" data-open-category="${M.escapeHtml(c.name)}">
+            <span class="menu-category-caption">MAJOBELLA · CATEGORÍA</span>
+            <strong>${M.escapeHtml(c.name)}</strong>
+            <small>${n} ${n === 1 ? 'servicio' : 'opciones'}</small>
+            <span class="menu-category-cta">Explorar →</span>
+          </button>`;
+        }).join('')}</div>`;
+        return;
+      }
+      tabs.innerHTML = '<button type="button" class="menu-tab" data-cat="Todos">← Todas las categorías</button>';
+      const items = M.services.filter((s) => s.categoryId === cat.id || (!s.categoryId && s.category === cat.name));
+      const parents = (M.serviceGroups || []).filter((g) => g.categoryId === cat.id);
+      const direct = items.filter((s) => !s.parentId || !parents.some((g) => g.id === s.parentId));
+      list.innerHTML = `<div class="menu-category-heading"><p>MAJOBELLA · SERVICIOS</p><h3>${M.escapeHtml(cat.name)}</h3></div>
+        ${parents.map((g) => {
+          const children = items.filter((s) => s.parentId === g.id);
+          return `<details class="menu-service-group"><summary><span>${M.escapeHtml(g.name)}</span>
+            <small>${children.length} ${children.length===1?'opción':'opciones'} · Ver opciones</small></summary>
+            <div class="menu-service-children">${g.description ? `<p>${M.escapeHtml(g.description)}</p>` : ''}
+            ${children.map(card).join('')}</div></details>`;
+        }).join('')}
+        ${direct.map(card).join('')}`;
     }
 
     function toggleDetails(cardEl) {
@@ -106,6 +116,13 @@
     });
 
     list.addEventListener('click', (e) => {
+      const categoryButton = e.target.closest('[data-open-category]');
+      if (categoryButton) {
+        active = categoryButton.dataset.openCategory;
+        render();
+        tabs.scrollIntoView({ block: 'nearest' });
+        return;
+      }
       const cardEl = e.target.closest('.svc-card');
       if (!cardEl) return;
       if (e.target.closest('.svc-add')) { M.toggleService(cardEl.dataset.id, 'services'); return; }
