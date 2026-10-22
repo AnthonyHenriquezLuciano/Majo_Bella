@@ -42,6 +42,13 @@
       if (b.metodoPago === 'cortesia' || b.estado === 'pendiente' || !(Number(b.montoRD) > 0)) return;
       out.push({ at: b.creada || b.vendida, date: b.vendida, kind: 'Paquete', method: b.metodoPago || 'efectivo', amount: Number(b.montoRD) || 0, who: b.clienta || b.codigo });
     });
+    // Reembolsos completados de tarjetas y paquetes: restan solo una vez de los ingresos.
+    (A.data.paypalRefunds || []).filter(p=>p.estado==='completado'&&['tarjeta','paquete'].includes(p.tipo)).forEach(p=>{
+      const at=p.actualizado||p.creado;
+      if(!at)return;
+      out.push({at,date:A.dayOf(at),kind:'Reembolso · '+(p.tipo==='tarjeta'?'tarjeta de regalo':'paquete'),
+        method:'paypal',amount:-Number(p.montoRD||0),who:p.referencia});
+    });
     return out.sort((a, b) => String(a.at).localeCompare(String(b.at)));
   };
 
@@ -146,7 +153,7 @@
     $('mn-fee-note').textContent = `Comisión de PayPal estimada con ${A.setting('comisionPaypalPct', 5.4)}% + US$ ${A.setting('comisionPaypalFijoUSD', 0.3)} por cobro y ${A.setting('conversionPct', 3.5)}% de conversión a pesos (se cambian en Ajustes).`;
   }
 
-  function render() { renderDay(); renderMonth(); }
+  function render() { renderDay(); renderMonth(); A.PayPalOps?.render(); }
 
   /* ---------- Reporte PDF ---------- */
   function loadScript(src) {
@@ -314,6 +321,7 @@
   A.sections.dinero = {
     render,
     init() {
+      A.PayPalOps?.init();
       $('mn-day-prev').addEventListener('click', () => { st.day = A.addDays(st.day, -1); renderDay(); });
       $('mn-day-next').addEventListener('click', () => { st.day = A.addDays(st.day, 1); renderDay(); });
       $('mn-day-today').addEventListener('click', () => { st.day = M.todayKey(); renderDay(); });
