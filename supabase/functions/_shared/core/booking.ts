@@ -11,6 +11,7 @@ import { authorized_, human_, limited_, noteFail_, verifyIdToken_ } from './secu
 import { calendarCancel_, calendarCreate_, calendarMove_ } from './google.ts';
 import { adminTo_, mailAdminRescheduled_, mailAdminTransfer_, mailTransferReceived_, notifyCancelled_, notifyConfirmed_, notifyRescheduled_, safeMail_ } from './mail.ts';
 import { consentState_ } from './consent.ts';
+import { evaluateConsent_ } from './consent-templates.ts';
 import { markWaitlistBooked_, notifyWaitlist_ } from './waitlist.ts';
 import { logError_ } from './errors.ts';
 import { PRIVATE_BUCKET, filePath, putFile } from './storage.ts';
@@ -36,6 +37,7 @@ export async function hold_(d) {
   const ids = (d.services || []).map(function (x) { return typeof x === 'string' ? x : x && x.id; }).filter(Boolean);
   const items = catalogItems_(ids);
   if (!items.length || items.some(function (x) { return !x; })) return { ok: false, error: 'Elige un servicio válido.' };
+  const consentSnapshots = evaluateConsent_(items, d);
   const minutes = items.reduce(function (t, x) { return t + x.durationMinutes; }, 0);
 
   // Horario
@@ -68,6 +70,8 @@ export async function hold_(d) {
     totalRD: p.total, depositoRD: p.depositRD, depositoUSD: p.depositUSD.toFixed(2), saldoRD: p.balanceRD,
     clienta: name, telefono: phone, correo: email, nota: notes, tokenHash: hash_(token),
     saldoEstado: p.balanceRD > 0 ? 'pendiente' : 'pagado', retenidaHasta: new Date(Date.now() + holdMin * 60000).toISOString(),
+    consentimientosJson: consentSnapshots.length?JSON.stringify(consentSnapshots):'',
+    consentimiento: consentSnapshots.length?new Date().toISOString():'',
     origen: clean_(d.origen, 40), canal: clean_(d.canal, 80), creadaPor: 'web',
   };
 
