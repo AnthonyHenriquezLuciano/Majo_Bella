@@ -1330,3 +1330,62 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   .services-section .menu-category-tile { min-height: 143px; padding: 20px 22px; }
   .services-section .menu-category-tile::before { right: -55px; }
 }
+
+/* MAJOBELLA · categorías sólidas, sin etiquetas; detalles claros y acción + */
+.services-section .menu-category-tile {
+  background: #111111;
+  border-color: #111111;
+  min-height: 148px;
+  gap: 14px;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.services-section .menu-category-tile:hover { background: #202020; }
+.services-section .menu-category-tile strong {
+  margin: 0;
+  font-size: clamp(23px, 2.7vw, 31px);
+  line-height: 1.2;
+}
+.services-section .menu-category-cta { margin-top: 0; }
+.services-section .menu-category-heading h3 {
+  font-size: clamp(24px, 2.8vw, 32px);
+  line-height: 1.2;
+}
+.services-section .menu-service-group > summary {
+  justify-content: flex-start;
+  min-height: 82px;
+  gap: 12px;
+  font-size: clamp(19px, 2vw, 24px);
+}
+.services-section .menu-service-group > summary > span:first-child { flex: 1; }
+.services-section .menu-service-group > summary small { font-size: 12px; }
+.services-section .menu-group-expand {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #b7b7b7;
+  border-radius: 50%;
+  font: 400 23px/1 system-ui, sans-serif;
+  color: #111111;
+  transition: transform .2s ease;
+}
+.services-section .menu-service-group[open] .menu-group-expand { transform: rotate(45deg); }
+.services-section .svc-card .svc-add {
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  font: 400 26px/1 system-ui, sans-serif;
+}
+.services-section .svc-add[aria-pressed=true] .svc-add-label { font-size: 21px; }
+.services-section .svc-more { font-size: 13px; }
+@media (prefers-reduced-motion: reduce) {
+  .services-section .menu-group-expand { transition: none; }
+}
+@media (max-width:650px) {
+  .services-section .menu-category-tile { min-height: 138px; }
+  .services-section .menu-service-group > summary { flex-wrap: wrap; }
+}
