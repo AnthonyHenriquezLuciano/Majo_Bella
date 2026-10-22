@@ -1389,3 +1389,6 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   .services-section .menu-category-tile { min-height: 138px; }
   .services-section .menu-service-group > summary { flex-wrap: wrap; }
 }
+
+/* Ocultar correctamente los paneles de detalle hasta pulsar «Ver detalle». */
+.services-section .svc-details[hidden] { display:none; }
