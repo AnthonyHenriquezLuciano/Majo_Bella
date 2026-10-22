@@ -158,7 +158,7 @@
     const changed = next !== app.tab;
     app.tab = next;
     document.querySelectorAll('.screen').forEach((s) => { s.hidden = s.dataset.screen !== next; });
-    document.querySelectorAll('#tabbar [data-tab]').forEach((t) => { const on = t.dataset.tab === next; t.classList.toggle('on', on); if (on) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
+    document.querySelectorAll('#tabbar [data-tab]').forEach((t) => { const on = t.dataset.tab === next || (next === 'billetera' && t.dataset.tab === 'perfil'); t.classList.toggle('on', on); if (on) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
     $('tb-title').textContent = TITLES[next];
     if (next === 'reservar') bk.setStepFromHash(sub);
     render(next);
@@ -173,6 +173,14 @@
     setTopAction(null);
     $('tb-back').hidden = true; $('tb-mark').hidden = false;
     ({ inicio: renderInicio, servicios: renderServicios, reservar: () => bk.render(), citas: renderCitas, billetera: renderBilletera, perfil: renderPerfil })[tab]();
+    // La billetera es una subpantalla de Cuenta en Android: conservar ruta
+    // antigua por compatibilidad pero ofrecer navegación de regreso visible.
+    if(tab === 'billetera') {
+      $('tb-mark').hidden = true;
+      const back = $('tb-back');
+      back.hidden = false;
+      back.onclick = () => { location.hash = '#perfil'; };
+    }
   }
   function onScroll() { $('topbar').classList.toggle('is-scrolled', window.scrollY > 40); }
   window.addEventListener('scroll', onScroll, { passive: true });
