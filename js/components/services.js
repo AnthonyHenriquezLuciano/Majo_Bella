@@ -55,9 +55,12 @@
     function render() {
       const cats = categories();
       const cat = cats.find(c => c.name === active);
+      if (!cat) active = 'Todos';
+      // Filtros originales siempre visibles: "Todos" muestra la lista de categorías.
+      tabs.innerHTML = ['Todos', ...cats.map((c) => c.name)].map((name) => `
+        <button type="button" class="menu-tab${name === active ? ' is-active' : ''}"
+          role="tab" aria-selected="${name === active}" data-cat="${M.escapeHtml(name)}">${M.escapeHtml(name)}</button>`).join('');
       if (!cat) {
-        active = 'Todos';
-        tabs.innerHTML = '';
         list.innerHTML = `<div class="menu-category-grid">${cats.map((c) => {
           const n = M.services.filter((s) => s.categoryId === c.id || (!s.categoryId && s.category === c.name)).length;
           return `<button type="button" class="menu-category-tile" data-open-category="${M.escapeHtml(c.name)}">
@@ -69,7 +72,6 @@
         }).join('')}</div>`;
         return;
       }
-      tabs.innerHTML = '<button type="button" class="menu-tab" data-cat="Todos">← Todas las categorías</button>';
       const items = M.services.filter((s) => s.categoryId === cat.id || (!s.categoryId && s.category === cat.name));
       const parents = (M.serviceGroups || []).filter((g) => g.categoryId === cat.id);
       const direct = items.filter((s) => !s.parentId || !parents.some((g) => g.id === s.parentId));
