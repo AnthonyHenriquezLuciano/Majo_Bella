@@ -407,7 +407,7 @@ export function adminSaveExpense_(d) {
     else appendRow_('Ajustes',{clave:'gastosRecurrentes',valor:value,'qué es':'Plantillas de gastos mensuales'});
   }
   const patch: any = {
-    id: recurrentId ? ('GRE-' + recurrentId + '-' + todayKey_().slice(0,7).replace('-','')) : (e.id || ('GST-' + uuid().slice(0, 6).toUpperCase())),
+    id: recurrentId ? ('GRE-' + recurrentId + '-' + (isDateKey_(e.fecha) ? String(e.fecha) : todayKey_()).slice(0,7).replace('-','')) : (e.id || ('GST-' + uuid().slice(0, 6).toUpperCase())),
     fecha: isDateKey_(e.fecha) ? e.fecha : todayKey_(), concepto: clean_(e.concepto, 120),
     categoria: clean_(e.categoria, 40) || 'Otros', montoRD: monto, metodo: clean_(e.metodo, 30) || 'efectivo',
   };
