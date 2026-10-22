@@ -46,6 +46,7 @@ jobs:
           node --check ../js/integrations/booking-api.js
           node --check ../js/components/services.js
           node --check ../js/components/membresias.js
+          node --check ../js/integrations/paypal.js
           node --check ../js/admin/membresias.js
           node --check ../js/admin/catalogo.js
           node --check ../js/admin/centro.js
