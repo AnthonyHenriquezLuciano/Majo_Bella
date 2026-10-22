@@ -3,6 +3,7 @@ import { env_ } from './ctx.ts';
 import { readOpt_ } from './db.ts';
 import { categories_, serviceGroups_, servicesMap_, services_, settings_ } from './data.ts';
 import { schedule_ } from './schedule.ts';
+import { publicTemplates_ } from './consent-templates.ts';
 import { promos_ } from './pricing.ts';
 import { paypalEnv_, paypalConfigured_ } from './paypal.ts';
 import { turnstileOn_ } from './security.ts';
@@ -16,11 +17,12 @@ export function catalog_(): any {
   return {
     ok: true,
     categories: categories_().filter((c) => available.some((x) => x.categoryId === c.id)),
+    consentTemplates: publicTemplates_(),
     serviceGroups: serviceGroups_().filter((g) => available.some((x) => x.parentId === g.id)),
     services: available.map(function (x) {
       return { id: x.id, name: x.name, categoryId: x.categoryId, category: x.category,
         parentId: x.parentId, description: x.description, order: x.order,
-        durationMinutes: x.durationMinutes, price: x.price, priceFrom: x.priceFrom, depositPercent: x.depositPercent };
+        durationMinutes: x.durationMinutes, price: x.price, priceFrom: x.priceFrom, depositPercent: x.depositPercent, consentTemplateId: x.consentTemplateId };
     }),
     payments: {
       // No ofrecer PayPal hasta que la API tenga un par de credenciales configurado.
