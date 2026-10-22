@@ -7,6 +7,7 @@ import { env_ } from './ctx.ts';
 import { settings_ } from './data.ts';
 import { clean_, esc_, money_, todayKey_, uuid, strip_ } from './util.ts';
 import { adminTo_, layout_, mailUrl_, safeMail_ } from './mail.ts';
+import { knownEvent_, recordPaypalEvent_, processPaypalOperationalEvent_ } from './paypal-ops.ts';
 
 const rows = () => readTable_('Membresias');
 const plans = () => readTable_('PlanesMembresia');
@@ -186,16 +187,25 @@ export async function paypalWebhook_(d:any,headers:Record<string,string>) {
    auth_algo:headers['paypal-auth-algo'],webhook_id:webhookId,webhook_event:event
  });
  if(verify.verification_status!=='SUCCESS')throw Error('La firma del evento de PayPal no es válida.');
+ if(knownEvent_(str(event.id)))return {ok:true,duplicate:true};
  const resource=event.resource||{},etype=str(event.event_type);
  let subId=str(resource.billing_agreement_id||resource.id);
  if(etype==='PAYMENT.SALE.COMPLETED'||etype==='PAYMENT.SALE.REFUNDED'||etype==='PAYMENT.SALE.REVERSED')
    subId=str(resource.billing_agreement_id);
  const m=paypalMember(subId);
- if(!m)return {ok:true,ignored:true};
- if(etype==='PAYMENT.SALE.COMPLETED')return settle(m,resource);
+ if(!m){
+   const outcome=processPaypalOperationalEvent_(event);
+   recordPaypalEvent_(event,outcome.status,outcome.ref,outcome.detail);
+   return {ok:true,ignored:outcome.status==='sin_vincular',status:outcome.status};
+ }
+ if(etype==='PAYMENT.SALE.COMPLETED'){
+   const out=await settle(m,resource);
+   recordPaypalEvent_(event,'conciliado',m.id,out.duplicate?'Venta repetida (sin cargo duplicado)':'Nuevo período pagado');
+   return out;
+ }
  if(etype==='BILLING.SUBSCRIPTION.PAYMENT.FAILED'){
    // Evitar correos repetidos para el mismo período de impago.
-   if(m.paypalEstado!=='PAYMENT_FAILED'){
+   if(!['PAYMENT_FAILED','CANCELLED','EXPIRED'].includes(m.paypalEstado)){
      updateTable_('Membresias',m._row,{paypalEstado:'PAYMENT_FAILED',paypalPagosFallidos:Number(m.paypalPagosFallidos||0)+1});
      failedNotice(m);
    }
@@ -205,8 +215,9 @@ export async function paypalWebhook_(d:any,headers:Record<string,string>) {
    if(m.estado==='solicitada')patch.estado='cancelada';
    updateTable_('Membresias',m._row,patch);
  }else if(etype==='BILLING.SUBSCRIPTION.ACTIVATED'){
-   // Sólo se refleja la autorización; NUNCA se conceden sesiones sin SALE.COMPLETED.
-   if(m.paypalEstado!=='ACTIVE')updateTable_('Membresias',m._row,{paypalEstado:'APPROVED_PENDING_PAYMENT'});
+   // No restaurar suscripciones canceladas ni conceder sesiones antes del cobro.
+   if(!['ACTIVE','CANCELLED','EXPIRED'].includes(m.paypalEstado))
+     updateTable_('Membresias',m._row,{paypalEstado:'APPROVED_PENDING_PAYMENT'});
  }else if(etype==='PAYMENT.SALE.REFUNDED'||etype==='PAYMENT.SALE.REVERSED'){
    const saleRef=str(resource.parent_payment||resource.parent_payment_id||resource.id);
    const p=payments().find(x=>x.id===saleRef);
@@ -220,6 +231,7 @@ export async function paypalWebhook_(d:any,headers:Record<string,string>) {
        details:[['Plan',esc_(m.nombrePlan)],['Referencia',esc_(p.id)]]}),{tipo:'aviso',ref:p.id});
    }
  }
+ recordPaypalEvent_(event,'conciliado',m.id,etype);
  return {ok:true};
 }
 export function myMembershipPayments_(d:any){
