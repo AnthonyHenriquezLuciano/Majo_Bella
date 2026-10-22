@@ -20,7 +20,7 @@
     <p class="mb-pub-desc">${esc(p.descripcion||'Tu tiempo de belleza, diseñado para ti.')}</p>
     <p class="mb-pub-session">${Number(p.sesionesMes)} ${Number(p.sesionesMes)===1?'sesión':'sesiones'} incluidas al mes</p>
     ${p.beneficios?`<p class="mb-pub-benefits">${esc(p.beneficios)}</p>`:''}
-    ${capability().enabled&&p.renovacion==='automatica_disponible'? `<div class="mb-pay-choice"><span>♻ Renovación mensual automática</span><small>Un solo consentimiento · Gestiona tu suscripción cuando quieras</small></div>
+    ${capability().enabled&&p.renovacion==='automatica_disponible'? `<div class="mb-pay-choice"><span>♻ Renovación mensual automática</span><small>Cargo de US$ ${Number(p.paypalPrecioUSD||0).toFixed(2)} mensuales en PayPal · equivalente referencial ${money(p.precioRD)} al crear el plan</small><small>Gestiona tu suscripción cuando quieras</small></div>
       <button class="btn btn-primary" type="button" data-mb-auto="${esc(p.id)}">Suscribirme con PayPal →</button>`:''}
     <button class="btn btn-ghost" type="button" data-mb-request="${esc(p.id)}">Solicitar pago con el estudio</button>
     <p class="mb-pay-small">La activación requiere confirmar el pago. Puedes cancelar la renovación desde tu cuenta.</p>
@@ -100,7 +100,7 @@
   if(busy)return;
   if(!M.Auth?.token){on('Inicia sesión para continuar con tu suscripción segura.');M.openAuth?.();return;}
   const p=plans.find(x=>x.id===id);if(!p)return;
-  if(!confirm('Vas a autorizar cobros mensuales de '+money(p.precioRD)+' (se convertirán a USD a la tasa del estudio). PayPal mostrará el importe exacto en dólares antes de aceptar. Puedes cancelar la renovación desde Mis membresías. ¿Continuar?'))return;
+  if(!confirm('Vas a autorizar un cobro recurrente de US$ '+Number(p.paypalPrecioUSD).toFixed(2)+' cada mes (equivalente referencial '+money(p.precioRD)+' al configurar este plan). PayPal confirmará ese importe antes de aceptarlo. Puedes cancelar la renovación desde Mis membresías. ¿Continuar?'))return;
   busy=true;on('Preparando tu autorización de forma segura…');
   try{
     const r=await API.post({action:'startPaypalSubscription',planId:id,idToken:M.Auth.token,nombre:M.Auth.user?.name||''});
