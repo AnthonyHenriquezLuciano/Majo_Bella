@@ -474,3 +474,23 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   .bk-service-group > summary { flex-wrap:wrap; }
 }
 @media(prefers-reduced-motion:reduce) { .bk-service-group .bk-group-plus { transition:none; } }
+
+/* Paridad visual con la app nativa MAJOBELLA (Android): misma navegación, tipografía y jerarquía */
+.native-hero {padding:22px 0 28px}
+.native-hero .large-title {font-size:clamp(36px,10vw,47px);line-height:1.08;letter-spacing:-.03em;margin-top:11px}
+.native-hero .lead {margin-top:14px;max-width:35ch}
+.native-hero-actions {display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px}
+.native-hero-actions .btn{min-width:0;padding:0 12px}
+.service-filter{margin-bottom:20px}
+.service-catalog{display:grid;gap:12px;padding-bottom:18px}
+.service-catalog-card{border:1px solid var(--line-strong);background:var(--bg);padding:19px;border-radius:var(--r-md);display:grid;gap:16px}
+.service-catalog-card h2{font:400 23px/1.17 var(--serif);margin:7px 0}
+.service-catalog-card .service-catalog-copy>p:last-child{color:var(--muted);margin:0;font-size:14px}
+.service-catalog-actions{display:flex;align-items:center;gap:10px}
+.service-catalog-actions button{border:1px solid var(--line-strong);background:transparent;padding:10px 14px;min-height:44px;cursor:pointer;flex:1;font-size:13px}
+.service-catalog-actions .service-catalog-book{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tabbar a{font-family:var(--serif);font-size:11.5px;font-weight:400}
+.tab-main .tab-plus{border-radius:0;width:50px;height:50px;margin-top:-22px;box-shadow:none;border:3px solid #fff}
+.tabbar a.on{font-weight:600}
+.screen:focus-visible{outline-offset:-2px}
+@media(prefers-reduced-motion:reduce){.screen,.step-enter{animation:none!important}.tabbar a,.tab-main .tab-plus{transition:none!important}}
