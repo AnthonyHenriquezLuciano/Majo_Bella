@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="css/admin.css?v=20261022v3">
 <link rel="stylesheet" href="css/catalogo.css?v=20261022v3">
 <link rel="stylesheet" href="css/consentimientos.css?v=20261022ct1">
-<link rel="stylesheet" href="css/membresias.css?v=20261022mb1">
+<link rel="stylesheet" href="css/membresias.css?v=20261022pay1">
 <link rel="stylesheet" href="css/admin-pro.css?v=20261022pro1">
 </head>
 <body>
@@ -482,6 +482,12 @@
       <div class="mb-filters"><label>Filtrar estado<select id="mb-state-filter"><option value="">Todos</option><option value="solicitada">Solicitadas</option><option value="activa">Activas</option><option value="vencida">Vencidas</option><option value="pausada">Pausadas</option><option value="cancelada">Canceladas</option></select></label><label>Buscar<input type="search" id="mb-search" placeholder="Clienta, correo o plan"></label></div>
       <div class="mb-member-list" id="mb-member-list"></div>
     </div>
+    <section class="ad-panel mb-ledger-panel">
+      <div class="panel-head"><h2>Conciliación de pagos recurrentes</h2><span class="muted">Cobros verificados por PayPal</span></div>
+      <div id="mb-payment-summary" class="mb-payment-summary"></div>
+      <div id="mb-payment-ledger" class="mb-payment-ledger"></div>
+      <p class="panel-note">No incluye reservas ni pagos manuales. Cada transacción recurrente se registra una sola vez y se muestra con su referencia.</p>
+    </section>
     <p class="mb-note">Importante: registrar el uso de una sesión aquí no sustituye la reserva ni el consentimiento obligatorio antes de pagar. Comprueba la cita y sus condiciones.</p>
   </section>
 
@@ -974,7 +980,7 @@
 <script src="js/admin/paquetes.js?v=20261022v3"></script>
 <script src="js/admin/web.js?v=20261022v3"></script>
 <script src="js/admin/correos.js?v=20261022v3"></script>
-<script src="js/admin/membresias.js?v=20261022mb1"></script>
+<script src="js/admin/membresias.js?v=20261022pay1"></script>
 <script src="js/admin/consentimientos.js?v=20261022ct1"></script>
 <script src="js/admin/catalogo.js?v=20261022ct1"></script>
 <script src="js/admin/ajustes.js?v=20261022v3"></script>
