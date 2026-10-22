@@ -29,6 +29,9 @@ export default async function(){
   fail(await g.post({action:'startPaypalSubscription',planId:p.id}),'no se permite anónimo');
   const sub=ok(await g.post({action:'startPaypalSubscription',planId:p.id,idToken:client,nombre:'Ana Pérez'}),'solicitud segura');
   assert.match(sub.approvalUrl,/sandbox.paypal.com/);
+  const continuation=ok(await g.post({action:'startPaypalSubscription',planId:p.id,idToken:client}),'reanudar autorización sin duplicar');
+  assert.equal(continuation.approvalUrl,sub.approvalUrl);
+  assert.equal(Object.keys(g.pp.subscriptions).length,1);
   const m=await g.row('Membresias',sub.membresiaId);
   assert.equal(m.estado,'solicitada');
   const sid=m.paypalSubscriptionId;
