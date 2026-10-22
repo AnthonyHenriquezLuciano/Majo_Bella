@@ -404,9 +404,8 @@
         this.cat='Todas';
         $('s-reservar').innerHTML = `<div class="head">${this.stepper()}<p class="kicker">PASO 1 DE 3</p><h1 class="large-title">Reserva tu momento</h1><p class="lead">Elige la categoría que mejor se adapte a ti.</p></div>
           <div id="bk-list" class="bk-categories">${categories.map(c=>{
-            const count=M.services.filter(s=>s.categoryId===c.id||s.category===c.name).length;
             return `<button type="button" class="bk-category-tile" data-cat="${esc(c.name)}">
-              <span>MAJOBELLA · CATEGORÍA</span><b>${esc(c.name)}</b><small>${count} ${count===1?'servicio':'opciones'}</small><em>Explorar →</em>
+              <b>${esc(c.name)}</b><em>Explorar →</em>
             </button>`;
           }).join('')}</div>`;
         this.servicesBar(); return;
@@ -414,13 +413,13 @@
       const items=M.services.filter(s=>s.categoryId===cat.id||s.category===cat.name);
       const groups=(M.serviceGroups||[]).filter(g=>g.categoryId===cat.id);
       const direct=items.filter(s=>!s.parentId||!groups.some(g=>g.id===s.parentId));
-      $('s-reservar').innerHTML = `<div class="head">${this.stepper()}<p class="kicker">PASO 1 DE 3 · ${esc(cat.name)}</p>
+      $('s-reservar').innerHTML = `<div class="head bk-category-head">${this.stepper()}<p class="kicker">PASO 1 DE 3 · ${esc(cat.name)}</p>
         <h1 class="large-title">${esc(cat.name)}</h1><p class="lead">Elige los servicios que deseas reservar.</p></div>
         <button type="button" class="bk-back" data-cat="Todas">← Todas las categorías</button>
         <div id="bk-list">${groups.map(g=>{
           const children=items.filter(s=>s.parentId===g.id);
           return `<details class="bk-service-group" data-group="${esc(g.id)}" ${this.expandedGroup===g.id?'open':''}>
-            <summary><strong>${esc(g.name)}</strong><small>${children.length} opciones · Ver opciones</small></summary>
+            <summary><strong>${esc(g.name)}</strong><span class="bk-group-plus" aria-hidden="true">+</span><small>Ver opciones</small></summary>
             <div>${children.map(s=>this.svcItem(s)).join('')}</div></details>`;
         }).join('')}${direct.map(s=>this.svcItem(s)).join('')}</div>`;
       $('bk-list').addEventListener('click', e=>{
@@ -433,11 +432,13 @@
       const on = this.ids.includes(s.id);
       const p = M.promoFor ? M.promoFor(s.id) : null;
       const dep = M.depositPct ? M.depositPct(s) : null;
-      return `<div class="svc-item${on ? ' on' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-svc="${esc(s.id)}">
+      return `<div class="svc-item${on ? ' on' : ''}">
         <span class="st"><b>${esc(s.name)}</b><small>${M.fmtDurationShort(s.durationMinutes)}${dep === 0 ? ' · sin depósito' : ''}</small>
           <span class="price">${p ? `<s>${M.fmtPrice(s.price)}</s>` : ''}${s.priceFrom ? 'Desde ' : ''}${M.fmtPrice(p ? s.price - p.discount : s.price)}${p ? `<span class="promo">${esc(M.promoLabel(p))}</span>` : ''}</span></span>
-        ${s.description ? `<button type="button" class="info" data-svc-info="${esc(s.id)}" aria-label="Detalles de ${esc(s.name)}">${I.info}</button>` : ''}
-        <span class="tick" aria-hidden="true">${on ? I.check : I.plus}</span></div>`;
+        <div class="bk-svc-actions">
+          <button type="button" class="bk-svc-detail" data-svc-info="${esc(s.id)}">Ver detalle</button>
+          <button type="button" class="bk-svc-add" data-svc-add="${esc(s.id)}" aria-pressed="${on}" aria-label="${on ? 'Quitar' : 'Añadir'} ${esc(s.name)}">${on ? '✓' : '+'}</button>
+        </div></div>`;
     },
     servicesBar() {
       const items = this.items();
