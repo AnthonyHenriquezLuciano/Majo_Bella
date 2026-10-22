@@ -1,6 +1,6 @@
 /* MAJOBELLA · Cliente de la API (el mismo contrato que usa la web: GET ?action=… y POST { action, … }).
    Funciona igual con el backend de Supabase (functions/v1/api) y con el anterior de Apps Script. */
-import type { Appointment, Catalog, ClientData, HoldResult, Loyalty, Pricing, WalletItem } from './types';
+import type { Appointment, Catalog, ClientData, ConsentSubmission, HoldResult, Loyalty, Pricing, WalletItem } from './types';
 
 export interface ApiOptions {
   url: string;
@@ -75,7 +75,7 @@ export function createApi(opts: ApiOptions) {
       api.post<{ pricing: Pricing }>({ action: 'checkCode', services, code: code || '', giftCode: giftCode || '', client: client || null }, 'No se pudo revisar el código.'),
     hold: (d: {
       services: string[]; date: string; time: string; client: ClientData; code?: string; giftCode?: string;
-      origen?: string; canal?: string; method: 'paypal' | 'transferencia'; captcha?: string;
+      origen?: string; canal?: string; method: 'paypal' | 'transferencia'; captcha?: string; consents?: ConsentSubmission[];
     }) => api.post<HoldResult>({ action: 'hold', ...d, birthday: d.client.birthday || '', code: d.code || '', giftCode: d.giftCode || '', origen: d.origen || '', canal: d.canal || 'app' }, 'No se pudo apartar el horario.'),
     capture: (id: string, orderId: string) => api.post<{ appointment: Appointment }>({ action: 'capture', id, orderId }, 'No se pudo confirmar el pago.'),
     release: (id: string, token: string) => api.post({ action: 'release', id, token }, '').catch(() => null),
