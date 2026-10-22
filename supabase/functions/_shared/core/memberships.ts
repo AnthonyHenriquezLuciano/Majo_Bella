@@ -30,7 +30,7 @@ export function publicPlans_() { return readTable_('PlanesMembresia').filter(p=>
  .sort((a,b)=>(Number(a.orden)||0)-(Number(b.orden)||0))
  .map(p=>({id:p.id,nombre:p.nombre,descripcion:p.descripcion||'',precioRD:Number(p.precioRD)||0,
    sesionesMes:Number(p.sesionesMes)||1,servicios:jsonIds(p.servicios),
-   beneficios:p.beneficios||'',renovacion:p.paypalPlanId?'automatica_disponible':'manual'})); }
+   beneficios:p.beneficios||'',paypalPrecioUSD:p.paypalPlanId?Number(p.paypalPrecioUSD):0,renovacion:p.paypalPlanId?'automatica_disponible':'manual'})); }
 export function adminSubscriptionData_(){
   return {membershipPlans:readTable_('PlanesMembresia').map(planOut),
     memberships:readTable_('Membresias').map(rowOut)};
