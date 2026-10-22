@@ -33,7 +33,7 @@
 
     function card(s) {
       const on = M.state.selected.includes(s.id);
-      const hasDetails = s.idealFor || (s.includes && s.includes.length);
+      const hasDetails = true;
       return `
         <article class="svc-card${on ? ' is-selected' : ''}" data-id="${s.id}">
           <div class="svc-info">
@@ -41,13 +41,15 @@
             <p class="svc-dur">${M.fmtDurationShort(s.durationMinutes)}</p>
             <p class="svc-desc">${M.escapeHtml(s.description)}</p>
             ${priceHtml(s)}
-            ${hasDetails ? `<button type="button" class="svc-more" aria-expanded="false" aria-controls="det-${s.id}">Ver detalles</button>` : ''}
+            <button type="button" class="svc-more" aria-expanded="false" aria-controls="det-${s.id}">Ver detalle</button>
           </div>
-          <button type="button" class="svc-add" data-add="${s.id}" aria-pressed="${on}">
-            <span class="svc-add-label">${on ? 'Añadido' : 'Añadir'}</span>
-            <span class="sr-only"> ${M.escapeHtml(s.name)}</span>
+          <button type="button" class="svc-add" data-add="${s.id}" aria-label="${on ? 'Quitar' : 'Añadir'} ${M.escapeHtml(s.name)}" aria-pressed="${on}">
+            <span class="svc-add-label" aria-hidden="true">${on ? '✓' : '+'}</span>
           </button>
-          ${hasDetails ? `<dl class="svc-details" id="det-${s.id}" hidden>${details(s)}</dl>` : ''}
+          <dl class="svc-details" id="det-${s.id}" hidden>
+            ${s.description ? `<div><dt>Descripción</dt><dd>${M.escapeHtml(s.description)}</dd></div>` : ''}
+            ${details(s) || (!s.description ? '<div><dt>Servicio</dt><dd>Consulta precio y duración antes de reservar.</dd></div>' : '')}
+          </dl>
         </article>`;
     }
 
@@ -62,11 +64,8 @@
           role="tab" aria-selected="${name === active}" data-cat="${M.escapeHtml(name)}">${M.escapeHtml(name)}</button>`).join('');
       if (!cat) {
         list.innerHTML = `<div class="menu-category-grid">${cats.map((c) => {
-          const n = M.services.filter((s) => s.categoryId === c.id || (!s.categoryId && s.category === c.name)).length;
           return `<button type="button" class="menu-category-tile" data-open-category="${M.escapeHtml(c.name)}">
-            <span class="menu-category-caption">MAJOBELLA · CATEGORÍA</span>
             <strong>${M.escapeHtml(c.name)}</strong>
-            <small>${n} ${n === 1 ? 'servicio' : 'opciones'}</small>
             <span class="menu-category-cta">Explorar →</span>
           </button>`;
         }).join('')}</div>`;
@@ -75,11 +74,12 @@
       const items = M.services.filter((s) => s.categoryId === cat.id || (!s.categoryId && s.category === cat.name));
       const parents = (M.serviceGroups || []).filter((g) => g.categoryId === cat.id);
       const direct = items.filter((s) => !s.parentId || !parents.some((g) => g.id === s.parentId));
-      list.innerHTML = `<div class="menu-category-heading"><p>MAJOBELLA · SERVICIOS</p><h3>${M.escapeHtml(cat.name)}</h3></div>
+      list.innerHTML = `<div class="menu-category-heading"><h3>${M.escapeHtml(cat.name)}</h3></div>
         ${parents.map((g) => {
           const children = items.filter((s) => s.parentId === g.id);
           return `<details class="menu-service-group"><summary><span>${M.escapeHtml(g.name)}</span>
-            <small>${children.length} ${children.length===1?'opción':'opciones'} · Ver opciones</small></summary>
+            <span class="menu-group-expand" aria-hidden="true">+</span>
+            <small>Ver opciones</small></summary>
             <div class="menu-service-children">${g.description ? `<p>${M.escapeHtml(g.description)}</p>` : ''}
             ${children.map(card).join('')}</div></details>`;
         }).join('')}
@@ -92,7 +92,7 @@
       if (!btn || !panel) return;
       const open = btn.getAttribute('aria-expanded') !== 'true';
       btn.setAttribute('aria-expanded', String(open));
-      btn.textContent = open ? 'Ocultar detalles' : 'Ver detalles';
+      btn.textContent = open ? 'Ocultar detalle' : 'Ver detalle';
       cardEl.classList.toggle('is-open', open);
       if (open) {
         panel.hidden = false;
@@ -139,7 +139,8 @@
         c.classList.toggle('is-selected', on);
         const b = c.querySelector('.svc-add');
         b.setAttribute('aria-pressed', String(on));
-        b.querySelector('.svc-add-label').textContent = on ? 'Añadido' : 'Añadir';
+        b.querySelector('.svc-add-label').textContent = on ? '✓' : '+';
+        b.setAttribute('aria-label', `${on ? 'Quitar' : 'Añadir'} ${c.querySelector('.svc-name').textContent}`);
       });
     });
 
