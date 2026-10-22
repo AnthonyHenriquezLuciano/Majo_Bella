@@ -59,6 +59,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="servicio/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="entrar" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="auth" options={{ animation: 'none' }} />
           <Stack.Screen name="cita/[id]" />
           <Stack.Screen name="billetera" />
           <Stack.Screen name="regalo" />
