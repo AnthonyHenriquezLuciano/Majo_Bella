@@ -158,6 +158,10 @@
     $('mn-cats').innerHTML = A.hbars(Object.entries(cats).sort((a, b) => b[1] - a[1]).map(([c, v]) => ({ label: c, value: v, text: A.money(v) })), 'Sin gastos registrados este mes.');
 
     // Gastos
+    let templates=[];
+    try {const v=JSON.parse(String(A.settingsMap().gastosRecurrentes||'[]'));if(Array.isArray(v))templates=v;}catch(e){}
+    $('mn-exp-recurrent').innerHTML=templates.some(t=>t.activo)?'<p class="mn-recurr-head">GASTOS PROGRAMADOS · AUTOMÁTICOS</p>'+templates.filter(t=>t.activo).map(t=>
+      `<div class="mn-recurring-row"><span><b>${esc(t.concepto)}</b><small>Día ${Number(t.dia)} de cada mes · ${A.money(t.montoRD)} · solo se descuenta tras confirmar</small></span><button type="button" data-rec-stop="${esc(t.id)}">Desactivar</button></div>`).join(''):'';
     const pendingExpenses = (A.data.expenses || []).filter(e => e.fecha >= r.from && e.fecha <= r.to && e.metodo === 'pendiente');
     $('mn-exp-list').innerHTML = (s.expenses.length || pendingExpenses.length) ? `
       <table class="tbl"><thead><tr><th>Fecha</th><th>Concepto</th><th>Método</th><th class="num">Monto</th><th></th></tr></thead>
@@ -361,12 +365,21 @@
             if(exact&&!confirm('Ya existe un gasto con el mismo concepto, importe y fecha. ¿Registrar otra operación igualmente?'))return;
             const res = await A.call('adminSaveExpense', { expense: { fecha: f.fecha.value, concepto: f.concepto.value.trim(), categoria: f.categoria.value, montoRD: f.montoRD.value, metodo: f.metodo.value, repetirMensual:f.repetirMensual.checked } });
             A.data.expenses.push(res.expense);
+            const repeated=f.repetirMensual.checked;
             f.concepto.value = ''; f.montoRD.value = ''; f.repetirMensual.checked=false;
+            if(repeated)await A.load();
             render(); A.toast('Gasto guardado.');
           } catch (err) { A.toast(err.message); }
         });
       });
       document.addEventListener('click', async (e) => {
+        const stop = e.target.closest('[data-rec-stop]');
+        if(stop) {
+          if(!confirm('¿Desactivar este gasto fijo? Se conservarán los gastos anteriores.'))return;
+          await A.busy(stop,async()=>{try{await A.call('adminPauseRecurringExpense',{id:stop.dataset.recStop});await A.load();render();A.toast('Programación desactivada.');}
+          catch(err){A.toast(err.message);}});
+          return;
+        }
         const confirmExpense = e.target.closest('[data-exp-confirm]');
         if (confirmExpense) {
           const expense=(A.data.expenses||[]).find(x=>x.id===confirmExpense.dataset.expConfirm);
