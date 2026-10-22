@@ -39,7 +39,7 @@ export class Studio {
       this.services = cat.services.map((r, i) => {
         const base = local[r.id] || { id: r.id, category: r.name, name: r.name, description: '' };
         return { ...base, name: r.name, category: r.category || base.category, categoryId: r.categoryId || base.categoryId,
-          parentId: r.parentId || '', description: r.description || base.description, price: r.price,
+          parentId: r.parentId || '', description: r.description === undefined ? base.description : r.description, price: r.price,
           durationMinutes: r.durationMinutes, priceFrom: !!r.priceFrom, depositPercent: r.depositPercent,
           order: r.order ?? i } as ServiceInfo;
       });
