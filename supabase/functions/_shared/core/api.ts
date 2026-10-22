@@ -202,6 +202,8 @@ export async function handle(deps: Deps, method: string, data: any, headers: Rec
         if (out && out.ok === false && out.error === NOT_HUMAN && data.app) out.error = 'Para continuar desde la app, inicia sesión con tu correo (Cuenta → Iniciar sesión).';
         return out;
       });
+      if(action==='paypalWebhook' && body?.ok===false)
+        return {status:/firma|No autorizado|Faltan las firmas/i.test(String(body.error||''))?401:503,body};
       return { status: 200, body, after: safeOutbox(sql) };
     } catch (err) {
       // No se pudo guardar. Si en esta petición se cobró algo, se avisa de inmediato para revisarlo a mano.
