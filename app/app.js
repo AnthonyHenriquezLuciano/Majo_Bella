@@ -369,7 +369,7 @@
      ====================================================================== */
   const SCH = C.schedule;
   const bk = {
-    step: 1, ids: [], date: null, time: null, cat: 'Todas', hold: null, result: null, fastest: null, timerT: null,
+    step: 1, ids: [], date: null, time: null, cat: 'Todas', consents: [], hold: null, result: null, fastest: null, timerT: null,
     items() { return this.ids.map((id) => M.serviceById[id]).filter(Boolean); },
     minutes() { return this.items().reduce((t, s) => t + s.durationMinutes, 0); },
     go(n) { location.hash = n > 1 ? `#reservar/${n}` : '#reservar'; },
@@ -646,6 +646,11 @@
       if (!client) return;
       if (!API.enabled()) { toast('El sistema de reservas no está conectado.'); return; }
       const a = this.appointment(client);
+      try {
+        const prepared = M.Consent ? await M.Consent.prepare(this.ids,client.name) : [];
+        if(prepared===null)return;
+        this.consents=prepared;a.consents=prepared;
+      }catch(e){toast(e.message);return;}
       const pr = this.pricing();
       if (pr.depositRD <= 0) {
         btn.disabled = true; btn.textContent = 'Confirmando…';
