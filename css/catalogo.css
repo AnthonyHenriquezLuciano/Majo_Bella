@@ -1,0 +1,79 @@
+/* MAJOBELLA · Editor visual del catálogo: blanco/negro, mismo lenguaje que las reservas */
+#sec-catalogo { --cat-border:#d8d8d8; --cat-subtle:#f8f8f8; max-width:1440px; }
+#sec-catalogo .cat-eyebrow { font-size:11px; letter-spacing:.22em; font-weight:600; color:#6d6d6d; margin:0 0 8px; text-transform:uppercase; }
+.cat-head { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.cat-head h1 { font-size:clamp(30px,3vw,44px); }
+.cat-toolbar { background:#fff; border:1px solid #e5e5e5; border-radius:22px; padding:12px; margin:20px 0 12px; display:flex; flex-direction:column; gap:14px; }
+.cat-levels,.cat-statuses { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
+.cat-levels button,.cat-statuses button { color:#444; border:1px solid #e5e5e5; background:#fff; padding:10px 15px; border-radius:999px; cursor:pointer; font-size:14px; display:inline-flex; gap:8px; align-items:center; justify-content:center; }
+.cat-levels button[aria-pressed=true] { background:#111; color:#fff; border-color:#111; }
+.cat-statuses button[aria-pressed=true] { background:#eee; color:#111; border-color:#888; }
+.cat-statuses button span { font-size:18px; line-height:1; }
+.cat-statuses button b { color:inherit; font-size:11px; font-variant-numeric:tabular-nums; font-weight:500; }
+.cat-statuses button:hover,.cat-levels button:hover { border-color:#111; }
+.cat-path { display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:13px; color:#777; margin:6px 0 15px; }
+.cat-path button { background:transparent; border:0; cursor:pointer; color:#111; text-decoration:underline; text-underline-offset:3px; padding:3px; }
+.cat-layout { display:grid; grid-template-columns:minmax(0, 1fr) minmax(290px,345px); align-items:start; gap:22px; }
+.cat-workspace { min-width:0; }
+.cat-list-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.cat-list-head h2 { font:400 30px/1.15 'Source Serif 4',Georgia,serif; margin:0 0 4px; }
+.cat-list-head p { font-size:13px; color:#747474; margin:0; }
+.cat-search { display:flex; gap:10px; align-items:center; font-size:12px; color:#666; margin:15px 0; }
+.cat-search input { flex:1; min-width:0; height:44px; border:1px solid var(--cat-border); border-radius:13px; padding:0 14px; background:#fff; color:#111; font-size:15px; }
+.cat-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; min-height:120px; }
+.cat-item { position:relative; min-width:0; border:1px solid var(--cat-border); background:#fff; border-radius:23px; overflow:hidden; transition:box-shadow .2s,border-color .2s,transform .2s; }
+.cat-item:hover { border-color:#888; box-shadow:0 10px 26px rgba(0,0,0,.06); }
+.cat-item.is-chosen { outline:2px solid #111; outline-offset:1px; }
+.cat-item.is-dragging { opacity:.35; }
+.cat-item[draggable=true] { cursor:grab; }
+.cat-item.is-drop-target { outline:2px dashed #222; outline-offset:3px; }
+.cat-item.category { color:#fff; background:#111; border-color:#111; border-radius:25px; isolation:isolate; }
+.cat-item.category::before { content:''; position:absolute; z-index:-1; inset:0; background:url('../assets/monograma.png') right -38px bottom -43px / 205px 205px no-repeat; filter:invert(1); opacity:.11; pointer-events:none; }
+.cat-item-main { min-height:145px; width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:7px; text-align:left; background:transparent; color:inherit; border:0; padding:23px 22px 12px; cursor:pointer; }
+.cat-item.category .cat-item-main { min-height:172px; }
+.cat-item-main h3 { margin:0; font:400 clamp(23px,2.4vw,31px)/1.05 'Source Serif 4',Georgia,serif; overflow-wrap:anywhere; }
+.cat-item-main p { margin:0; font-size:13px; line-height:1.5; color:#777; }
+.cat-item.category .cat-item-main p { color:#d0d0d0; }
+.cat-mini { font-size:10px; font-weight:600; letter-spacing:.18em; color:#777; text-transform:uppercase; }
+.cat-item.category .cat-mini { color:#aaa; }
+.cat-item-footer { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; padding:10px 14px 14px 20px; }
+.cat-status { display:inline-flex; align-items:center; gap:5px; font-size:11px; color:#666; font-weight:500; }
+.cat-item.category .cat-status { color:#dadada; }
+.cat-item-footer button { border:1px solid #d5d5d5; background:#fff; color:#111; cursor:pointer; border-radius:999px; min-width:37px; height:35px; padding:0 10px; font-size:12px; }
+.cat-item-footer button:hover { border-color:#111; background:#f2f2f2; }
+.cat-item-footer button:disabled { opacity:.3; cursor:default; }
+.cat-item.category .cat-item-footer button { background:#252525; color:#fff; border-color:#666; }
+.cat-item.category .cat-item-footer button:hover { background:#444; }
+.cat-helper { font-size:12px; line-height:1.5; color:#777; margin:14px 0; }
+.cat-empty-list { grid-column:1/-1; border:1px dashed #ccc; border-radius:24px; padding:36px; text-align:center; color:#777; }
+.cat-inspector { border:1px solid #dedede; background:#fff; border-radius:25px; padding:22px; position:sticky; top:89px; }
+.cat-inspector-head h2 { margin:0 0 18px; font:400 26px/1.1 'Source Serif 4',Georgia,serif; overflow-wrap:anywhere; }
+.cat-empty { color:#777; font-size:14px; line-height:1.6; margin:0; }
+.cat-live-preview { position:relative; border-radius:23px; background:#111; color:#fff; min-height:125px; padding:20px; overflow:hidden; margin-bottom:22px; isolation:isolate; }
+.cat-live-preview::before { content:''; position:absolute; z-index:-1; inset:0; background:url('../assets/monograma.png') right -25px bottom -43px / 170px auto no-repeat; filter:invert(1); opacity:.1; }
+.cat-live-preview.service { background:#fff; color:#111; border:1px solid #ddd; min-height:100px; }
+.cat-live-preview.service::before { display:none; }
+.cat-live-preview small { font-size:10px; letter-spacing:.16em; opacity:.6; }
+.cat-live-preview strong { display:block; font:400 25px/1.25 'Source Serif 4',Georgia,serif; margin:8px 0; overflow-wrap:anywhere; }
+.cat-live-preview p { margin:0; font-size:12px; color:inherit; opacity:.72; }
+.cat-form { display:grid; gap:14px; }
+.cat-form label { display:grid; gap:6px; font-size:12px; font-weight:600; color:#555; }
+.cat-form input:not([type=checkbox]),.cat-form textarea,.cat-form select { width:100%; min-width:0; border:1px solid #ccc; border-radius:12px; padding:11px 12px; background:white; color:#111; font-size:14px; font-weight:400; }
+.cat-form textarea { resize:vertical; min-height:64px; }
+.cat-form input:focus,.cat-form textarea:focus,.cat-form select:focus { outline:2px solid #aaa; outline-offset:1px; }
+.cat-form .cat-two-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.cat-form label.cat-check { display:flex; align-items:center; gap:8px; }
+.cat-form .cat-check input { width:16px; height:16px; accent-color:#111; }
+.cat-editor-help { padding:10px 12px; border-radius:10px; background:#f5f5f5; color:#666; line-height:1.5; font-size:12px; }
+.cat-inspector-actions { display:flex; gap:9px; flex-wrap:wrap; margin-top:8px; }
+.cat-inspector-actions button { border-radius:999px; background:#fff; border:1px solid #111; padding:10px 14px; color:#111; cursor:pointer; font-size:12px; }
+.cat-inspector-actions button:hover { background:#111; color:#fff; }
+.cat-savebar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin:22px 0 30px; border:1px solid #e3e3e3; background:#fff; border-radius:19px; padding:16px 18px; position:sticky; bottom:16px; z-index:6; box-shadow:0 7px 35px rgba(0,0,0,.07); }
+.cat-savebar p { font-size:12px; margin:0; color:#777; }
+.cat-savebar .is-dirty { color:#111; font-weight:600; }
+.cat-savebar > div { display:flex; gap:8px; flex-wrap:wrap; }
+.cat-savebar button:disabled { opacity:.4; cursor:default; }
+@media (min-width:1400px) { .cat-list { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media (max-width:1070px) { .cat-layout { grid-template-columns:1fr; } .cat-inspector { position:static; } }
+@media (max-width:610px) { .cat-head { align-items:flex-start; } .cat-list { grid-template-columns:1fr; }.cat-item.category .cat-item-main { min-height:153px; }.cat-toolbar { padding:10px; }.cat-statuses button { padding:9px 12px; }.cat-savebar { bottom:calc(72px + env(safe-area-inset-bottom)); }.cat-form .cat-two-col { grid-template-columns:1fr 1fr; } }
+@media (prefers-reduced-motion:reduce) {.cat-item { transition:none; }}
