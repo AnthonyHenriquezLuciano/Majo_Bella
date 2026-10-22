@@ -60,7 +60,20 @@
         </div></article>`;
     }).join(''):'<p class="muted">No hay clientas para este filtro.</p>';
   }
-  function render(){renderPlans();renderMembers();}
+  function renderPayments(){
+    const list=(A.data?.membershipPayments||[]).slice().reverse();
+    const completed=list.filter(p=>p.estado==='completado');
+    const usd=completed.reduce((t,p)=>t+Number(p.montoUSD||0),0);
+    const refunded=list.filter(p=>p.estado==='reembolsado').length;
+    $('mb-payment-summary').innerHTML=`<span><b>US$ ${usd.toFixed(2)}</b><small>Cobrado en membresías · historial</small></span>
+      <span><b>${completed.length}</b><small>Cobros completados</small></span>
+      <span><b>${refunded}</b><small>Reembolsos registrados</small></span>`;
+    $('mb-payment-ledger').innerHTML=list.length?list.slice(0,50).map(p=>`<div class="mb-ledger-row">
+      <span><b>${esc(p.nombrePlan||'Membresía')}</b><small>${esc(p.correo||'')} · ${esc(p.id)}</small></span>
+      <span><b>US$ ${Number(p.montoUSD||0).toFixed(2)}</b><small>${esc(p.estado||'')} · ${esc(String(p.creado||'').slice(0,10))}</small></span>
+    </div>`).join(''):'<p class="muted">Los cobros confirmados por PayPal aparecerán aquí automáticamente.</p>';
+  }
+  function render(){renderPlans();renderMembers();renderPayments();}
   async function save(e){
     e.preventDefault();
     const f=e.currentTarget;
