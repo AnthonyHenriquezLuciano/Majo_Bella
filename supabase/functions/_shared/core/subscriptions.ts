@@ -15,7 +15,7 @@ const payments = () => readTable_('PagosMembresia');
 const str = (v:any) => String(v||'');
 const isAutopay = (m:any) => !!str(m.paypalSubscriptionId);
 const validId = (x:any) => /^[A-Za-z0-9-]{8,64}$/.test(str(x));
-const features = () => paypalConfigured_() && env_('PAYPAL_SUBSCRIPTIONS_ENABLED') === 'true';
+const features = () => paypalConfigured_() && !!env_('PAYPAL_WEBHOOK_ID') && env_('PAYPAL_SUBSCRIPTIONS_ENABLED') === 'true';
 const plusMonth = (day:string) => {
   const [y,m,d]=day.split('-').map(Number), next=new Date(Date.UTC(y,m,1));
   const last=new Date(Date.UTC(next.getUTCFullYear(),next.getUTCMonth()+1,0)).getUTCDate();
@@ -133,7 +133,13 @@ async function settle(m:any,sale:any) {
    throw Error('El importe notificado por PayPal no coincide con el importe autorizado para la membresía '+m.id+'.');
  if(!['COMPLETED','completed'].includes(str(sale.state||sale.status)))throw Error('El cobro todavía no ha sido completado.');
  const today=todayKey_(),initial=!m.pagadoEn;
- const start=m.vence>=today?m.vence:today,vence=plusMonth(initial?today:start);
+ // Aplicar la fecha ORIGINAL del pago, no el día en que llegó el webhook retrasado.
+ const rawTime=str(sale.time||sale.create_time||sale.update_time);
+ const parsed=Date.parse(rawTime);
+ const billingDay=Number.isFinite(parsed)&&parsed<=Date.now()+86400000?
+   new Date(parsed).toISOString().slice(0,10):today;
+ const base=m.vence>=billingDay?m.vence:billingDay;
+ const vence=plusMonth(initial?billingDay:base);
  const patch:any={estado:'activa',paypalEstado:m.paypalEstado==='CANCELLED'?'CANCELLED':'ACTIVE',paypalPagoId:saleId,paypalPagosFallidos:0,
    inicio:initial?today:m.inicio,vence,pagadoEn:new Date().toISOString(),metodoPago:'paypal',actualizada:new Date().toISOString(),
    sesionesUsadas:0};
@@ -144,6 +150,39 @@ async function settle(m:any,sale:any) {
  receipt({...m,...patch},pay);
  return {ok:true,membresia:asPublic({...m,...patch})};
 }
+/* Conciliación autorizada: reconstruye períodos desde transacciones reales de PayPal
+   cuando el webhook se retrasó. No se permite activación manual sin cobro. */
+export async function adminReconcilePaypalSubscription_(d:any){
+ needAdmin_(d);
+ const m=findMember(str(d.id));
+ if(!m||!m.paypalSubscriptionId)throw Error('No encontramos una suscripción PayPal vinculada.');
+ const sub=await paypal_('get','/v1/billing/subscriptions/'+encodeURIComponent(m.paypalSubscriptionId),null);
+ if(sub.id!==m.paypalSubscriptionId)throw Error('La suscripción no coincide con la referencia guardada.');
+ const end=new Date(),begin=new Date(end.getTime()-1000*86400000/10);
+ const query='?start_time='+encodeURIComponent(begin.toISOString())+'&end_time='+encodeURIComponent(end.toISOString());
+ const history=await paypal_('get','/v1/billing/subscriptions/'+encodeURIComponent(m.paypalSubscriptionId)+'/transactions'+query,null);
+ const transactions=(Array.isArray(history.transactions)?history.transactions:[])
+  .filter((t:any)=>t.status==='COMPLETED')
+  .sort((a:any,b:any)=>str(a.time).localeCompare(str(b.time)));
+ let added=0;
+ for(const t of transactions){
+   const amount=t.amount_with_breakdown?.gross_amount;
+   if(!amount||!t.id)continue;
+   const latest=findMember(m.id)||m;
+   const out=await settle(latest,{id:t.id,billing_agreement_id:m.paypalSubscriptionId,
+     amount:{value:amount.value,currency_code:amount.currency_code},status:t.status,time:t.time});
+   if(!out.duplicate)added++;
+ }
+ const current=findMember(m.id)||m;
+ const remoteState=str(sub.status||'');
+ // Cancelaciones PayPal nunca se deshacen por eventos atrasados.
+ if(['CANCELLED','EXPIRED','SUSPENDED'].includes(remoteState)&&current.paypalEstado!==remoteState){
+   updateTable_('Membresias',current._row,{paypalEstado:remoteState,actualizada:new Date().toISOString()});
+ }
+ return {ok:true,added,verified:transactions.length,paypalEstado:remoteState,
+  message:added?'Conciliadas '+added+' transacciones completadas.':'No se encontraron cobros nuevos; no se modificaron sesiones.'};
+}
+
 export async function confirmPaypalSubscription_(d:any){
  const u=verifyIdToken_(d.idToken);
  if(!u?.email)throw Error('Inicia sesión para consultar tu suscripción.');
