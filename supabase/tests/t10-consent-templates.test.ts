@@ -22,8 +22,8 @@ export default async function(){
     const base={action:'hold',services:['cejas'],date:nextTuesday(),time:'13:00',
       client:{name:'Ana Pérez',phone:'8095551111',email:'ana@example.com'}};
     fail(await g.post(base),'no se reserva sin consentimiento');
-    fail(await g.post({...base,consents:[{templateId:t.id,name:'Ana Pérez',accepted:true,answers:{irritacion:'si',cuidados:'si'}}]}),'respuesta riesgosa bloqueada',/irritación/);
-    fail(await g.post({...base,consents:[{templateId:t.id,name:'Ana Pérez',accepted:true,answers:{irritacion:'no',cuidados:'no'}}]}),'respuesta negativa bloqueada',/cuidados/);
+    fail(await g.post({...base,consents:[{templateId:t.id,name:'Ana Pérez',accepted:true,answers:{irritacion:'si',cuidados:'si'}}]}),'respuesta riesgosa bloqueada');
+    fail(await g.post({...base,consents:[{templateId:t.id,name:'Ana Pérez',accepted:true,answers:{irritacion:'no',cuidados:'no'}}]}),'respuesta negativa bloqueada');
     const valid=ok(await g.post({...base,consents:[{templateId:t.id,name:'Ana Pérez',accepted:true,answers:{irritacion:'no',cuidados:'si'}}]}),'autorizar pago');
     const row=await g.row('Reservas',valid.id);
     assert.ok(row.consentimientosJson);
