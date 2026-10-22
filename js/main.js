@@ -64,7 +64,7 @@
     if (has('paquetes')) run('paquetes', M.initPackages);
     if (has('membresias')) run('membresías', M.initMemberships);
     if (has('regalos-empty')) {
-      const none = () => { document.getElementById('regalos-empty').hidden = !(document.getElementById('regalar').hidden && document.getElementById('paquetes').hidden); };
+      const none = () => { document.getElementById('regalos-empty').hidden = !(document.getElementById('regalar').hidden && document.getElementById('paquetes').hidden && document.getElementById('membresias')?.hidden); };
       none(); setTimeout(none, 1500);
     }
     if (has('ap-downloads') && M.initAppPage) run('aplicación', M.initAppPage);
