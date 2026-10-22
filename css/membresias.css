@@ -24,3 +24,20 @@
 .mb-member-actions {display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;max-width:400px;}
 .mb-note {font-size:12px;color:#666;margin:16px 0;line-height:1.5;}
 @media(max-width:700px){.mb-member{flex-direction:column}.mb-member-actions{justify-content:flex-start;max-width:none}}
+
+/* Centro financiero de membresías */
+.mb-plan-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.mb-plan-actions .chip-btn:disabled{opacity:.45;cursor:not-allowed;}
+.mb-auto-state{color:#4c683b!important;font-size:12px!important;padding:9px 10px;background:#eff6ed;border-radius:10px;}
+.mb-ledger-panel{margin-top:24px;}
+.mb-payment-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0;}
+.mb-payment-summary>span{padding:19px 15px;border:1px solid #e1dcd5;background:#faf8f5;border-radius:13px;display:grid;gap:5px;}
+.mb-payment-summary b{font-size:23px;color:#32231a;overflow-wrap:anywhere;}
+.mb-payment-summary small{font-size:11px;color:#777067;}
+.mb-payment-ledger{display:grid;gap:3px;}
+.mb-ledger-row{display:flex;justify-content:space-between;gap:16px;padding:14px 8px;border-bottom:1px solid #eee8e2;}
+.mb-ledger-row span{display:grid;gap:3px;}
+.mb-ledger-row span:last-child{text-align:right;}
+.mb-ledger-row b{font-size:13px;font-weight:600;overflow-wrap:anywhere;}
+.mb-ledger-row small{font-size:11px;color:#888;}
+@media(max-width:600px){.mb-payment-summary{grid-template-columns:1fr 1fr;}.mb-ledger-row{flex-direction:column;}.mb-ledger-row span:last-child{text-align:left;}}
