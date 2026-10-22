@@ -158,7 +158,7 @@ export async function adminReconcilePaypalSubscription_(d:any){
  if(!m||!m.paypalSubscriptionId)throw Error('No encontramos una suscripción PayPal vinculada.');
  const sub=await paypal_('get','/v1/billing/subscriptions/'+encodeURIComponent(m.paypalSubscriptionId),null);
  if(sub.id!==m.paypalSubscriptionId)throw Error('La suscripción no coincide con la referencia guardada.');
- const end=new Date(),begin=new Date(end.getTime()-1000*86400000/10);
+ const end=new Date(),begin=new Date(end.getTime()-93*86400000);
  const query='?start_time='+encodeURIComponent(begin.toISOString())+'&end_time='+encodeURIComponent(end.toISOString());
  const history=await paypal_('get','/v1/billing/subscriptions/'+encodeURIComponent(m.paypalSubscriptionId)+'/transactions'+query,null);
  const transactions=(Array.isArray(history.transactions)?history.transactions:[])
