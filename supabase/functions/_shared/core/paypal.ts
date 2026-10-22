@@ -59,7 +59,8 @@ export function firstCapture_(order: any) {
 export async function tryRefund_(captureId: string, requestId: string) {
   try {
     const r = await paypal_('post', '/v2/payments/captures/' + encodeURIComponent(captureId) + '/refund', {}, requestId);
-    return 'reembolsado ' + (r.id || '') + ' (' + (r.status || '') + ')';
+    if(r.status==='COMPLETED')return 'reembolsado ' + (r.id || '') + ' (COMPLETED)';
+    return 'pendiente: PayPal '+(r.id||'sin referencia')+' ('+(r.status||'sin confirmar')+')';
   } catch (err) {
     return 'reembolso pendiente: ' + msg_(err);
   }
