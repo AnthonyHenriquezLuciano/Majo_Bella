@@ -153,9 +153,17 @@
 
     applyCatalog(data) {
       applied = true;
+      M.serviceCategories = data.categories || [];
+      M.serviceGroups = data.serviceGroups || [];
       (data.services || []).forEach((r) => {
         const s = M.serviceById[r.id];
-        if (s) { s.price = r.price; s.durationMinutes = r.durationMinutes; s.priceFrom = !!r.priceFrom; s.depositPercent = r.depositPercent; }
+        if (s) {
+          s.name = r.name; s.category = r.category || s.category;
+          s.categoryId = r.categoryId || ''; s.parentId = r.parentId || '';
+          s.description = r.description || s.description;
+          s.price = r.price; s.durationMinutes = r.durationMinutes;
+          s.priceFrom = !!r.priceFrom; s.depositPercent = r.depositPercent;
+        }
       });
       if (data.payments) Object.assign(M.config.payments, data.payments);
       if (data.schedule) {
@@ -169,12 +177,14 @@
       if ((data.services || []).length) {
         const active = new Set(data.services.map((r) => r.id));
         for (let i = M.services.length - 1; i >= 0; i--) if (!active.has(M.services[i].id)) M.services.splice(i, 1);
-        data.services.forEach((r, i) => { const s = M.serviceById[r.id]; if (s) s.order = i; });
+        data.services.forEach((r, i) => { const s = M.serviceById[r.id]; if (s) s.order = r.order ?? i; });
       }
       // Servicios nuevos creados en el dashboard que aún no están en services.js
       (data.services || []).forEach((r) => {
         if (M.serviceById[r.id]) return;
-        const s = { id: r.id, category: r.name, name: r.name, description: '', durationMinutes: r.durationMinutes, price: r.price, priceFrom: !!r.priceFrom, depositPercent: r.depositPercent };
+        const s = { id: r.id, category: r.category || r.name, categoryId: r.categoryId || '', parentId: r.parentId || '',
+          name: r.name, description: r.description || '', durationMinutes: r.durationMinutes,
+          price: r.price, priceFrom: !!r.priceFrom, depositPercent: r.depositPercent, order: r.order ?? 0 };
         M.services.push(s); M.serviceById[s.id] = s;
       });
       M.promos = data.promos || [];
