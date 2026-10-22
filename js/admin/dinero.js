@@ -1,5 +1,5 @@
 /* MAJOBELLA · Dashboard: Dinero
-   Cierre de caja del día, ganancia real del mes (ingresos − reembolsos − comisiones de PayPal − gastos)
+   Cierre de caja del día, ganancia estimada del mes (ingresos − reembolsos − comisiones de PayPal − gastos)
    y reporte mensual en PDF con el estilo de la marca. */
 (function (M) {
   const A = M.Admin;
@@ -122,7 +122,7 @@
       k('Ingresos', A.money(s.gross), delta(s.gross, p.gross)),
       k('Reembolsos y comisiones', A.money(-(s.ref) + s.fees), `${A.money(-s.ref)} devuelto · ≈ ${A.money(s.fees)} PayPal`),
       k('Gastos', A.money(s.exp), A.plural(s.expenses.length, 'gasto')),
-      k('Ganancia real', A.money(s.profit), delta(s.profit, p.profit), 'kpi-strong'),
+      k('Ganancia estimada', A.money(s.profit), delta(s.profit, p.profit), 'kpi-strong'),
     ].join('');
     const done = s.appts.filter((a) => a.status === 'completada');
     const ticket = done.length ? A.sum(done, (a) => a.totalPrice) / done.length : 0;
@@ -150,7 +150,7 @@
       <table class="tbl"><thead><tr><th>Fecha</th><th>Concepto</th><th>Método</th><th class="num">Monto</th><th></th></tr></thead>
       <tbody>${s.expenses.sort((a, b) => b.fecha.localeCompare(a.fecha)).map((e) => `<tr><td>${A.shortDate(e.fecha)}</td><td>${esc(e.concepto)}<span class="t-sub">${esc(e.categoria)}</span></td><td>${esc(METHOD[e.metodo] || e.metodo)}</td><td class="num">${A.money(e.montoRD)}</td><td class="num"><button type="button" class="link" data-exp-del="${esc(e.id)}">Borrar</button></td></tr>`).join('')}</tbody></table>`
       : '<p class="empty">Aún no registras gastos este mes.</p>';
-    $('mn-fee-note').textContent = `Comisión de PayPal estimada con ${A.setting('comisionPaypalPct', 5.4)}% + US$ ${A.setting('comisionPaypalFijoUSD', 0.3)} por cobro y ${A.setting('conversionPct', 3.5)}% de conversión a pesos (se cambian en Ajustes).`;
+    $('mn-fee-note').textContent = `Comisiones y conversión estimadas con ${A.setting('comisionPaypalPct', 5.4)}% + US$ ${A.setting('comisionPaypalFijoUSD', 0.3)} por cobro y ${A.setting('conversionPct', 3.5)}% de conversión a pesos (se cambian en Ajustes).`;
   }
 
   function render() { renderDay(); renderMonth(); A.PayPalOps?.render(); }
