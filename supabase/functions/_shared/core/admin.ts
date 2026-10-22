@@ -223,8 +223,12 @@ export function adminSaveSettings_(d) {
       const nombre = clean_(cat.nombre, 80);
       if (!id || !nombre || !/^[a-z0-9_-]+$/i.test(id) || ids.has(id)) throw new Error('Cada categoría necesita nombre e identificador único.');
       ids.add(id);
-      const patch = { id, nombre, orden: Math.max(0, Math.round(Number(cat.orden) || 0)), activo: /^no$/i.test(String(cat.activo)) ? 'no' : 'si' };
       const old = rows.find((x) => x.id === id);
+      const raw = String(cat.estado || '').toLowerCase();
+      const estado = ['activo', 'desactivado', 'borrador'].includes(raw) ? raw
+        : /^(no|false)$/i.test(String(cat.activo)) ? 'desactivado' : (old?.estado || 'activo');
+      const patch = { id, nombre, orden: Math.max(0, Math.round(Number(cat.orden) || 0)), estado,
+        activo: estado === 'activo' ? 'si' : 'no' };
       if (old) updateTable_('Categorias', old._row, patch); else appendRow_('Categorias', patch);
     });
   }
@@ -251,13 +255,17 @@ export function adminSaveSettings_(d) {
         if (!parent || parent.tipo !== 'grupo' || String(parent.categoriaId || 'otros') !== categoriaId || padreId === id)
           throw new Error('El grupo del subservicio debe existir en la misma categoría.');
       }
+      const current = rows.find((x) => x.id === id);
+      const rawStatus = String(sv.estado || '').toLowerCase();
+      const estado = ['activo', 'desactivado', 'borrador'].includes(rawStatus) ? rawStatus
+        : /^(no|false)$/i.test(String(sv.activo)) ? 'desactivado' : (current?.estado || 'activo');
       const patch: any = {
-        id: id, nombre: name, categoriaId, padreId, tipo, descripcion: clean_(sv.descripcion, 500),
+        id: id, nombre: name, categoriaId, padreId, tipo, descripcion: clean_(sv.descripcion, 500), estado,
         orden: Math.max(0, Math.round(Number(sv.orden) || 0)),
         duracionMin: Math.max(5, Math.round(Number(sv.duracionMin) || 30)),
         precioRD: Math.max(0, Math.round(Number(sv.precioRD) || 0)),
         precioDesde: /^(si|sí|true)$/i.test(String(sv.precioDesde)) ? 'si' : 'no',
-        activo: /^(no|false)$/i.test(String(sv.activo)) ? 'no' : 'si',
+        activo: estado === 'activo' ? 'si' : 'no',
         volverDias: Math.max(0, Math.round(Number(sv.volverDias) || 0)),
         depositoPct: Math.max(0, Math.min(100, Math.round(Number(sv.depositoPct === '' || sv.depositoPct == null ? 50 : sv.depositoPct) || 0))),
         retoqueDias: Math.max(0, Math.round(Number(sv.retoqueDias) || 0)),
