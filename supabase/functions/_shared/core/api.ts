@@ -121,7 +121,7 @@ export async function handle(deps: Deps, method: string, data: any, headers: Rec
       if (method === 'GET') {
         if (action === 'catalog') {
           const body = await sql.begin(async (tx: any) => {
-            await loadTables(tx, { tables: ['Ajustes', 'Servicios', 'Promociones', 'Paquetes', 'Galeria', 'Resenas', 'Cuentas'] });
+            await loadTables(tx, { tables: ['Ajustes', 'Categorias', 'Servicios', 'Promociones', 'Paquetes', 'Galeria', 'Resenas', 'Cuentas'] });
             ensureSeed_();
             heartbeat_();
             const out = catalog_();
