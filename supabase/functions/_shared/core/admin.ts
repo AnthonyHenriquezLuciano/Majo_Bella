@@ -47,6 +47,7 @@ export function adminData_(d, extra?) {
     reviews: readOpt_('Resenas').map(strip_),
     packages: readOpt_('Paquetes').map(strip_),
     ...adminSubscriptionData_(),
+    membershipPayments: readOpt_('PagosMembresia').map(strip_),
     bonos: readOpt_('Bonos').filter(function (b) { return b.estado !== 'pendiente'; }).map(strip_),
     waitlist: readOpt_('Espera').map(strip_),
     emails: readOpt_('Correos').slice(-200).reverse().map(strip_),
