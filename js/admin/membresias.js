@@ -44,7 +44,7 @@
           <strong>${remain} de ${Number(m.sesionesMes)||0} sesiones disponibles</strong>
         </div>
         <div class="mb-member-actions">
-          ${pending||expired||m.estado==='pausada'? `<button class="btn-dark sm" data-mb-action="activar" data-id="${esc(m.id)}">Activar con pago</button>`:''}
+          ${pending||m.estado==='pausada'? `<button class="btn-dark sm" data-mb-action="activar" data-id="${esc(m.id)}">Activar con pago</button>`:''}
           ${active||expired? `<button class="chip-btn" data-mb-action="renovar" data-id="${esc(m.id)}">Renovar con pago</button>`:''}
           ${active&&remain>0?`<button class="chip-btn" data-mb-action="usar" data-id="${esc(m.id)}">Registrar sesión</button>`:''}
           ${Number(m.sesionesUsadas)>0?`<button class="chip-btn" data-mb-action="deshacerUso" data-id="${esc(m.id)}">Corregir uso</button>`:''}
