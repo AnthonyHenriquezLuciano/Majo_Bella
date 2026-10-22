@@ -3,7 +3,9 @@
 import { appendRow_, readTable_, updateTable_ } from './db.ts';
 import { needAdmin_, verifyIdToken_ } from './security.ts';
 import { clean_, uuid, strip_, todayKey_ } from './util.ts';
-import { services_ } from './data.ts';
+import { services_, settings_ } from './data.ts';
+import { adminTo_, layout_, mailUrl_, safeMail_ } from './mail.ts';
+import { esc_, money_ } from './util.ts';
 
 const STATES = ['solicitada','activa','pausada','cancelada','vencida'];
 const isActive = (m: any) => m.estado === 'activa' && m.vence >= todayKey_();
@@ -73,6 +75,20 @@ export function requestMembership_(d:any){
     servicios:JSON.stringify(jsonIds(p.servicios)),metodoPago:'',pagadoEn:'',notas:'',
     creada:now,actualizada:now};
   appendRow_('Membresias',entry);
+  const cfg=settings_();
+  safeMail_(u.email,'Recibimos tu solicitud de membresía · MAJOBELLA',layout_(cfg,{
+    kicker:'Tu membresía',title:'Gracias por elegir MAJOBELLA',
+    intro:'Tu solicitud de <b>'+esc_(p.nombre)+'</b> fue recibida. Nuestro equipo se pondrá en contacto contigo para confirmar el pago y activar tus beneficios.',
+    details:[['Plan',esc_(p.nombre)],['Importe mensual','RD$ '+money_(p.precioRD)]],
+    note:'Aún no se ha realizado ningún cobro. Las renovaciones serán gestionadas por el estudio y nunca se debitarán automáticamente.',
+    cta:{text:'Ver mis membresías',url:mailUrl_(cfg,'regalos.html#membresias')}
+  }),{tipo:'membresia',ref:entry.id});
+  safeMail_(adminTo_(cfg),'Nueva solicitud de membresía · '+p.nombre,layout_(cfg,{
+    kicker:'Membresía pendiente',title:esc_(entry.clienta||u.email),
+    intro:'Una clienta solicitó una membresía. Verifica el pago antes de activarla.',
+    details:[['Plan',esc_(p.nombre)],['Correo',esc_(u.email)],['Importe','RD$ '+money_(p.precioRD)]],
+    cta:{text:'Abrir membresías',url:mailUrl_(cfg,'admin.html#membresias')}
+  }),{tipo:'aviso',ref:entry.id});
   return {ok:true,membresia:rowOut(entry)};
 }
 export function myMemberships_(d:any){
@@ -112,5 +128,17 @@ export function adminMembershipAction_(d:any){
   } else throw Error('Acción no permitida.');
   if(d.notas!==undefined)patch.notas=clean_(d.notas,600);
   updateTable_('Membresias',m._row,patch);
+  if(action==='activar'||action==='renovar'){
+    const cfg=settings_();
+    safeMail_(m.correo,'Tu membresía MAJOBELLA está '+(action==='activar'?'activa':'renovada'),layout_(cfg,{
+      kicker:'Membresía '+(action==='activar'?'activa':'renovada'),
+      title:'Tu momento MAJOBELLA continúa',
+      intro:'Confirmamos el pago de tu membresía. Ya puedes agendar tus tratamientos incluidos, sujetos a disponibilidad y consentimiento.',
+      details:[['Plan',esc_(m.nombrePlan)],['Sesiones incluidas',esc_(m.sesionesMes)],
+        ['Vigente hasta',esc_(patch.vence)]],
+      cta:{text:'Reservar cita',url:mailUrl_(cfg,'reservar.html')},
+      note:'Tus sesiones no usadas no se acumulan al renovar. No realizamos cobros automáticos.'
+    }),{tipo:'membresia',ref:m.id});
+  }
   return {ok:true,membresia:rowOut({...m,...patch})};
 }
