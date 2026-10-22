@@ -55,7 +55,7 @@ export function adminPaypalOperations_(d:any){
  for(const a of readTable_('Bonos'))if(a.paypalCaptura)candidates.push({tipo:'paquete',referencia:a.id,cliente:a.clienta,montoRD:Number(a.montoRD),captureId:a.paypalCaptura});
  return {ok:true,
   config:{env:paypalEnv_(),credentials:paypalConfigured_(),webhook:!!env_('PAYPAL_WEBHOOK_ID'),
-    subscriptions:env_('PAYPAL_SUBSCRIPTIONS_ENABLED')==='true'&&paypalConfigured_(),
+    subscriptions:env_('PAYPAL_SUBSCRIPTIONS_ENABLED')==='true'&&paypalConfigured_()&&!!env_('PAYPAL_WEBHOOK_ID'),
     production:paypalEnv_()==='live',webhookUrl:str(env_('SUPABASE_URL')).replace(/\/$/,'')+'/functions/v1/api',
     verifiedDelivery:eventRows.length>0,eventCount:eventRows.length},
   events:eventRows.slice(-100).reverse().map(x=>({id:x.id,tipo:x.tipo,recurso:x.recurso,referencia:x.referencia,
