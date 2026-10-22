@@ -408,7 +408,7 @@
         return `<section class="bk-category"><h2 class="bk-category-title">${esc(c.name)}</h2>
           ${parents.map((g) => {
             const children = items.filter((s) => s.parentId === g.id);
-            return `<details class="bk-service-group"><summary>${esc(g.name)}<small>Ver ${children.length} opciones</small></summary>
+            return `<details class="bk-service-group" data-group="${esc(g.id)}" ${this.expandedGroup === g.id ? 'open' : ''}><summary>${esc(g.name)}<small>Ver ${children.length} opciones</small></summary>
               <div>${children.map((s) => this.svcItem(s)).join('')}</div></details>`;
           }).join('')}
           ${direct.map((s) => this.svcItem(s)).join('')}</section>`;
@@ -417,6 +417,11 @@
         <div class="head">${this.stepper()}<p class="kicker">Paso 1 de 3</p><h1 class="large-title">¿Qué te hacemos hoy?</h1><p class="lead">Puedes elegir varios servicios.</p></div>
         ${cats.length > 2 ? `<div class="cat-chips">${cats.map((c) => `<button type="button" class="chip${c === this.cat ? ' on' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : ''}
         <div id="bk-list">${categories.filter((c) => this.cat === 'Todas' || this.cat === c.name).map(renderGroup).join('')}</div>`;
+      $('bk-list').addEventListener('click', (e) => {
+        const summary = e.target.closest('summary');
+        const details = summary && summary.closest('details[data-group]');
+        if (details) this.expandedGroup = details.open ? '' : details.dataset.group;
+      });
       this.servicesBar();
     },
     svcItem(s) {
