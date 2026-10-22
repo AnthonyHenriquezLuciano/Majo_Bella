@@ -27,6 +27,52 @@
     </article>`).join(''):
    '<div class="mb-public-empty">Pronto encontrarás aquí nuestras membresías. Escríbenos si deseas conocer las opciones disponibles.</div>';
  }
+ function initPlanCarousel(){
+  const track=$('mb-public-list');
+  if(!track||track.dataset.carouselReady)return;
+  track.dataset.carouselReady='true';
+  track.setAttribute('role','region');
+  track.setAttribute('aria-roledescription','carrusel');
+  track.setAttribute('aria-label','Planes de membresía MAJOBELLA');
+  const nav=document.createElement('div');
+  nav.className='mb-carousel-nav';
+  nav.innerHTML='<span class="mb-carousel-caption">ELIGE TU RITUAL MENSUAL</span><div class="mb-carousel-actions"><button type="button" data-mb-prev aria-label="Plan anterior">‹</button><span class="mb-carousel-count" aria-live="polite"></span><button type="button" data-mb-next aria-label="Plan siguiente">›</button></div>';
+  track.after(nav);
+  const cards=()=>[...track.querySelectorAll('.mb-pub-card')];
+  const update=()=>{
+    const items=cards();
+    nav.hidden=items.length<2;
+    if(!items.length)return;
+    const width=track.getBoundingClientRect().width;
+    const center=track.scrollLeft+width/2;
+    let best=0,dist=Infinity;
+    items.forEach((item,i)=>{
+      const delta=Math.abs(item.offsetLeft-track.offsetLeft+item.offsetWidth/2-center);
+      if(delta<dist){best=i;dist=delta;}
+    });
+    nav.querySelector('.mb-carousel-count').textContent=String(best+1).padStart(2,'0')+' / '+String(items.length).padStart(2,'0');
+    nav.querySelector('[data-mb-prev]').disabled=best===0;
+    nav.querySelector('[data-mb-next]').disabled=best===items.length-1;
+  };
+  const move=dir=>{
+    const items=cards();
+    if(!items.length)return;
+    const current=Math.round(track.scrollLeft/(items[0].getBoundingClientRect().width+16));
+    const next=Math.min(items.length-1,Math.max(0,current+dir));
+    track.scrollTo({left:items[next].offsetLeft-items[0].offsetLeft,behavior:'smooth'});
+  };
+  nav.querySelector('[data-mb-prev]').addEventListener('click',()=>move(-1));
+  nav.querySelector('[data-mb-next]').addEventListener('click',()=>move(1));
+  track.addEventListener('scroll',()=>requestAnimationFrame(update),{passive:true});
+  track.addEventListener('keydown',e=>{
+    if(e.target!==track||!['ArrowLeft','ArrowRight'].includes(e.key))return;
+    e.preventDefault();move(e.key==='ArrowRight'?1:-1);
+  });
+  track.tabIndex=0;
+  if('ResizeObserver' in window)new ResizeObserver(update).observe(track);
+  M.updateMembershipCarousel=update;
+  update();
+ }
  function receiptHtml(p){
   const number=esc(p.id),date=safeDate(String(p.creado||'').slice(0,10)),name=esc(M.Auth?.user?.name||'Clienta MAJOBELLA');
   return `<article class="mb-receipt-sheet"><header><p>MAJOBELLA</p><small>BEAUTY STUDIO · MÁS YO, MÁS BELLA.</small></header>
@@ -140,7 +186,7 @@
     const e=document.createElement('div');e.id='mb-payment-history';e.className='mb-payment-history';
     $('mb-mine').after(e);
   }
-  render();loadMine().then(returnFromPaypal);
+  render();initPlanCarousel();loadMine().then(returnFromPaypal);
   $('membresias').addEventListener('click',e=>{
    const b=e.target.closest('[data-mb-auto],[data-mb-request],[data-mb-cancel],[data-mb-receipt]');
    if(!b)return;
@@ -151,5 +197,5 @@
   });
   M.Auth.onChange(()=>{loadMine();});
  };
- M.refreshMemberships=render;
+ M.refreshMemberships=()=>{render();M.updateMembershipCarousel?.();};
 })(window.MJB);

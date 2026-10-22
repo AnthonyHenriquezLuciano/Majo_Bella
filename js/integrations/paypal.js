@@ -48,30 +48,59 @@
       if(!eligible.length)throw new Error('No hay métodos de PayPal habilitados para este navegador o cuenta. Puedes elegir transferencia si está disponible.');
       const prefix='pp-'+Math.random().toString(36).slice(2,9);
       el.innerHTML = `<div class="pp-premium" data-paypal-checkout>
-        <p class="pp-premium-eyebrow">PAGO PROTEGIDO · MAJOBELLA</p>
-        <h3>Elige cómo pagar</h3>
-        <div class="pp-premium-methods" role="group" aria-label="Método de pago">
-          ${eligible.map((x,i)=>`<button type="button" class="pp-premium-method${i===0?' is-active':''}" data-pp-mode="${x.key}" aria-pressed="${i===0}"><span class="pp-premium-method-icon" aria-hidden="true">${x.key==='card'?'▣':'P'}</span><span>${x.label}</span><span aria-hidden="true">→</span></button>`).join('')}
+        <div class="pp-premium-header"><p class="pp-premium-eyebrow">MAJOBELLA · CHECKOUT SEGURO</p><span class="pp-premium-counter" aria-live="polite">01 / ${String(eligible.length).padStart(2,'0')}</span></div>
+        <h3>Elige tu forma de pago</h3>
+        <p class="pp-premium-subtitle">Una experiencia sencilla, protegida y diseñada para ti.</p>
+        <div class="pp-premium-carousel" aria-label="Carrusel de métodos de pago">
+          <button type="button" class="pp-premium-nav" data-pp-prev aria-label="Método anterior">‹</button>
+          <div class="pp-premium-methods" role="tablist" aria-label="Métodos de pago disponibles">
+            ${eligible.map((x,i)=>`<button type="button" id="${prefix}-tab-${x.key}" role="tab" class="pp-premium-method${i===0?' is-active':''}" data-pp-mode="${x.key}" aria-controls="${prefix}-frame-${x.key}" aria-selected="${i===0}" tabindex="${i===0?'0':'-1'}"><span class="pp-premium-method-icon" aria-hidden="true">${x.key==='card'?'▣':'P'}</span><span class="pp-premium-method-copy"><strong>${x.label}</strong><small>${x.key==='card'?'Solo cuando PayPal habilite esta opción':'Autoriza el pago desde tu cuenta'}</small></span><span class="pp-premium-method-go" aria-hidden="true">↗</span></button>`).join('')}
+          </div>
+          <button type="button" class="pp-premium-nav" data-pp-next aria-label="Método siguiente">›</button>
         </div>
+        <div class="pp-premium-dots" aria-hidden="true">${eligible.map((x,i)=>`<span data-pp-dot="${x.key}" class="${i===0?'is-active':''}"></span>`).join('')}</div>
         <div class="pp-premium-hint" aria-live="polite"></div>
-        <div class="pp-premium-frames">${eligible.map((x)=>`<div data-pp-frame="${x.key}"><div id="${prefix}-${x.key}"></div></div>`).join('')}</div>
-        <p class="pp-premium-secure">🔒 Procesado directamente por PayPal · No guardamos tu tarjeta</p>
+        <div class="pp-premium-frames">${eligible.map((x)=>`<div id="${prefix}-frame-${x.key}" role="tabpanel" aria-labelledby="${prefix}-tab-${x.key}" data-pp-frame="${x.key}"><div id="${prefix}-${x.key}"></div></div>`).join('')}</div>
+        <div class="pp-premium-trust"><span>♢ Compra protegida</span><span>♢ Confirmación verificada</span><span>♢ Atención del estudio</span></div>
+        <p class="pp-premium-secure">El cobro se procesa en PayPal. MAJOBELLA no almacena datos de tarjetas. La tarjeta sin cuenta y sus funciones dependen de la elegibilidad de PayPal.</p>
         <p class="pp-premium-error" role="alert" hidden></p>
       </div>`;
       const root=el.querySelector('[data-paypal-checkout]');
       const alert=root.querySelector('.pp-premium-error');
       const hint=root.querySelector('.pp-premium-hint');
-      const active=(key)=>{
+      let current=eligible[0].key;
+      const active=(key,focus=false)=>{
+        const index=eligible.findIndex(x=>x.key===key);
+        if(index<0)return;
+        current=key;
         eligible.forEach(x=>{
           const on=x.key===key;
           const btn=root.querySelector('[data-pp-mode="'+x.key+'"]');
-          btn.classList.toggle('is-active',on);btn.setAttribute('aria-pressed',String(on));
+          btn.classList.toggle('is-active',on);
+          btn.setAttribute('aria-selected',String(on));
+          btn.tabIndex=on?0:-1;
           root.querySelector('[data-pp-frame="'+x.key+'"]').hidden=!on;
+          root.querySelector('[data-pp-dot="'+x.key+'"]').classList.toggle('is-active',on);
         });
-        hint.textContent=eligible.find(x=>x.key===key)?.hint||'';
+        root.querySelector('.pp-premium-counter').textContent=String(index+1).padStart(2,'0')+' / '+String(eligible.length).padStart(2,'0');
+        hint.textContent=eligible[index].hint;
         alert.hidden=true;
+        if(focus)root.querySelector('[data-pp-mode="'+key+'"]').focus();
       };
-      root.querySelectorAll('[data-pp-mode]').forEach(btn=>btn.addEventListener('click',()=>active(btn.dataset.ppMode)));
+      const move=(direction,focus=false)=>{
+        const i=eligible.findIndex(x=>x.key===current);
+        active(eligible[(i+direction+eligible.length)%eligible.length].key,focus);
+      };
+      root.querySelectorAll('[data-pp-mode]').forEach(btn=>{
+        btn.addEventListener('click',()=>active(btn.dataset.ppMode));
+        btn.addEventListener('keydown',e=>{
+          if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();move(e.key==='ArrowRight'?1:-1,true);}
+          if(e.key==='Home'||e.key==='End'){e.preventDefault();active(eligible[e.key==='Home'?0:eligible.length-1].key,true);}
+        });
+      });
+      root.querySelector('[data-pp-prev]').addEventListener('click',()=>move(-1,true));
+      root.querySelector('[data-pp-next]').addEventListener('click',()=>move(1,true));
+      root.querySelectorAll('.pp-premium-nav').forEach(b=>b.hidden=eligible.length<2);
       for(const x of eligible){
         const buttons=sdk.Buttons({
           fundingSource:x.funding,

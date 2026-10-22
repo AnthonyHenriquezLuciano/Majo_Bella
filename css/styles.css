@@ -1486,3 +1486,48 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
  .mb-receipt-dialog::backdrop,.mb-receipt-toolbar{display:none!important}
  .mb-receipt-sheet{padding:15mm!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
+
+
+/* PayPal Premium · Elegibilidad real, no se fabrican opciones de pago */
+.pp-premium { background:linear-gradient(155deg,#fffdf9,#f7f1e8);border:1px solid #ded0bf;border-radius:22px;padding:clamp(18px,3vw,30px);box-shadow:0 16px 45px rgba(68,39,18,.08);color:#442712; }
+.pp-premium-header {display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.pp-premium-eyebrow,.pp-premium-counter {font-size:11px;letter-spacing:.15em;font-weight:700;}
+.pp-premium-counter {font-variant-numeric:tabular-nums;color:#8d745f;}
+.pp-premium h3 {font-family:"Source Serif 4","Source Serif Pro",Georgia,serif;font-size:clamp(24px,3vw,34px);margin:10px 0 6px;}
+.pp-premium-subtitle {font-size:14px;color:#7c6a5e;margin:0 0 22px;}
+.pp-premium-carousel {display:flex;align-items:stretch;gap:9px;}
+.pp-premium-methods {display:flex;flex:1;min-width:0;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;}
+.pp-premium-methods::-webkit-scrollbar {display:none;}
+.pp-premium-method {scroll-snap-align:start;display:flex;align-items:center;gap:12px;flex:1 0 min(275px,85%);min-height:84px;padding:12px 14px;border:1px solid #d9cbbd;border-radius:14px;background:#fff;color:#442712;text-align:left;cursor:pointer;transition:background .18s,border-color .18s,box-shadow .18s;}
+.pp-premium-method.is-active {background:#f1e7da;border-color:#442712;box-shadow:inset 0 0 0 1px #442712;}
+.pp-premium-method:focus-visible,.pp-premium-nav:focus-visible {outline:3px solid #a17d55;outline-offset:3px;}
+.pp-premium-method-icon {display:grid;place-items:center;flex:none;width:37px;height:37px;border-radius:10px;background:#442712;color:#fff;font-size:20px;font-weight:700;}
+.pp-premium-method-copy {display:grid;gap:5px;flex:1;}
+.pp-premium-method-copy strong {font-size:14px;line-height:1.2;}
+.pp-premium-method-copy small {font-size:11px;line-height:1.35;color:#75665c;}
+.pp-premium-method-go {font-size:18px;align-self:flex-start;}
+.pp-premium-nav {background:transparent;border:1px solid #d9cbbd;border-radius:12px;width:32px;cursor:pointer;font-size:25px;color:#442712;}
+.pp-premium-nav[hidden]{display:none;}
+.pp-premium-dots {display:flex;justify-content:center;gap:7px;padding:13px 0 5px;}
+.pp-premium-dots span {width:7px;height:7px;border-radius:50%;background:#d3c4b4;transition:width .18s,background .18s;}
+.pp-premium-dots .is-active {width:24px;border-radius:10px;background:#442712;}
+.pp-premium-hint {font-size:13px;color:#6f5744;min-height:19px;margin:10px 0 12px;}
+.pp-premium-frames [hidden]{display:none;}
+.pp-premium-trust {display:flex;gap:8px 14px;flex-wrap:wrap;justify-content:center;font-size:11px;color:#6f5744;margin-top:20px;}
+.pp-premium-secure {font-size:11px;line-height:1.55;color:#73665b;text-align:center;margin:10px 0 0;}
+.pp-premium-error {color:#a32e25;font-size:13px;margin-top:12px;}
+.pp-premium-loading {color:#442712;padding:16px;}
+/* Membresías · carrusel accesible con desplazamiento natural táctil */
+.mb-public-grid {display:grid;grid-auto-flow:column;grid-auto-columns:minmax(260px,calc((100% - 32px)/3));grid-template-columns:none;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:2px;overscroll-behavior-x:contain;padding:8px 2px 22px;scrollbar-width:thin;scrollbar-color:#c8b49d transparent;}
+.mb-public-grid .mb-pub-card {scroll-snap-align:start;min-width:0;}
+.mb-carousel-nav {display:flex;align-items:center;justify-content:space-between;gap:14px;margin:4px 0 28px;color:#442712;}
+.mb-carousel-nav[hidden] {display:none;}
+.mb-carousel-caption {font-size:11px;letter-spacing:.13em;font-weight:700;}
+.mb-carousel-actions {display:flex;align-items:center;gap:12px;}
+.mb-carousel-actions button {width:42px;height:42px;border-radius:50%;background:transparent;border:1px solid #bb9b7f;font-size:24px;color:#442712;cursor:pointer;}
+.mb-carousel-actions button:disabled {opacity:.28;cursor:not-allowed;}
+.mb-carousel-actions button:focus-visible {outline:3px solid #a17d55;outline-offset:3px;}
+.mb-carousel-count {font-size:12px;letter-spacing:.12em;font-variant-numeric:tabular-nums;}
+@media(max-width:850px){.mb-public-grid {grid-auto-columns:minmax(270px,calc((100% - 32px)/2));}}
+@media(max-width:580px){.mb-public-grid {grid-auto-columns:minmax(265px,87%);}.pp-premium-method {flex-basis:100%;}.pp-premium-carousel{gap:5px;}.pp-premium-nav{width:25px;}.pp-premium-methods{gap:8px;}}
+@media(prefers-reduced-motion:reduce){.pp-premium-method,.pp-premium-dots span{transition:none;}.mb-public-grid{scroll-behavior:auto;}}
