@@ -62,6 +62,7 @@
     run('contenido', M.initSite);
     if (has('regalar')) run('tarjetas', M.initGiftShop);
     if (has('paquetes')) run('paquetes', M.initPackages);
+    if (has('membresias')) run('membresías', M.initMemberships);
     if (has('regalos-empty')) {
       const none = () => { document.getElementById('regalos-empty').hidden = !(document.getElementById('regalar').hidden && document.getElementById('paquetes').hidden); };
       none(); setTimeout(none, 1500);
@@ -75,6 +76,7 @@
       if (M.refreshServices && has('services-list')) M.refreshServices();
       if (M.refreshBookingCatalog && has('reservar')) M.refreshBookingCatalog();
       if (M.refreshPackages && has('paquetes')) M.refreshPackages();
+      if (M.refreshMemberships && has('membresias')) M.refreshMemberships();
       if (M.refreshSiteNav) M.refreshSiteNav();
     });
   }
