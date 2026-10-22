@@ -260,7 +260,13 @@ export async function paypalWebhook_(d:any,headers:Record<string,string>) {
  }else if(etype==='PAYMENT.SALE.REFUNDED'||etype==='PAYMENT.SALE.REVERSED'){
    const saleRef=str(resource.parent_payment||resource.parent_payment_id||resource.id);
    const p=payments().find(x=>x.id===saleRef);
-   if(p&&p.estado==='completado'){
+   // PayPal puede avisar de reembolsos PARCIALES. No revocar sesiones ni
+   // declarar reembolsado el pago completo hasta verificar importe y moneda.
+   const amount=Number(resource.amount?.total??resource.amount?.value);
+   const currency=str(resource.amount?.currency||resource.amount?.currency_code);
+   const complete=p && Number.isFinite(amount) && amount>0 &&
+     currency==='USD' && Math.abs(amount-Number(p.montoUSD))<0.01;
+   if(p&&p.estado==='completado'&&complete){
      updateTable_('PagosMembresia',p._row,{estado:'reembolsado'});
      if(m.paypalPagoId===p.id)updateTable_('Membresias',m._row,{estado:'pausada',paypalEstado:'REFUNDED'});
      const cfg=settings();
@@ -268,6 +274,16 @@ export async function paypalWebhook_(d:any,headers:Record<string,string>) {
        layout_(cfg,{kicker:'Revisión de cobro',title:'Se revirtió un pago de membresía',
        intro:'Se pausó el acceso del último período afectado. Revisa PayPal y contacta a la clienta.',
        details:[['Plan',esc_(m.nombrePlan)],['Referencia',esc_(p.id)]]}),{tipo:'aviso',ref:p.id});
+   }else if(!complete){
+     const cfg=settings();
+     safeMail_(adminTo_(cfg),'Revisión de reembolso parcial · MAJOBELLA',
+       layout_(cfg,{kicker:'Conciliación PayPal',title:'Reembolso de membresía pendiente de revisar',
+         intro:'No se revocaron sesiones ni se registró un reembolso completo: el evento no confirma la devolución íntegra.',
+         details:[['Plan',esc_(m.nombrePlan)],['Venta PayPal',esc_(saleRef)],['Evento',esc_(etype)]],
+         cta:{text:'Abrir PayPal',url:'https://www.paypal.com/myaccount/activity/'}}),
+       {tipo:'aviso',ref:str(event.id)});
+     recordPaypalEvent_(event,'requiere_revision',m.id,'Reembolso parcial o importe no verificable');
+     return {ok:true,review:true};
    }
  }
  recordPaypalEvent_(event,'conciliado',m.id,etype);
