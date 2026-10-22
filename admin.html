@@ -303,13 +303,22 @@
       </div>
       <section class="ad-panel">
         <div class="panel-head"><h2>Gastos del mes</h2></div>
+        <p class="panel-note">Elige un gasto frecuente y el sistema rellenará la categoría. Los gastos fijos pueden repetirse cada mes como <b>pendientes de confirmar</b>, nunca como pagos bancarios verificados.</p>
+        <div class="exp-presets" id="mn-exp-presets" role="group" aria-label="Gastos frecuentes">
+          <button type="button" data-exp-preset="Alquiler">Alquiler</button>
+          <button type="button" data-exp-preset="Electricidad">Electricidad</button>
+          <button type="button" data-exp-preset="Internet">Internet</button>
+          <button type="button" data-exp-preset="Insumos">Insumos</button>
+          <button type="button" data-exp-preset="Publicidad">Publicidad</button>
+        </div>
         <form class="exp-form" id="mn-exp-form">
           <label>Fecha<input type="date" name="fecha" required></label>
-          <label class="grow">Concepto<input name="concepto" placeholder="Pigmentos, alquiler, publicidad…" maxlength="120" required></label>
+          <label class="grow">Concepto<input name="concepto" placeholder="Ej. Alquiler del local" maxlength="120" required autocomplete="off"></label>
           <label>Categoría<select name="categoria"></select></label>
           <label>Monto (RD$)<input type="number" name="montoRD" min="1" step="1" required></label>
           <label>Pagado con<select name="metodo"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="tarjeta">Tarjeta</option><option value="paypal">PayPal</option></select></label>
-          <button type="submit" class="btn-dark">Agregar gasto</button>
+          <label class="exp-repeat"><input type="checkbox" name="repetirMensual"> Repetir automáticamente cada mes <small>Generará un pendiente para revisar, sin restarlo de caja.</small></label>
+          <button type="submit" class="btn-dark">Registrar gasto</button>
         </form>
         <div class="tbl-wrap" id="mn-exp-list"></div>
         <p class="panel-note" id="mn-fee-note"></p>
