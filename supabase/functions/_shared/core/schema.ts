@@ -78,6 +78,17 @@ export const TABLES: Table[] = [
     indexes:['membresia_id','paypal_subscription_id'],
   },
   {
+    name: 'EventosPaypal', table: 'eventos_paypal', pk: 'id', comment: 'Eventos verificados de PayPal, idempotentes y sin datos sensibles.',
+    cols: [c('id','text',{notNull:true}),c('tipo'),c('recurso'),c('referencia'),c('estado'),c('detalle'),c('recibido','ts')],
+    indexes:['tipo','recibido'],
+  },
+  {
+    name: 'ReembolsosPaypal', table: 'reembolsos_paypal', pk: 'id', comment: 'Solicitudes de reembolso iniciadas por el estudio y verificadas contra PayPal.',
+    cols: [c('id','text',{notNull:true}),c('referencia'),c('tipo'),c('paypalPagoId'),c('paypalReembolsoId'),c('montoUSD','num'),
+      c('montoRD','num'),c('estado'),c('motivo'),c('iniciadoPor'),c('creado','ts'),c('actualizado','ts')],
+    indexes:['referencia','estado'],
+  },
+  {
     name: 'Bloqueos', table: 'bloqueos', pk: 'id', comment: 'Horarios bloqueados: una vez, varios días o cada semana.',
     cols: [
       c('id', 'text', { notNull: true }), c('tipo', 'text', { check: inList(['unico', 'rango', 'semanal']) }), c('dias'),
