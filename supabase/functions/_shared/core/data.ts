@@ -54,7 +54,7 @@ export function servicesMap_(): Record<string, any> {
   const c = cx();
   if (!c.svc) {
     c.svc = {};
-    readTable_('Servicios').forEach((r) => {
+    readTable_('Servicios').filter((r) => r.tipo !== 'grupo').forEach((r) => {
       c.svc[String(r.id).trim()] = { id: String(r.id).trim(), name: String(r.nombre).trim(), price: Number(r.precioRD) || 0, retoqueDays: Number(r.retoqueDias) || 0, consent: /^s[ií]$/i.test(String(r.consentimiento)), active: !/^no$/i.test(String(r.activo)) };
     });
   }
