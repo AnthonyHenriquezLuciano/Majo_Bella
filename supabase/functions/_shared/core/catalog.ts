@@ -12,11 +12,12 @@ export function catalog_(): any {
   const s = settings_();
   const sch = schedule_(s);
   const today = todayKey_();
+  const available = services_();
   return {
     ok: true,
-    categories: categories_(),
-    serviceGroups: serviceGroups_(),
-    services: services_().map(function (x) {
+    categories: categories_().filter((c) => available.some((x) => x.categoryId === c.id)),
+    serviceGroups: serviceGroups_().filter((g) => available.some((x) => x.parentId === g.id)),
+    services: available.map(function (x) {
       return { id: x.id, name: x.name, categoryId: x.categoryId, category: x.category,
         parentId: x.parentId, description: x.description, order: x.order,
         durationMinutes: x.durationMinutes, price: x.price, priceFrom: x.priceFrom, depositPercent: x.depositPercent };
