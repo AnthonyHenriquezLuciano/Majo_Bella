@@ -419,14 +419,9 @@
       </div>
     </section>
     <section class="ad-panel" id="aj-p-services">
-      <div class="panel-head"><h2>Servicios</h2><button type="button" class="chip-btn" id="aj-svc-add">+ Añadir servicio</button></div>
-      <p class="panel-note">Precio, duración y depósito que se cobran en la web. «Depósito» es el % que paga la clienta para apartar ese servicio (0 = sin depósito, se confirma al instante). «Vuelve cada» define cuándo aparece en «Por volver». «Retoque a los» envía el aviso de retoque (0 = sin retoque). «Consentimiento» pide firmarlo antes de la cita. Las descripciones de cada servicio se editan en js/data/services.js.</p>
-      <div class="tbl-wrap">
-        <table class="tbl tbl-edit">
-          <thead><tr><th>Servicio</th><th>Duración (min)</th><th>Precio (RD$)</th><th class="c">Precio «desde»</th><th>Depósito (%)</th><th>Vuelve cada (días)</th><th>Retoque a los (días)</th><th class="c">Consenti&shy;miento</th><th class="c">Activo</th></tr></thead>
-          <tbody id="aj-services"></tbody>
-        </table>
-      </div>
+      <div class="panel-head"><h2>Catálogo de servicios</h2><button type="button" class="chip-btn" id="aj-cat-add">Añadir categoría</button></div>
+      <p class="panel-note">Organiza tus tratamientos por categoría, servicio y subservicio. Solo las opciones finales tienen precio y duración, y pueden reservarse. Arrastra el orden con «Subir» y «Bajar»; desactiva una opción para ocultarla sin alterar citas anteriores.</p>
+      <div class="aj-cat-grid" id="aj-services" aria-label="Categorías de servicios"></div>
     </section>
     <div class="ad-cols" id="aj-extra">
       <section class="ad-panel" id="aj-transfer-panel">
