@@ -52,7 +52,7 @@ export function services_() {
       durationMinutes: Number(r.duracionMin) || 30, price: Number(r.precioRD) || 0,
       priceFrom: /^s[ií]$/i.test(String(r.precioDesde)), returnDays: Number(r.volverDias) || 0,
       depositPercent: pctOrNull_(r.depositoPct),
-      retoqueDays: Number(r.retoqueDias) || 0, consent: /^s[ií]$/i.test(String(r.consentimiento)),
+      retoqueDays: Number(r.retoqueDias) || 0, consent: /^s[ií]$/i.test(String(r.consentimiento)), consentTemplateId: String(r.consentTemplateId||''),
     }));
 }
 export function servicesMap_(): Record<string, any> {
