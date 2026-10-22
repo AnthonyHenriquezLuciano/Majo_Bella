@@ -173,20 +173,26 @@
         ['minNoticeHours', 'maxDaysAhead', 'slotStepMinutes'].forEach((k) => { if (sc[k]) SCH[k] = sc[k]; });
       }
       if (data.payments && data.payments.cancelHours) M.config.policies.changeHours = data.payments.cancelHours;
-      // Servicios desactivados en el dashboard: dejan de mostrarse
-      if ((data.services || []).length) {
-        const active = new Set(data.services.map((r) => r.id));
-        for (let i = M.services.length - 1; i >= 0; i--) if (!active.has(M.services[i].id)) M.services.splice(i, 1);
-        data.services.forEach((r, i) => { const s = M.serviceById[r.id]; if (s) s.order = r.order ?? i; });
+      // La API es la fuente de verdad; reactivar un servicio lo devuelve al catálogo.
+      // Se conserva serviceById para consultar el nombre de citas antiguas.
+      if (Array.isArray(data.services)) {
+        M.services.length = 0;
+        data.services.forEach((r, i) => {
+          let s = M.serviceById[r.id];
+          if (!s) {
+            s = { id: r.id, name: r.name, category: r.category || r.name,
+              categoryId: r.categoryId || '', parentId: r.parentId || '',
+              description: r.description || '', durationMinutes: r.durationMinutes, price: r.price,
+              priceFrom: !!r.priceFrom, depositPercent: r.depositPercent };
+            M.serviceById[s.id] = s;
+          }
+          s.name = r.name; s.category = r.category || s.category; s.categoryId = r.categoryId || '';
+          s.parentId = r.parentId || ''; s.description = r.description === undefined ? s.description : r.description;
+          s.price = r.price; s.durationMinutes = r.durationMinutes; s.priceFrom = !!r.priceFrom;
+          s.depositPercent = r.depositPercent; s.order = r.order ?? i;
+          M.services.push(s);
+        });
       }
-      // Servicios nuevos creados en el dashboard que aún no están en services.js
-      (data.services || []).forEach((r) => {
-        if (M.serviceById[r.id]) return;
-        const s = { id: r.id, category: r.category || r.name, categoryId: r.categoryId || '', parentId: r.parentId || '',
-          name: r.name, description: r.description || '', durationMinutes: r.durationMinutes,
-          price: r.price, priceFrom: !!r.priceFrom, depositPercent: r.depositPercent, order: r.order ?? 0 };
-        M.services.push(s); M.serviceById[s.id] = s;
-      });
       M.promos = data.promos || [];
       M.site = Object.assign(M.site || {}, data.site || {}, {
         gallery: data.gallery || [], reviews: data.reviews || [], giftShop: data.giftShop || null, packages: data.packages || [], loaded: true,
