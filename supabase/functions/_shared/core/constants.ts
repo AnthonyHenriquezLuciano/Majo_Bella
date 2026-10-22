@@ -9,6 +9,9 @@ export const BUSY_STATES = ['confirmada', 'completada', 'no-asistio', 'bloqueo',
 
 export const DEFAULT_SETTINGS: string[][] = [
   ['tasaUSD', '63', 'Pesos dominicanos por 1 US$. PayPal no cobra en RD$: el depósito se convierte con esta tasa.'],
+  ['tasaUSDModo', 'manual', 'manual o automatico. Si es automático se actualiza con una tasa de mercado indicativa, con controles de antigüedad y variación.'],
+  ['tasaUSDFuente', '', 'Origen informativo de la última actualización automática.'],
+  ['tasaUSDActualizada', '', 'Momento en que se actualizó la tasa automáticamente.'],
   ['porcentajeDeposito', '50', 'Depósito para servicios sin porcentaje propio (cada servicio lo define en la pestaña Servicios).'],
   ['minutosRetencion', '15', 'Minutos que se aparta el horario mientras la clienta paga.'],
   ['horasCancelacion', '24', 'Si cancela con al menos estas horas de aviso, se le devuelve el depósito.'],
