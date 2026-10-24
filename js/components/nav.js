@@ -2,6 +2,23 @@
 (function (M) {
   M.initNav = function () {
     const header = document.querySelector('.site-header');
+    // Las tres secciones comparten regalos.html, pero cada enlace debe
+    // conservar su propio indicador activo según el fragmento de la URL.
+    const syncExperienceNavigation = () => {
+      const current = new URL(location.href);
+      const isGiftPage = current.pathname.endsWith('/regalos.html');
+      document.querySelectorAll('.main-nav a[href], .mobile-menu a[href]').forEach(link => {
+        const dest = new URL(link.getAttribute('href'), location.href);
+        if (!dest.pathname.endsWith('/regalos.html') || !dest.hash ||
+          !['#regalar', '#membresias', '#paquetes'].includes(dest.hash)) return;
+        const selected = isGiftPage && dest.hash === (current.hash || '#regalar');
+        if (selected) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+    };
+    syncExperienceNavigation();
+    window.addEventListener('hashchange', syncExperienceNavigation);
+
     const btn = document.querySelector('.menu-toggle');
     const panel = document.getElementById('mobile-menu');
 
