@@ -71,8 +71,8 @@ export async function adminSyncPaypalPlan_(d:any){
  if(!Number.isFinite(price)||price<=0)throw Error('El plan debe tener un precio mensual válido.');
  const usd=Math.ceil(price/rate*100)/100,version=usd.toFixed(2);
  // Límite operativo de MAJOBELLA, no un mínimo oficial de PayPal.
- if(usd<1)throw Error('El plan '+str(p.nombre)+' cuesta RD$ '+price.toFixed(2)+' (US$ '+version+
-   '). MAJOBELLA exige al menos US$ 1.00 para cobros mensuales automáticos. Ajusta el precio en Administración y vuelve a sincronizar. No se efectuó ningún cargo.');
+ if(usd<1 && d.confirmLowValue!==true)throw Error('El plan '+str(p.nombre)+' cuesta RD$ '+price.toFixed(2)+' (US$ '+version+
+   '). Los importes inferiores a US$ 1.00 requieren confirmación especial de Administración por las comisiones de PayPal. No se cambió el precio ni se realizó un cargo.');
  if(p.paypalPlanId&&p.paypalPlanVersion===version)return {ok:true,planId:p.id,paypalPlanId:p.paypalPlanId,usd};
  let productId=str(p.paypalProductId);
  if(!productId){
