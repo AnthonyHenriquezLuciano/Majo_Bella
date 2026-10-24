@@ -33,47 +33,45 @@
   }
 
   async function canvas(g, opts = {}) {
-    await loadLogo(); // El logotipo se mantiene disponible para otras vistas; el diseño exportado usa tipografía.
+    // Exportación autosuficiente: sin dependencias remotas ni imágenes bloqueadas.
     const W = 1200, H = 720;
     const c = document.createElement('canvas');
     c.width = W; c.height = H;
     const x = c.getContext('2d');
-    // Mismo lenguaje visual que la tarjeta que personalizas en la web.
+    // MAJOBELLA · Tarjeta de regalo en negro y marfil, igual que la vista previa.
     const bg = x.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, '#fcf7ee'); bg.addColorStop(.58, '#f1dfcd'); bg.addColorStop(1, '#dfc4ab');
+    bg.addColorStop(0, '#050505'); bg.addColorStop(.65, '#151515'); bg.addColorStop(1, '#050505');
     x.fillStyle = bg; x.fillRect(0, 0, W, H);
-    x.strokeStyle = 'rgba(68,39,18,.32)'; x.lineWidth = 2; x.strokeRect(31, 31, W - 62, H - 62);
-    x.strokeStyle = 'rgba(68,39,18,.16)'; x.lineWidth = 1; x.strokeRect(48, 48, W - 96, H - 96);
-    x.beginPath(); x.ellipse(1030, 610, 300, 300, 0, 0, Math.PI * 2);
-    x.fillStyle = 'rgba(68,39,18,.045)'; x.fill();
-    x.fillStyle = '#442712';
-    x.font = '600 29px Georgia, serif';
-    spaced(x, 'MAJOBELLA', W / 2, 122, 7);
-    x.font = '400 37px Georgia, serif'; x.fillText('✦', W / 2, 185);
-    x.fillStyle = '#806148'; x.font = '600 19px Georgia, serif';
-    spaced(x, 'TARJETA DE REGALO', W / 2, 246, 5);
-    x.fillStyle = '#442712'; x.font = '600 100px Georgia, serif';
-    x.fillText(M.fmtPrice(Number(g.montoRD) || 0), W / 2, 361);
+    x.strokeStyle = 'rgba(247,239,226,.5)'; x.lineWidth = 2; x.strokeRect(34, 34, W - 68, H - 68);
+    x.strokeStyle = 'rgba(247,239,226,.18)'; x.lineWidth = 1; x.strokeRect(49, 49, W - 98, H - 98);
+    x.beginPath(); x.arc(1060, 70, 300, 0, Math.PI * 2);
+    x.fillStyle = 'rgba(255,255,255,.025)'; x.fill();
+    x.textAlign = 'center';
+    x.fillStyle = '#f6f0e7'; x.font = '600 31px Georgia, serif';
+    spaced(x, 'MAJOBELLA', W / 2, 133, 7);
+    x.font = '400 39px Georgia, serif'; x.fillText('✦', W / 2, 190);
+    x.fillStyle = '#d8d2c8'; x.font = '600 19px Georgia, serif';
+    spaced(x, 'TARJETA DE REGALO', W / 2, 256, 6);
+    x.fillStyle = '#fff'; x.font = '600 96px Georgia, serif';
+    const amount = M.fmtPrice(Number(g.montoRD) || 0);
+    x.fillText(amount, W / 2, 366, 1030);
     const from = g.comprador || g.de;
     const who = [g.para ? `Para ${g.para}` : '', from ? `de ${from}` : ''].filter(Boolean).join(' · ');
-    if (who) {
-      x.font = 'italic 30px Georgia, serif'; x.fillStyle = '#442712';
-      const max = 56; x.fillText(who.length > max ? who.slice(0, max - 1) + '…' : who, W / 2, 413);
-    }
+    if (who) { x.font = 'italic 31px Georgia, serif'; x.fillStyle = '#eee8df'; x.fillText(who, W / 2, 420, 990); }
     if (g.mensaje) {
-      x.fillStyle = '#6c5544'; x.font = '22px Georgia, serif';
-      wrap(x, `“${String(g.mensaje).slice(0, 140)}”`, W / 2, 460, 820, 28);
+      x.font = '23px Georgia, serif'; x.fillStyle = '#cfc9c0';
+      wrap(x, `“${String(g.mensaje).slice(0, 140)}”`, W / 2, 461, 880, 31);
     }
-    x.fillStyle = 'rgba(255,255,255,.55)'; x.fillRect(W / 2 - 205, 546, 410, 60);
-    x.strokeStyle = '#b79b82'; x.lineWidth = 1; x.strokeRect(W / 2 - 205, 546, 410, 60);
-    x.fillStyle = '#442712'; x.font = '600 26px ui-monospace, Menlo, monospace';
-    spaced(x, g.codigo || 'MJB-····-····', W / 2, 585, 2);
-    x.fillStyle = '#7b5d47'; x.font = '600 15px Georgia, serif';
-    spaced(x, 'MÁS YO, MÁS BELLA.  ✦  BEAUTY STUDIO', W / 2, 647, 1.5);
+    x.fillStyle = 'rgba(255,255,255,.09)'; x.fillRect(W / 2 - 215, 541, 430, 65);
+    x.strokeStyle = 'rgba(255,255,255,.56)'; x.lineWidth = 1; x.strokeRect(W / 2 - 215, 541, 430, 65);
+    x.fillStyle = '#fff'; x.font = '600 27px ui-monospace, Menlo, monospace';
+    spaced(x, g.codigo || 'MJB-····-····', W / 2, 584, 2.3);
+    x.fillStyle = '#e7dfd4'; x.font = '600 15px Georgia, serif';
+    spaced(x, 'MÁS YO, MÁS BELLA.  ✦  BEAUTY STUDIO', W / 2, 646, 1.2);
     const web = String(opts.webUrl || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
     x.font = '15px Georgia, serif';
-    const line = `Al reservar utiliza tu código${web ? ' · ' + web : ''}${g.vence ? ' · Válida hasta ' + shortDate(g.vence) : ''}`;
-    x.fillText(line.length > 125 ? line.slice(0, 124) + '…' : line, W / 2, 681);
+    const line = `Usa tu código al reservar${g.vence ? ' · Válida hasta ' + shortDate(g.vence) : ''}${web ? ' · ' + web : ''}`;
+    x.fillText(line, W / 2, 682, W - 140);
     return c;
   }
 
