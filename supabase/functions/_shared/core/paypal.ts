@@ -39,7 +39,16 @@ export async function paypal_(method: string, path: string, body: any, requestId
     const issue = data.details && data.details[0] && data.details[0].issue;
     if (issue === 'INSTRUMENT_DECLINED') throw new Error('PayPal rechazó el método de pago. Prueba con otra tarjeta o cuenta.');
     if (issue === 'ORDER_ALREADY_CAPTURED') return getOrder_(path);
-    throw new Error('PayPal: ' + (data.message || issue || ('error ' + code)));
+    // Mostrar el campo que falló y el identificador de diagnóstico.
+    // Nunca incluir tokens, credenciales ni datos de tarjeta en el mensaje.
+    const details = Array.isArray(data.details) ? data.details.slice(0, 2).map((d:any) => {
+      const field = String(d.field || '').slice(0, 95);
+      const problem = String(d.description || d.issue || '').slice(0, 175);
+      return [field, problem].filter(Boolean).join(': ');
+    }).filter(Boolean).join('; ') : '';
+    const debug = /^[a-zA-Z0-9]{6,32}$/.test(String(data.debug_id||'')) ? ' (ref. PayPal ' + data.debug_id + ')' : '';
+    const message = String(data.message || issue || ('error ' + code)).slice(0, 190);
+    throw new Error('PayPal HTTP ' + code + ': ' + message + (details ? ' · ' + details : '') + debug);
   }
   // Se anota cada cobro hecho en esta petición: si algo falla al guardar, se avisa al estudio
   const cap = firstCapture_(data);
