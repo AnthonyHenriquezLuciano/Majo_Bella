@@ -9,14 +9,15 @@
           <p class="label">Reservas</p>
           <h2 class="display">Agenda tu cita</h2>
         </div>
-        <div class="section-head-side"><p>Elige servicio, día y hora. Solo verás horarios disponibles.</p></div>
+        <div class="section-head-side"><p>Descubre los tratamientos por categoría, elige el horario que prefieras y confirma tu reserva en unos pasos.</p></div>
       </div>
 
       <div class="booking">
         <form class="booking-flow" id="bk-form" novalidate>
           <fieldset class="step" id="step-servicio">
-            <legend><span class="step-n">1</span>Servicio</legend>
-            <div class="chips" id="bk-services"></div>
+            <legend><span class="step-n">1</span>Elige tus servicios</legend>
+            <p class="bk-services-lead">Explora por categoría y selecciona uno o varios tratamientos. Verás el total antes de confirmar.</p>
+            <div class="bk-services" id="bk-services" aria-label="Servicios agrupados por categoría"></div>
           </fieldset>
 
           <fieldset class="step" id="step-fecha">
@@ -122,8 +123,8 @@
             <div><dt>Precio</dt><dd id="sum-price">—</dd></div>
             <div class="sum-opt" id="sum-disc-row" hidden><dt>Descuento</dt><dd id="sum-discount">—</dd></div>
             <div class="sum-opt" id="sum-gift-row" hidden><dt id="sum-gift-label">Tarjeta de regalo</dt><dd id="sum-gift">—</dd></div>
-            <div class="sum-pay" data-pay-only hidden><dt>Depósito hoy</dt><dd id="sum-deposit">—</dd></div>
-            <div class="sum-pay" data-pay-only hidden><dt>Al terminar</dt><dd id="sum-balance">—</dd></div>
+            <div class="sum-pay" data-pay-only hidden><dt>Abono de reserva</dt><dd id="sum-deposit">—</dd></div>
+            <div class="sum-pay" data-pay-only hidden><dt>Saldo para tu cita</dt><dd id="sum-balance">—</dd></div>
           </dl>
           <details class="promo-box" id="bk-promo" data-pay-only hidden>
             <summary>¿Tienes un código de descuento o una tarjeta de regalo?</summary>
@@ -134,9 +135,9 @@
             <p class="promo-msg" id="bk-code-msg" aria-live="polite"></p>
             <div class="promo-tags" id="bk-code-tags"></div>
           </details>
-          <button type="button" class="btn btn-primary btn-block" id="bk-confirm" disabled>Confirmar cita</button>
+          <button type="button" class="btn btn-primary btn-block" id="bk-confirm" disabled>Confirmar y pagar mi abono</button>
           <div class="pay-panel" id="bk-pay" hidden>
-            <p class="pay-title">Aparta tu cita con el depósito</p>
+            <p class="pay-title">Confirma tu reserva con el abono</p>
             <div class="pay-methods" id="bk-pay-methods" role="tablist" aria-label="Forma de pago" hidden>
               <button type="button" class="pay-method is-on" role="tab" aria-selected="true" data-method="paypal">PayPal o tarjeta</button>
               <button type="button" class="pay-method" role="tab" aria-selected="false" data-method="transferencia">Transferencia</button>
@@ -151,6 +152,7 @@
             <button type="button" class="link-inline pay-back" id="bk-pay-back">Cambiar algo de la cita</button>
           </div>
           <p class="sum-missing" id="bk-missing" aria-live="polite"></p>
+          <p class="sum-friendly-note">Tu cita se reserva con el abono indicado. El saldo restante lo pagas el día de tu visita. Si eliges transferencia, validaremos el comprobante antes de confirmar.</p>
           <p class="sum-policy" id="bk-policy"></p>
           <p class="sum-mode" id="bk-mode"></p>
           <div class="sum-result" id="bk-result" hidden aria-live="polite"></div>
