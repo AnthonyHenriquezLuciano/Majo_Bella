@@ -1600,3 +1600,142 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   .header-account{min-width:88px}
   .header-cta{padding-inline:12px}
 }
+
+
+/* MAJOBELLA — Experiencia editorial en negro y marfil · octubre 2026 */
+.booking-section .bk-services-lead{margin:0 0 22px;color:#626262;line-height:1.65;max-width:62ch}
+.booking-section .bk-services{display:grid;gap:23px}
+.booking-section .bk-service-category{padding:clamp(16px,2vw,25px);border:1px solid #e4e4e4;border-radius:20px;background:#fff;min-width:0}
+.booking-section .bk-category-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid #e8e8e8;padding-bottom:13px;margin-bottom:17px}
+.booking-section .bk-category-head h3{margin:0;font:600 clamp(22px,2.8vw,28px)/1.25 var(--serif,"Source Serif 4",Georgia,serif);color:#111}
+.booking-section .bk-category-head span{font:500 12px/1.5 system-ui,sans-serif;color:#777;white-space:nowrap}
+.booking-section .bk-service-group+.bk-service-group{margin-top:20px;border-top:1px solid #e8e8e8;padding-top:20px}
+.booking-section .bk-service-group h4{font:600 17px/1.4 var(--serif,"Source Serif 4",Georgia,serif);margin:0 0 4px;color:#333}
+.booking-section .bk-service-group>p{font-size:13px;color:#777;margin:0 0 12px;line-height:1.5}
+.booking-section .bk-service-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,235px),1fr));gap:10px}
+.booking-section .bk-service-group+.bk-service-options{margin-top:15px}
+.booking-section .bk-service-choice{position:relative;display:flex;align-items:center;gap:10px;min-width:0;padding:14px 13px;border:1px solid #dedede;border-radius:13px;cursor:pointer;background:#fafafa;transition:border-color .18s,background-color .18s}
+.booking-section .bk-service-choice:hover{border-color:#777;background:#fff}
+.booking-section .bk-service-choice:focus-within{outline:2px solid #111;outline-offset:2px}
+.booking-section .bk-service-choice:has(input:checked){border-color:#111;background:#f2f2f2}
+.booking-section .bk-service-choice input{position:absolute;opacity:0;width:1px;height:1px}
+.booking-section .bk-service-content{min-width:0;flex:1;display:grid;gap:6px}
+.booking-section .bk-service-content strong{font:600 15px/1.35 var(--serif,"Source Serif 4",Georgia,serif);color:#111}
+.booking-section .bk-service-content small{font:400 12px/1.45 var(--serif,Georgia,serif);color:#666}
+.booking-section .bk-service-indicator{width:22px;height:22px;flex:0 0 22px;border:1.5px solid #777;border-radius:50%;display:grid;place-items:center;background:#fff}
+.booking-section .bk-service-choice input:checked~.bk-service-indicator{background:#111;border-color:#111}
+.booking-section .bk-service-choice input:checked~.bk-service-indicator::after{content:"✓";font:700 13px/1 system-ui,sans-serif;color:#fff}
+.booking-section .sum-friendly-note{font-size:13px;line-height:1.7;color:#444;background:#f5f5f5;border-left:3px solid #111;padding:13px 15px;margin:15px 0}
+.booking-section .bk-service-none{font-size:14px;color:#777}
+
+/* Portada de experiencias: composición del boceto (negro, blanco, geometría). */
+.regalos-page .regal-hub{background:#fff;padding-block:clamp(34px,5vw,70px)}
+.regalos-page .regal-hub-heading{max-width:730px;margin-bottom:28px}
+.regalos-page .regal-hub-heading .label{color:#555;letter-spacing:.2em}
+.regalos-page .regal-hub-heading h1{margin:12px 0 10px;max-width:none}
+.regalos-page .regal-hub-heading>p:last-child{margin:0;color:#555;line-height:1.6;max-width:62ch}
+.regalos-page .regal-hub-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(16px,2.6vw,28px)}
+.regalos-page .regal-hub-card{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:0;min-height:330px;border:0;border-radius:clamp(25px,5vw,47px);padding:clamp(25px,3.3vw,38px);background:#050505!important;color:#fff!important;text-decoration:none;box-shadow:none;transition:transform .22s ease,box-shadow .22s ease}
+.regalos-page .regal-hub-card:hover{border-color:transparent;transform:translateY(-3px);box-shadow:0 16px 32px rgba(0,0,0,.16)}
+.regalos-page .regal-hub-card:focus-visible{outline:3px solid #111;outline-offset:4px}
+.regalos-page .regal-hub-index{position:relative;z-index:2;display:block;font:800 clamp(12px,1.65vw,17px)/1.25 Arial,system-ui,sans-serif;letter-spacing:-.04em;max-width:56%;opacity:1;color:#fff;text-transform:uppercase}
+.regalos-page .regal-hub-card strong{position:relative;z-index:2;display:block;margin-top:auto;max-width:85%;font:800 clamp(22px,3vw,32px)/1.1 Arial,system-ui,sans-serif;letter-spacing:-.055em;text-transform:uppercase;color:#fff}
+.regalos-page .regal-hub-illustration{display:block;position:absolute;z-index:1;pointer-events:none;width:52%;height:auto;max-width:270px;right:-3%;top:7%;filter:none}
+.regalos-page .regal-hub-member .regal-hub-illustration{width:46%;right:-7%;top:20%}
+.regalos-page .regal-hub-gift .regal-hub-illustration{width:47%;right:-4%;top:1%}
+.regalos-page .regal-hub-action{position:relative;z-index:2;font:600 12px/1.4 Arial,system-ui,sans-serif;letter-spacing:0!important;opacity:.8;margin-top:19px;border-bottom:1px solid rgba(255,255,255,.55);padding-bottom:3px}
+.regalos-page .regal-hub-action span{margin-left:7px}
+.regalos-page .regal-hub-package{grid-column:1/-1;min-height:286px}
+.regalos-page .regal-hub-package .regal-hub-index{max-width:35%}
+.regalos-page .regal-hub-package .regal-hub-illustration{width:33%;max-width:285px;right:8%;top:-12%}
+.regalos-page .regal-hub-package strong{max-width:55%;font-size:clamp(26px,3.4vw,38px)}
+
+/* Tarjeta real y vista previa: identidad en negro/marfil, no marrón. */
+.regalos-page .gift{background:#fff}
+.regalos-page .gift-intro .label,.regalos-page .gift-form-head .label{color:#555}
+.regalos-page .gift-form,.regalos-page .gift-unavailable{border-color:#dedede;box-shadow:0 15px 33px rgba(0,0,0,.05);background:#fff}
+.regalos-page .gift-form-head h3,.regalos-page .gift-benefits strong,.regalos-page .gift-unavailable h3{color:#111}
+.regalos-page .gift-benefits,.regalos-page .gift-benefits>div{border-color:#e4e4e4}
+.regalos-page .gift-benefit-n{color:#555}
+.regalos-page .gift-benefits small,.regalos-page .gift-form-head>p:last-child{color:#666}
+.regalos-page .gc-preview{color:#f5eee4;border:1px solid #303030;background:radial-gradient(circle at 93% 8%,#303030 0,transparent 38%),linear-gradient(132deg,#050505,#161616 68%,#090909);box-shadow:0 20px 46px rgba(0,0,0,.17)}
+.regalos-page .gc-preview::before{border-color:rgba(247,239,226,.35)}
+.regalos-page .gc-preview::after{color:rgba(255,255,255,.035)}
+.regalos-page .gc-top,.regalos-page .gc-k,.regalos-page .gc-amt,.regalos-page .gc-who,.regalos-page .gc-msg,.regalos-page .gc-bottom{color:#f5eee4}
+.regalos-page .gc-top .gc-symbol{color:#fff}
+.regalos-page .gc-k{color:#d4cbbf}
+.regalos-page .gc-amt{font-family:var(--serif,"Source Serif 4",Georgia,serif);font-weight:600}
+.regalos-page .gc-code{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.5);color:#fff}
+.regalos-page .gc-brand{font-family:var(--serif,"Source Serif 4",Georgia,serif)}
+.regalos-page .gift-lead{color:#444}
+.regalos-page .gf-chip input:checked+span{background:#111;border-color:#111;color:#fff}
+
+/* Membresías: comerciales arriba, área privada al alcance de un scroll. */
+.regalos-page .mb-public{background:#f7f7f7}
+.regalos-page .mb-heading{margin-bottom:8px}
+.regalos-page .mb-public-grid{margin:19px 0 16px;gap:18px}
+.regalos-page .mb-pub-card{background:#fff!important;border:1px solid #ddd;border-radius:22px;padding:clamp(23px,3vw,34px);gap:14px;box-shadow:0 13px 30px rgba(0,0,0,.045)}
+.regalos-page .mb-card-top{display:flex;justify-content:space-between;gap:12px;align-items:center;width:100%}
+.regalos-page .mb-card-badge{border:1px solid #111;color:#111;border-radius:99px;padding:5px 9px;font:700 10px/1.3 Arial,system-ui,sans-serif;letter-spacing:.08em}
+.regalos-page .mb-pub-overline{color:#555;font-size:10px}
+.regalos-page .mb-pub-card h3{color:#111;font:600 clamp(24px,3vw,31px)/1.15 var(--serif,Georgia,serif);margin:12px 0 0}
+.regalos-page .mb-pub-desc{line-height:1.65;color:#555}
+.regalos-page .mb-card-value{width:100%;display:grid;gap:4px;padding:19px 0;border-block:1px solid #e3e3e3}
+.regalos-page .mb-pub-price{font:600 28px/1.3 var(--serif,Georgia,serif);color:#111}
+.regalos-page .mb-pub-price small{font-size:13px;font-weight:400;color:#666}
+.regalos-page .mb-pub-session{font-size:13px;font-weight:600;color:#444}
+.regalos-page .mb-card-benefits{display:grid;gap:10px;width:100%}
+.regalos-page .mb-card-benefits>span{font:700 10px/1.4 Arial,system-ui,sans-serif;letter-spacing:.15em;color:#777}
+.regalos-page .mb-card-benefits ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.regalos-page .mb-card-benefits li{font:400 14px/1.6 var(--serif,Georgia,serif);color:#333}
+.regalos-page .mb-card-benefits li::before{content:"✓";margin-right:9px;font-weight:700}
+.regalos-page .mb-card-actions{display:grid;gap:11px;width:100%;margin-top:auto;padding-top:14px}
+.regalos-page .mb-card-actions .btn{width:100%;text-align:center;white-space:normal}
+.regalos-page .mb-public-account{border:1px solid #dedede;border-radius:22px;background:#fff;margin-top:22px;padding:clamp(22px,3vw,32px);box-shadow:0 10px 22px rgba(0,0,0,.025)}
+.regalos-page .mb-account-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:15px}
+.regalos-page .mb-account-head h3{margin:4px 0 8px;font:600 clamp(24px,2.8vw,30px)/1.25 var(--serif,Georgia,serif);color:#111}
+.regalos-page .mb-account-head p:not(.label){font:400 14px/1.6 var(--serif,Georgia,serif);color:#555;margin:0;max-width:60ch}
+.regalos-page .mb-account-head .btn{flex:0 0 auto}
+.regalos-page .mb-account-head .btn[hidden],.regalos-page .mb-account-welcome[hidden]{display:none!important}
+.regalos-page .mb-account-welcome{font:600 14px/1.5 var(--serif,Georgia,serif);color:#111;padding:13px 16px;border:1px solid #e8e8e8;background:#f8f8f8;border-radius:12px;margin:10px 0}
+.regalos-page #mb-mine{margin:6px 0 0}
+.regalos-page .mb-account-prompt{color:#555;font:400 14px/1.6 var(--serif,Georgia,serif)}
+.regalos-page .mb-public-msg:empty{display:none}
+.regalos-page .mb-public-terms{max-width:90ch;color:#666;font-size:12px;margin-top:16px}
+
+/* Paquetes: beneficios a primera vista y precio comparado. */
+.regalos-page .packages{background:#fff}
+.regalos-page .pk-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,265px),1fr));gap:18px}
+.regalos-page .pk-card{display:flex;flex-direction:column;gap:16px;border:1px solid #ddd;border-radius:22px;padding:clamp(23px,3vw,32px);background:#fff;box-shadow:0 14px 28px rgba(0,0,0,.045)}
+.regalos-page .pk-card h3{font:600 26px/1.16 var(--serif,Georgia,serif);color:#111;margin:0}
+.regalos-page .pk-card-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.regalos-page .pk-card-top .pk-svc{color:#555;font:700 10px/1.4 Arial,system-ui,sans-serif;letter-spacing:.15em}
+.regalos-page .pk-discount{font:700 11px/1.4 Arial,system-ui,sans-serif;border-radius:50px;background:#111;color:#fff;padding:7px 11px}
+.regalos-page .pk-card .pk-desc{color:#555;font:400 15px/1.65 var(--serif,Georgia,serif);margin:0}
+.regalos-page .pk-card-benefits{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-block:1px solid #e6e6e6;padding:17px 0}
+.regalos-page .pk-card-benefits>div{display:grid;gap:7px}
+.regalos-page .pk-card-benefits span{font:700 10px/1.3 Arial,system-ui,sans-serif;letter-spacing:.11em;color:#666}
+.regalos-page .pk-card-benefits strong{font:600 18px/1.3 var(--serif,Georgia,serif);color:#111}
+.regalos-page .pk-card-bottom{display:grid;gap:9px;margin-top:auto}
+.regalos-page .pk-card .pk-price{font:600 30px/1.2 var(--serif,Georgia,serif);color:#111;margin:0}
+.regalos-page .pk-save{font:600 13px/1.4 var(--serif,Georgia,serif);color:#333}
+.regalos-page .pk-save s{font-weight:400;color:#777;margin-left:5px}
+.regalos-page .pk-card .btn{margin:9px 0 0;align-self:stretch;text-align:center}
+.regalos-page .pk-empty{background:#f7f7f7;border-color:#dedede}
+@media(max-width:760px){
+ .booking-section .bk-service-category{padding:16px}
+ .booking-section .bk-service-options{grid-template-columns:1fr}
+ .regalos-page .regal-hub-grid{grid-template-columns:1fr}
+ .regalos-page .regal-hub-card,.regalos-page .regal-hub-package{grid-column:auto;min-height:285px}
+ .regalos-page .regal-hub-package .regal-hub-index{max-width:63%}
+ .regalos-page .regal-hub-package .regal-hub-illustration{width:49%;max-width:230px;right:0;top:3%}
+ .regalos-page .regal-hub-package strong{max-width:85%}
+ .regalos-page .mb-account-head{align-items:flex-start;flex-direction:column}
+ .regalos-page .mb-account-head .btn{width:100%}
+}
+@media(max-width:480px){
+ .regalos-page .regal-hub-card,.regalos-page .regal-hub-package{min-height:255px;padding:26px}
+ .regalos-page .regal-hub-card strong{font-size:clamp(23px,6vw,30px)}
+ .regalos-page .regal-hub-index{font-size:13px}
+ .regalos-page .regal-hub-card .regal-hub-illustration{max-width:195px;right:-1%}
+}

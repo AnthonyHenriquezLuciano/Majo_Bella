@@ -74,10 +74,10 @@
       ? (canPayPal || canTransfer ? 'pay' : 'paysoon')
       : (M.WhatsApp.isConfigured() ? 'request' : 'none');
     document.querySelectorAll('[data-pay-only]').forEach((n) => { n.hidden = mode !== 'pay'; });
-    confirmBtn.textContent = mode === 'pay' ? 'Continuar al pago del depósito' : mode === 'request' ? 'Enviar solicitud' : 'Confirmar cita';
+    confirmBtn.textContent = mode === 'pay' ? 'Confirmar y pagar mi abono' : mode === 'request' ? 'Enviar solicitud' : 'Confirmar cita';
       sandbox = PAY.paypalEnv === 'sandbox';
     modeNote.innerHTML = {
-      pay: `${canPayPal ? 'Pagas el depósito con PayPal (tarjeta o cuenta) y tu cita queda confirmada al instante.' : ''}${canTransfer ? (canPayPal ? ' También puedes pagarlo por transferencia: subes el comprobante y te confirmamos.' : 'Pagas el depósito por transferencia, subes el comprobante y te confirmamos la cita.') : ''} Te llega un correo con todos los detalles.${sandbox && canPayPal ? ' <strong>Modo de prueba: no se hacen cobros reales.</strong>' : ''}`,
+      pay: `El abono de tu reserva se valida al pagar. ${canPayPal ? 'Con PayPal la confirmación es automática. ' : ''}${canTransfer ? 'Por transferencia, el estudio confirma después de revisar el comprobante. ' : ''}El saldo restante se paga el día de la cita.${sandbox && canPayPal ? ' <strong>Modo de prueba: sin cobros reales.</strong>' : ''}`,
       paysoon: 'Los pagos en línea se están activando. Si tienes dudas, escríbenos por WhatsApp.',
       request: 'La reserva con depósito en línea se activa pronto. Por ahora tu cita se envía como solicitud y te confirmamos por WhatsApp.',
       none: 'Reserva en línea pendiente de activar.',
@@ -90,7 +90,7 @@
       const none = items.length && M.depositRatio(items) === 0;
       const text = [
         mode === 'pay' && none ? 'Este servicio no requiere depósito: tu cita se confirma al instante y pagas al terminar.' : '',
-        mode === 'pay' && !none ? `Apartas tu cita con ${label ? `el ${label}` : 'un depósito según cada servicio'} y pagas el resto al terminar, en efectivo, transferencia o PayPal.` : '',
+        mode === 'pay' && !none ? `Para reservar tu cita, abonas ${label ? `el ${label}` : 'el importe indicado según el servicio'}. El saldo restante se paga el día de tu visita, en efectivo, transferencia o PayPal.` : '',
         mode === 'pay' && !none && P.changeHours ? `Con ${P.changeHours} horas o más de aviso puedes cambiar la fecha desde Mis citas o cancelar y te devolvemos el depósito.` : '',
         mode !== 'pay' && P.changeHours ? `Puedes cambiar o cancelar hasta ${P.changeHours} horas antes.` : '',
         P.arriveEarlyMinutes ? `Te recomendamos llegar ${P.arriveEarlyMinutes} minutos antes.` : '',
@@ -99,13 +99,38 @@
     }
     renderPolicy();
 
-    /* ---- 1. Servicios ---- */
-    svcBox.innerHTML = M.services.map((s) => `
-      <label class="chip">
-        <input type="checkbox" id="bk-svc-${s.id}" value="${s.id}">
-        <span>${M.escapeHtml(s.name)} <em>${M.fmtDurationShort(s.durationMinutes)}</em></span>
-      </label>`).join('');
-    svcBox.addEventListener('change', (e) => { if (e.target.matches('input')) M.toggleService(e.target.value, 'booking'); });
+    /* ---- 1. Servicios · jerarquía real del catálogo público ---- */
+    function renderServiceChoices() {
+      const categories = Array.isArray(M.serviceCategories) && M.serviceCategories.length
+        ? M.serviceCategories : [...new Set(M.services.map(s => s.category || 'Servicios'))].map(name => ({ id: name, name }));
+      const groups = M.serviceGroups || [];
+      const selected = new Set(M.state.selected);
+      const option = s => `<label class="bk-service-choice">
+        <input type="checkbox" value="${M.escapeHtml(s.id)}"${selected.has(s.id) ? ' checked' : ''}>
+        <span class="bk-service-content"><strong>${M.escapeHtml(s.name)}</strong>
+          <small>${M.fmtDurationShort(s.durationMinutes)} · ${s.priceFrom ? 'Desde ' : ''}${M.fmtPrice(Number(s.price) || 0)}</small></span>
+        <span class="bk-service-indicator" aria-hidden="true"></span>
+      </label>`;
+      svcBox.innerHTML = categories.map(cat => {
+        const items = M.services.filter(s => s.categoryId === cat.id || (!s.categoryId && s.category === cat.name));
+        if (!items.length) return '';
+        const parents = groups.filter(g => g.categoryId === cat.id && items.some(s => s.parentId === g.id));
+        const children = new Set(parents.map(g => g.id));
+        const direct = items.filter(s => !s.parentId || !children.has(s.parentId));
+        return `<section class="bk-service-category" aria-label="${M.escapeHtml(cat.name)}">
+          <div class="bk-category-head"><h3>${M.escapeHtml(cat.name)}</h3><span>${items.length} ${items.length === 1 ? 'opción' : 'opciones'}</span></div>
+          ${parents.map(g => `<div class="bk-service-group">
+            <h4>${M.escapeHtml(g.name)}</h4>${g.description ? `<p>${M.escapeHtml(g.description)}</p>` : ''}
+            <div class="bk-service-options">${items.filter(s => s.parentId === g.id).map(option).join('')}</div>
+          </div>`).join('')}
+          ${direct.length ? `<div class="bk-service-options">${direct.map(option).join('')}</div>` : ''}
+        </section>`;
+      }).join('') || '<p class="bk-service-none">Pronto estarán disponibles nuestros servicios. Escríbenos para recibir información.</p>';
+    }
+    renderServiceChoices();
+    svcBox.addEventListener('change', e => {
+      if (e.target.matches('input[type="checkbox"]')) M.toggleService(e.target.value, 'booking');
+    });
 
     /* ---- 2. Fecha ---- */
     const minutesNow = () => M.totals().minutes || M.config.schedule.slotStepMinutes;
@@ -333,7 +358,7 @@
       if (mode === 'pay') {
         sum.dep.innerHTML = t.items.length ? (pr.depositRD > 0 ? `${M.fmtPrice(pr.depositRD)}<small>${canPayPal ? `${M.fmtUSD(pr.depositUSD)} con PayPal${canTransfer ? ' o RD$ por transferencia' : ''}` : 'por transferencia'}</small>` : `${M.fmtPrice(0)}<small>${pr.giftAppliedRD > 0 ? (pr.giftKind === 'bono' ? 'cubierto con tu paquete' : 'cubierto con tu tarjeta de regalo') : 'no requiere depósito'}</small>`) : '—';
         sum.bal.innerHTML = t.items.length ? `${from}${M.fmtPrice(pr.balanceRD)}<small>efectivo, transferencia o PayPal</small>` : '—';
-        confirmBtn.textContent = t.items.length && pr.depositRD <= 0 ? (pr.giftAppliedRD > 0 ? (pr.giftKind === 'bono' ? 'Confirmar con mi paquete' : 'Confirmar con tarjeta de regalo') : 'Confirmar cita') : 'Continuar al pago del depósito';
+        confirmBtn.textContent = t.items.length && pr.depositRD <= 0 ? (pr.giftAppliedRD > 0 ? (pr.giftKind === 'bono' ? 'Confirmar con mi paquete' : 'Confirmar con tarjeta de regalo') : 'Confirmar cita') : 'Confirmar y pagar mi abono';
         renderPolicy();
       }
       const miss = missingList();
@@ -850,7 +875,7 @@
       renderWait();
     });
 
-    M.refreshBookingCatalog = () => { refreshPaymentMode(); renderPolicy(); renderQuick(); renderCalendar(); renderSlots(); findFastest(); renderSummary(); };
+    M.refreshBookingCatalog = () => { renderServiceChoices(); refreshPaymentMode(); renderPolicy(); renderQuick(); renderCalendar(); renderSlots(); findFastest(); renderSummary(); };
 
     renderQuick();
     renderCalendar();

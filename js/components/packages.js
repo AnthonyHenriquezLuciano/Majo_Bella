@@ -10,6 +10,7 @@
   const validity = (days) => (!days ? 'Sin fecha de vencimiento' : days % 30 === 0 ? `Válido ${days / 30 === 1 ? '1 mes' : `${days / 30} meses`}` : `Válido ${days} días`);
   const msg = (t, kind) => { $('pk-msg').textContent = t || ''; $('pk-msg').className = `gf-msg${kind ? ` is-${kind}` : ''}`; };
   const V = M.Validate;
+  const canPurchase = () => API.enabled() && M.PayPal.configured();
   const values = () => ({ name: V.fullName($('pk-first').value, $('pk-last').value), firstName: $('pk-first').value.trim(), lastName: $('pk-last').value.trim(), phone: V.phone($('pk-phone').value).value || $('pk-phone').value.trim(), email: $('pk-email').value.trim().toLowerCase() });
 
   function validate() {
@@ -24,17 +25,28 @@
   }
 
   function render() {
-    $('pk-grid').innerHTML = list.map((k) => `
-      <article class="pk-card">
-        <p class="pk-svc">${esc(k.serviceName)}</p>
+    const grid = $('pk-grid'), empty = $('pk-empty');
+    if (!grid) return;
+    empty.hidden = list.length > 0;
+    grid.innerHTML = list.map(k => {
+      const original = Number(k.regular) || 0, savings = Math.max(0, Number(k.savings) || 0);
+      const savingPercent = original > 0 ? Math.round(savings / original * 100) : 0;
+      const help = M.WhatsApp?.link(`Hola, quiero información del paquete ${k.name} de MAJOBELLA.`) || 'index.html#contacto';
+      return `<article class="pk-card">
+        <div class="pk-card-top"><span class="pk-svc">${esc(k.serviceName)}</span>${savingPercent > 0 ? `<span class="pk-discount">AHORRA ${savingPercent}%</span>` : ''}</div>
         <h3>${esc(k.name)}</h3>
-        <p class="pk-sessions">${k.sessions} ${k.sessions === 1 ? 'sesión' : 'sesiones'}</p>
-        <p class="pk-price">${M.fmtPrice(k.price)}${k.savings > 0 ? ` <s>${M.fmtPrice(k.regular)}</s>` : ''}</p>
-        ${k.savings > 0 ? `<p class="pk-save">Ahorras ${M.fmtPrice(k.savings)}</p>` : ''}
-        ${k.description ? `<p class="pk-desc">${esc(k.description)}</p>` : ''}
-        <p class="pk-valid">${validity(k.validDays)}</p>
-        <button type="button" class="btn btn-line" data-pk="${esc(k.id)}">Comprar</button>
-      </article>`).join('');
+        <p class="pk-desc">${esc(k.description||'Tu tratamiento, en varias sesiones para disfrutarlo con continuidad.')}</p>
+        <div class="pk-card-benefits">
+          <div><span>SESIONES INCLUIDAS</span><strong>${Number(k.sessions)||0}</strong></div>
+          <div><span>VIGENCIA</span><strong>${esc(validity(k.validDays))}</strong></div>
+        </div>
+        <div class="pk-card-bottom"><p class="pk-price">${M.fmtPrice(k.price)}</p>
+          ${savings > 0 ? `<p class="pk-save">Ahorras ${M.fmtPrice(savings)} <s>${M.fmtPrice(original)}</s></p>` : ''}
+          ${canPurchase() ? `<button type="button" class="btn btn-primary" data-pk="${esc(k.id)}">Elegir este paquete</button>`
+          : `<a class="btn btn-line" href="${esc(help)}" rel="noopener"${/^https?:/.test(help)?' target="_blank"':''}>Consultar este paquete</a>`}
+        </div>
+      </article>`;
+    }).join('');
   }
 
   async function open(id) {
@@ -87,24 +99,21 @@
 
   M.refreshPackages = function () {
     if (!$('pk-grid')) return;
-    list = ((M.site || {}).packages || []).filter((k) => M.serviceById[k.service]);
-    $('pk-empty').hidden = list.length > 0;
+    list = ((M.site || {}).packages || []).filter(k => M.serviceById[k.service]);
     render();
   };
   M.initPackages = function () {
-    list = ((M.site || {}).packages || []).filter((k) => M.serviceById[k.service]);
+    list = ((M.site || {}).packages || []).filter(k => M.serviceById[k.service]);
     $('paquetes').hidden = false;
-    if (!list.length || !API.enabled() || !M.PayPal.configured()) {
-      $('pk-empty').hidden = false;
-      return;
-    }
-    $('pk-empty').hidden = true;
     render();
     V.bindName($('pk-first')); V.bindName($('pk-last')); V.bindPhone($('pk-phone'));
-    $('pk-grid').addEventListener('click', (e) => { const b = e.target.closest('[data-pk]'); if (b) open(b.dataset.pk); });
-    $('pk-cancel').addEventListener('click', () => { $('pk-buy').hidden = true; M.scrollTo('#paquetes'); });
-    $('pk-buy').addEventListener('input', (e) => { const f = e.target.closest('.field'); if (f) f.classList.remove('has-error'); });
-    $('pk-terms').addEventListener('change', (e) => { if (e.target.checked && $('pk-msg').classList.contains('is-error')) msg(''); });
+    $('pk-grid').addEventListener('click', e => {
+      const b=e.target.closest('[data-pk]');
+      if(b && canPurchase())open(b.dataset.pk);
+    });
+    $('pk-cancel').addEventListener('click', () => { $('pk-buy').hidden=true; M.scrollTo('#paquetes'); });
+    $('pk-buy').addEventListener('input', e => { const n=e.target.closest('.field'); if(n)n.classList.remove('has-error'); });
+    $('pk-terms').addEventListener('change', e => { if(e.target.checked && $('pk-msg').classList.contains('is-error'))msg(''); });
     void buttons;
   };
 })(window.MJB);

@@ -44,9 +44,11 @@
     function open() {
       lastFocus = document.activeElement;
       if (M.closeMenu) M.closeMenu();
-      render();
+      // Google Identity Services necesita un contenedor visible para dibujar el botón.
       modal.hidden = false;
       document.body.classList.add('modal-open');
+      render();
+      M.Auth.renderButtons();
       if (!M.reduceMotion()) {
         gsap.fromTo(modal.querySelector('.am-backdrop'), { opacity: 0 }, { opacity: 1, duration: 0.4 });
         gsap.fromTo(modal.querySelector('.am-panel'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' });
@@ -82,9 +84,28 @@
       }
     });
 
+    /* Cuenta unificada en TODAS las páginas (no solo Mis citas). */
+    function syncHeader(user) {
+      const slot=document.getElementById('header-account');
+      const safe=M.escapeHtml;
+      if(slot) {
+        const first=user ? (user.firstName || user.name || 'Cuenta') : '';
+        const image=user?.picture ? `<img src="${safe(user.picture)}" alt="" width="30" height="30" referrerpolicy="no-referrer">`
+          : `<span>${safe((first[0] || 'M').toUpperCase())}</span>`;
+        slot.innerHTML=user
+          ? `<button type="button" class="header-user" data-open-auth aria-label="Tu cuenta, ${safe(first)}">${image}<em>${safe(first)}</em></button>`
+          : '<button type="button" class="header-login" data-open-auth>Iniciar sesión</button>';
+      }
+      document.querySelectorAll('.mobile-login').forEach(el => {
+        el.textContent=user ? `Tu cuenta · ${user.firstName || user.name || 'MAJOBELLA'}` : 'Iniciar sesión';
+      });
+    }
+    syncHeader(M.Auth.user);
+
     /* Bienvenida al iniciar sesión */
     let wasUser = !!M.Auth.user;
     M.Auth.onChange((u) => {
+      syncHeader(u);
       if (u && !wasUser) {
         close();
         showToast(`Hola, ${u.firstName || u.name}. Tus datos ya están listos para reservar.`);
