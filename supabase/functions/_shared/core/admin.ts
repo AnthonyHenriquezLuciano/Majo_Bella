@@ -274,6 +274,17 @@ export function adminSaveSettings_(d) {
         : /^(no|false)$/i.test(String(sv.activo)) ? 'desactivado' : (current?.estado || 'activo');
       const patch: any = {
         id: id, nombre: name, categoriaId, padreId, tipo, descripcion: clean_(sv.descripcion, 500), estado,
+         detalle: (() => {
+           let obj: any = sv.detalle;
+           if (typeof obj === 'string') { try { obj = JSON.parse(obj); } catch { obj = {}; } }
+           if (!obj || typeof obj !== 'object' || Array.isArray(obj)) obj = {};
+           const out = {
+             idealFor: clean_(obj.idealFor, 700), includes: clean_(obj.includes, 1600),
+             results: clean_(obj.results, 700), prep: clean_(obj.prep, 1600),
+             aftercare: clean_(obj.aftercare, 1600),
+           };
+           return Object.values(out).some(Boolean) ? JSON.stringify(out) : '';
+         })(),
         consentTemplateId: clean_(sv.consentTemplateId,40),
         orden: Math.max(0, Math.round(Number(sv.orden) || 0)),
         duracionMin: Math.max(5, Math.round(Number(sv.duracionMin) || 30)),
