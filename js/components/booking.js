@@ -77,7 +77,7 @@
     confirmBtn.textContent = mode === 'pay' ? 'Confirmar y pagar mi abono' : mode === 'request' ? 'Enviar solicitud' : 'Confirmar cita';
       sandbox = PAY.paypalEnv === 'sandbox';
     modeNote.innerHTML = {
-      pay: `${canPayPal ? 'Pagas el depósito con PayPal (tarjeta o cuenta) y tu cita queda confirmada al instante.' : ''}${canTransfer ? (canPayPal ? ' También puedes pagarlo por transferencia: subes el comprobante y te confirmamos.' : 'Pagas el depósito por transferencia, subes el comprobante y te confirmamos la cita.') : ''} Te llega un correo con todos los detalles.${sandbox && canPayPal ? ' <strong>Modo de prueba: no se hacen cobros reales.</strong>' : ''}`,
+      pay: `El abono de tu reserva se valida al pagar. ${canPayPal ? 'Con PayPal la confirmación es automática. ' : ''}${canTransfer ? 'Por transferencia, el estudio confirma después de revisar el comprobante. ' : ''}El saldo restante se paga el día de la cita.${sandbox && canPayPal ? ' <strong>Modo de prueba: sin cobros reales.</strong>' : ''}`,
       paysoon: 'Los pagos en línea se están activando. Si tienes dudas, escríbenos por WhatsApp.',
       request: 'La reserva con depósito en línea se activa pronto. Por ahora tu cita se envía como solicitud y te confirmamos por WhatsApp.',
       none: 'Reserva en línea pendiente de activar.',
@@ -875,7 +875,7 @@
       renderWait();
     });
 
-    M.refreshBookingCatalog = () => { refreshPaymentMode(); renderPolicy(); renderQuick(); renderCalendar(); renderSlots(); findFastest(); renderSummary(); };
+    M.refreshBookingCatalog = () => { renderServiceChoices(); refreshPaymentMode(); renderPolicy(); renderQuick(); renderCalendar(); renderSlots(); findFastest(); renderSummary(); };
 
     renderQuick();
     renderCalendar();
