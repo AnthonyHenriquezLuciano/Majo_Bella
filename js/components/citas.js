@@ -51,9 +51,10 @@
     let payingId = null, proofId = null, moveId = null;
     const move = { days: null, key: null, time: null, slots: null, busy: false, msg: '' };
     const esc = M.escapeHtml;
-    // Corrige separadores literales heredados «/n» o «\\n» en datos visibles.
+    // Normaliza saltos heredados que aparecen como «/n» o «\\n».
     const readable = (value) => String(value == null ? '' : value)
-      .replace(/(?:\\\\n|\/n|\r?\n)+/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+      .replaceAll(String.raw`\n`, ' ').replaceAll('/n', ' ')
+      .replace(/\s{2,}/g, ' ').trim();
 
     function paymentLine(a) {
       const p = a.payment;
