@@ -32,7 +32,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corinthia:wght@400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=20261024web2-pay1">
+<link rel="stylesheet" href="css/styles.css?v=20261024ux3-pay1">
 </head>
 <body data-page="reservar">
 <!--MJB:BODY-START-->
@@ -57,9 +57,9 @@
         <li><a href="./#servicios">Servicios</a></li>
         <li data-nav-for="resenas" hidden><a href="./#resenas">Opiniones</a></li>
         <li><a href="regalos.html#regalar" data-nav="regalos">Tarjeta de regalo</a></li>
+        <li><a href="regalos.html#membresias">Membresía</a></li>
+        <li><a href="regalos.html#paquetes">Paquete</a></li>
         <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
-        <li><a href="regalos.html#membresias">Membresías</a></li>
-        <li><a href="regalos.html#paquetes">Paquetes</a></li>
         <li><a href="aplicacion.html" class="nav-app" data-nav="aplicacion">Aplicación</a></li>
       </ul>
     </nav>
@@ -96,10 +96,10 @@
       <li data-nav-for="resultados" hidden><a href="./#resultados">Resultados</a></li>
       <li data-nav-for="resenas" hidden><a href="./#resenas">Opiniones</a></li>
       <li><a href="reservar.html" data-nav="reservar" aria-current="page">Reservar</a></li>
-      <li><a href="regalos.html#membresias">Membresías</a></li>
-      <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
       <li><a href="regalos.html#regalar" data-nav="regalos">Tarjeta de regalo</a></li>
-      <li><a href="regalos.html#paquetes">Paquetes</a></li>
+      <li><a href="regalos.html#membresias">Membresía</a></li>
+      <li><a href="regalos.html#paquetes">Paquete</a></li>
+      <li><a href="citas.html" data-nav="citas">Mis citas</a></li>
       <li><a href="./#contacto">Contacto</a></li>
       <li><a href="aplicacion.html" data-nav="aplicacion">Aplicación <span class="mm-tag">Para tu celular</span></a></li>
     </ul>
@@ -119,14 +119,15 @@
           <p class="label">Reservas</p>
           <h2 class="display">Agenda tu cita</h2>
         </div>
-        <div class="section-head-side"><p>Elige servicio, día y hora. Solo verás horarios disponibles.</p></div>
+        <div class="section-head-side"><p>Descubre los tratamientos por categoría, elige el horario que prefieras y confirma tu reserva en unos pasos.</p></div>
       </div>
 
       <div class="booking">
         <form class="booking-flow" id="bk-form" novalidate>
           <fieldset class="step" id="step-servicio">
-            <legend><span class="step-n">1</span>Servicio</legend>
-            <div class="chips" id="bk-services"></div>
+            <legend><span class="step-n">1</span>Elige tus servicios</legend>
+            <p class="bk-services-lead">Explora por categoría y selecciona uno o varios tratamientos. Verás el total antes de confirmar.</p>
+            <div class="bk-services" id="bk-services" aria-label="Servicios agrupados por categoría"></div>
           </fieldset>
 
           <fieldset class="step" id="step-fecha">
@@ -232,8 +233,8 @@
             <div><dt>Precio</dt><dd id="sum-price">—</dd></div>
             <div class="sum-opt" id="sum-disc-row" hidden><dt>Descuento</dt><dd id="sum-discount">—</dd></div>
             <div class="sum-opt" id="sum-gift-row" hidden><dt id="sum-gift-label">Tarjeta de regalo</dt><dd id="sum-gift">—</dd></div>
-            <div class="sum-pay" data-pay-only hidden><dt>Depósito hoy</dt><dd id="sum-deposit">—</dd></div>
-            <div class="sum-pay" data-pay-only hidden><dt>Al terminar</dt><dd id="sum-balance">—</dd></div>
+            <div class="sum-pay" data-pay-only hidden><dt>Abono de reserva</dt><dd id="sum-deposit">—</dd></div>
+            <div class="sum-pay" data-pay-only hidden><dt>Saldo para tu cita</dt><dd id="sum-balance">—</dd></div>
           </dl>
           <details class="promo-box" id="bk-promo" data-pay-only hidden>
             <summary>¿Tienes un código de descuento o una tarjeta de regalo?</summary>
@@ -244,9 +245,9 @@
             <p class="promo-msg" id="bk-code-msg" aria-live="polite"></p>
             <div class="promo-tags" id="bk-code-tags"></div>
           </details>
-          <button type="button" class="btn btn-primary btn-block" id="bk-confirm" disabled>Confirmar cita</button>
+          <button type="button" class="btn btn-primary btn-block" id="bk-confirm" disabled>Confirmar y pagar mi abono</button>
           <div class="pay-panel" id="bk-pay" hidden>
-            <p class="pay-title">Aparta tu cita con el depósito</p>
+            <p class="pay-title">Confirma tu reserva con el abono</p>
             <div class="pay-methods" id="bk-pay-methods" role="tablist" aria-label="Forma de pago" hidden>
               <button type="button" class="pay-method is-on" role="tab" aria-selected="true" data-method="paypal">PayPal o tarjeta</button>
               <button type="button" class="pay-method" role="tab" aria-selected="false" data-method="transferencia">Transferencia</button>
@@ -261,6 +262,7 @@
             <button type="button" class="link-inline pay-back" id="bk-pay-back">Cambiar algo de la cita</button>
           </div>
           <p class="sum-missing" id="bk-missing" aria-live="polite"></p>
+          <p class="sum-friendly-note">Tu cita se reserva con el abono indicado. El saldo restante lo pagas el día de tu visita. Si eliges transferencia, validaremos el comprobante antes de confirmar.</p>
           <p class="sum-policy" id="bk-policy"></p>
           <p class="sum-mode" id="bk-mode"></p>
           <div class="sum-result" id="bk-result" hidden aria-live="polite"></div>
@@ -350,40 +352,40 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="js/config.js?v=20261024web2"></script>
-<script src="js/data/services.js?v=20261024web2"></script>
-<script src="js/data/faq.js?v=20261024web2"></script>
-<script src="js/data/brows.js?v=20261024web2"></script>
-<script src="js/core/utils.js?v=20261024web2"></script>
-<script src="js/core/validate.js?v=20261024web2"></script>
-<script src="js/integrations/whatsapp.js?v=20261024web2"></script>
-<script src="js/integrations/calendar.js?v=20261024web2"></script>
-<script src="js/integrations/booking-api.js?v=20261024web2-pay1"></script>
-<script src="js/integrations/paypal.js?v=20261024web2-pay1"></script>
-<script src="js/integrations/google-auth.js?v=20261024web2"></script>
-<script src="js/integrations/appointments.js?v=20261024web2"></script>
-<script src="js/integrations/giftcard.js?v=20261024web2"></script>
-<script src="js/integrations/captcha.js?v=20261024web2"></script>
-<script src="js/integrations/manage.js?v=20261024web2"></script>
-<script src="js/components/nav.js?v=20261024web2"></script>
-<script src="js/components/auth-modal.js?v=20261024web2"></script>
-<script src="js/components/face.js?v=20261024web2"></script>
-<script src="js/components/brows.js?v=20261024web2"></script>
-<script src="js/components/hero.js?v=20261024web2"></script>
-<script src="js/components/services.js?v=20261024web2-web-list2"></script>
-<script src="js/components/selection-bar.js?v=20261024web2"></script>
-<script src="js/components/consent-flow.js?v=20261024web2-ct1"></script>
-<script src="js/components/booking.js?v=20261024web2-ux1"></script>
-<script src="js/components/citas.js?v=20261024web2"></script>
-<script src="js/components/contact.js?v=20261024web2"></script>
-<script src="js/components/site.js?v=20261024web2"></script>
-<script src="js/components/giftshop.js?v=20261024web2-ux1"></script>
-<script src="js/components/packages.js?v=20261024web2"></script>
-<script src="js/components/membresias.js?v=20261024web2-pay1"></script>
-<script src="js/integrations/install.js?v=20261024web2"></script>
-<script src="js/components/getapp.js?v=20261024web2"></script>
-<script src="js/components/appinfo.js?v=20261024web2"></script>
-<script src="js/components/reveal.js?v=20261024web2"></script>
-<script src="js/main.js?v=20261024web2-mb1"></script>
+<script src="js/config.js?v=20261024ux3"></script>
+<script src="js/data/services.js?v=20261024ux3"></script>
+<script src="js/data/faq.js?v=20261024ux3"></script>
+<script src="js/data/brows.js?v=20261024ux3"></script>
+<script src="js/core/utils.js?v=20261024ux3"></script>
+<script src="js/core/validate.js?v=20261024ux3"></script>
+<script src="js/integrations/whatsapp.js?v=20261024ux3"></script>
+<script src="js/integrations/calendar.js?v=20261024ux3"></script>
+<script src="js/integrations/booking-api.js?v=20261024ux3-pay1"></script>
+<script src="js/integrations/paypal.js?v=20261024ux3-pay1"></script>
+<script src="js/integrations/google-auth.js?v=20261024ux3"></script>
+<script src="js/integrations/appointments.js?v=20261024ux3"></script>
+<script src="js/integrations/giftcard.js?v=20261024ux3"></script>
+<script src="js/integrations/captcha.js?v=20261024ux3"></script>
+<script src="js/integrations/manage.js?v=20261024ux3"></script>
+<script src="js/components/nav.js?v=20261024ux3"></script>
+<script src="js/components/auth-modal.js?v=20261024ux3"></script>
+<script src="js/components/face.js?v=20261024ux3"></script>
+<script src="js/components/brows.js?v=20261024ux3"></script>
+<script src="js/components/hero.js?v=20261024ux3"></script>
+<script src="js/components/services.js?v=20261024ux3-web-list2"></script>
+<script src="js/components/selection-bar.js?v=20261024ux3"></script>
+<script src="js/components/consent-flow.js?v=20261024ux3-ct1"></script>
+<script src="js/components/booking.js?v=20261024ux3-ux1"></script>
+<script src="js/components/citas.js?v=20261024ux3"></script>
+<script src="js/components/contact.js?v=20261024ux3"></script>
+<script src="js/components/site.js?v=20261024ux3"></script>
+<script src="js/components/giftshop.js?v=20261024ux3-ux1"></script>
+<script src="js/components/packages.js?v=20261024ux3"></script>
+<script src="js/components/membresias.js?v=20261024ux3-pay1"></script>
+<script src="js/integrations/install.js?v=20261024ux3"></script>
+<script src="js/components/getapp.js?v=20261024ux3"></script>
+<script src="js/components/appinfo.js?v=20261024ux3"></script>
+<script src="js/components/reveal.js?v=20261024ux3"></script>
+<script src="js/main.js?v=20261024ux3-mb1"></script>
 </body>
 </html>
