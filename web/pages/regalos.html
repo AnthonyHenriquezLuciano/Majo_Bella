@@ -2,13 +2,30 @@
 <main id="contenido" class="page-main regalos-page">
   <section class="section regal-hub" aria-labelledby="regal-hub-title">
     <div class="container">
-      <p class="label">EL UNIVERSO MAJOBELLA</p>
-      <h1 class="display" id="regal-hub-title">Una forma de regalarte belleza</h1>
-      <p class="regal-hub-lead">Un detalle especial, un ritual mensual o varias sesiones para disfrutar sin prisa. Elige la experiencia que más se parece a ti.</p>
+      <div class="regal-hub-heading">
+        <p class="label">EXPERIENCIAS MAJOBELLA</p>
+        <h1 class="display" id="regal-hub-title">Elige cómo vivir MAJOBELLA</h1>
+        <p>Para regalar, volver cada mes o disfrutar más sesiones. Tres formas de compartir lo que te hace sentir bella.</p>
+      </div>
       <div class="regal-hub-grid">
-        <a class="regal-hub-card is-gift" href="#regalar"><span class="regal-hub-index">01 / UN DETALLE PERSONAL</span><span class="regal-hub-icon" aria-hidden="true">✦</span><strong>Tarjeta de regalo</strong><span>Un importe a elegir, una dedicatoria y libertad para escoger el servicio.</span><em>Crear mi regalo <span aria-hidden="true">↗</span></em></a>
-        <a class="regal-hub-card" href="#membresias"><span class="regal-hub-index">02 / TU MOMENTO CADA MES</span><span class="regal-hub-icon" aria-hidden="true">◌</span><strong>Membresías</strong><span>Rutinas de belleza mensuales con beneficios y sesiones reservadas para ti.</span><em>Explorar membresías <span aria-hidden="true">↗</span></em></a>
-        <a class="regal-hub-card" href="#paquetes"><span class="regal-hub-index">03 / MÁS MOMENTOS PARA TI</span><span class="regal-hub-icon" aria-hidden="true">✧</span><strong>Paquetes</strong><span>Varias sesiones de un tratamiento para cuidarte con continuidad.</span><em>Ver paquetes <span aria-hidden="true">↗</span></em></a>
+        <a class="regal-hub-card regal-hub-gift" href="#regalar" aria-label="Conoce nuestras tarjetas de regalo">
+          <span class="regal-hub-index">CONSIENTE A QUIEN AMAS</span>
+          <img class="regal-hub-illustration" src="assets/gift-outline-majobella.svg" alt="" aria-hidden="true" loading="lazy">
+          <strong>TARJETA DE REGALO</strong>
+          <span class="regal-hub-action">Conocer más <span aria-hidden="true">↗</span></span>
+        </a>
+        <a class="regal-hub-card regal-hub-member" href="#membresias" aria-label="Conoce nuestras membresías">
+          <span class="regal-hub-index">TU MOMENTO CADA MES</span>
+          <img class="regal-hub-illustration" src="assets/sparkle-majobella.svg" alt="" aria-hidden="true" loading="lazy">
+          <strong>MEMBRESÍA</strong>
+          <span class="regal-hub-action">Conocer más <span aria-hidden="true">↗</span></span>
+        </a>
+        <a class="regal-hub-card regal-hub-package" href="#paquetes" aria-label="Conoce nuestros paquetes de sesiones">
+          <span class="regal-hub-index">MÁS MOMENTOS PARA TI Y LOS TUYOS</span>
+          <img class="regal-hub-illustration" src="assets/swan-majobella.svg" alt="" aria-hidden="true" loading="lazy">
+          <strong>PAQUETES</strong>
+          <span class="regal-hub-action">Conocer más <span aria-hidden="true">↗</span></span>
+        </a>
       </div>
     </div>
   </section>
@@ -82,13 +99,25 @@
   <!-- MEMBRESÍAS -->
   <section id="membresias" class="section mb-public" hidden>
     <div class="container">
-      <div class="section-head"><div><p class="label">MAJOBELLA · MEMBRESÍAS</p><h2 class="display">Belleza que te acompaña cada mes</h2></div>
-        <div class="section-head-side"><p>Planes de sesiones mensuales para disfrutar tus tratamientos favoritos. Solicítalos en línea y activa tus beneficios con nuestro equipo.</p></div></div>
+      <div class="section-head mb-heading">
+        <div><p class="label">MAJOBELLA · TU RITUAL MENSUAL</p><h2 class="display">Tu momento, cada mes</h2></div>
+        <div class="section-head-side"><p>Convierte el cuidado personal en un ritual. Elige un plan con sesiones y beneficios pensados para acompañarte de forma constante.</p></div>
+      </div>
       <div class="mb-public-grid" id="mb-public-list"></div>
-      <p class="mb-public-terms">Las membresías pueden pagarse con el estudio o renovarse automáticamente con PayPal <strong>solo si eliges y autorizas esa opción</strong>. Podrás cancelar la renovación desde tu cuenta. Las sesiones no usadas vencen al terminar el período mensual y cada cita requiere disponibilidad y el consentimiento del servicio.</p>
       <p class="mb-public-msg" id="mb-public-msg" role="status" aria-live="polite"></p>
-      <div class="mb-public-account"><h3>Mis membresías</h3><div id="mb-mine"><p>Inicia sesión para consultar tus planes.</p></div>
-        <button type="button" class="btn btn-ghost" data-open-auth>Iniciar sesión</button></div>
+      <section class="mb-public-account" aria-labelledby="mb-account-title">
+        <div class="mb-account-head">
+          <div>
+            <p class="label">TU ESPACIO PERSONAL</p>
+            <h3 id="mb-account-title">Mis membresías</h3>
+            <p id="mb-account-intro">Consulta tus sesiones disponibles, las fechas de tu plan y tus comprobantes, todo en un mismo lugar.</p>
+          </div>
+          <button id="mb-account-login" type="button" class="btn btn-primary" data-open-auth>Iniciar sesión</button>
+        </div>
+        <div class="mb-account-welcome" id="mb-account-welcome" hidden aria-live="polite"></div>
+        <div id="mb-mine"><p>Inicia sesión para consultar tus planes.</p></div>
+      </section>
+      <p class="mb-public-terms">Puedes solicitar tu membresía al estudio. Si un plan permite renovación automática con PayPal, esta se activa únicamente con tu autorización. Las sesiones se utilizan dentro de la vigencia del plan y cada reserva está sujeta a disponibilidad.</p>
     </div>
   </section>
 
@@ -98,10 +127,10 @@
       <div class="section-head" data-reveal>
         <div>
           <p class="label">Paquetes</p>
-          <h2 class="display">Tus sesiones, a mejor precio</h2>
+          <h2 class="display">Más sesiones, más momentos</h2>
         </div>
         <div class="section-head-side">
-          <p>Compra varias sesiones de tu servicio y ahorra. Recibes un código por correo y lo escribes al reservar cada sesión.</p>
+          <p>Descubre experiencias en varias sesiones: más constancia para tus resultados y una mejor relación entre el número de citas y el precio. Cada paquete muestra sus beneficios y vigencia.</p>
         </div>
       </div>
       <div class="pk-grid" id="pk-grid"></div><div class="pk-empty" id="pk-empty" hidden><p>Estamos preparando nuestros paquetes de sesiones. Puedes consultarnos para recibir una propuesta personalizada.</p><a class="btn btn-line" data-wa href="./#contacto">Consultar opciones</a></div>
