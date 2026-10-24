@@ -67,6 +67,14 @@
       const none = () => { document.getElementById('regalos-empty').hidden = !(document.getElementById('regalar').hidden && document.getElementById('paquetes').hidden && document.getElementById('membresias')?.hidden); };
       none(); setTimeout(none, 1500);
     }
+    // El navegador intenta navegar al ancla antes de que las secciones dinámicas
+    // de regalos/membresías/paquetes dejen de estar ocultas.
+    if (page === 'regalos' && ['#regalar', '#membresias', '#paquetes'].includes(location.hash)) {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const target = document.querySelector(location.hash);
+        if (target && !target.hidden) M.scrollTo(location.hash);
+      }));
+    }
     if (has('ap-downloads') && M.initAppPage) run('aplicación', M.initAppPage);
     if (M.initGetApp) run('instalar', M.initGetApp);
     run('animaciones', M.initReveal);
