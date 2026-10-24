@@ -72,7 +72,10 @@
   dlg.showModal();
  }
  function mineView(){
-  $('mb-mine').innerHTML=mine.length?mine.map(m=>{
+  syncAuth();
+  $('mb-mine').innerHTML=!M.Auth?.token
+    ? '<p class="mb-account-prompt">Inicia sesión con Google para consultar tus membresías y sesiones disponibles.</p>'
+    : mine.length?mine.map(m=>{
     const status=m.estadoEfectivo||m.estado,auto=isAuto(m),renew=auto&&m.paypalEstado!=='CANCELLED'&&m.paypalEstado!=='EXPIRED';
     return `<article class="mb-pub-member mb-member-premium">
       <div class="mb-member-premium-top"><span>MAJOBELLA · MI MEMBRESÍA</span>
