@@ -86,14 +86,19 @@
   }
 
   M.refreshPackages = function () {
-    if (!$('pk-grid') || $('paquetes').hidden) return;
+    if (!$('pk-grid')) return;
     list = ((M.site || {}).packages || []).filter((k) => M.serviceById[k.service]);
+    $('pk-empty').hidden = list.length > 0;
     render();
   };
   M.initPackages = function () {
     list = ((M.site || {}).packages || []).filter((k) => M.serviceById[k.service]);
-    if (!list.length || !API.enabled() || !M.PayPal.configured()) return;
     $('paquetes').hidden = false;
+    if (!list.length || !API.enabled() || !M.PayPal.configured()) {
+      $('pk-empty').hidden = false;
+      return;
+    }
+    $('pk-empty').hidden = true;
     render();
     V.bindName($('pk-first')); V.bindName($('pk-last')); V.bindPhone($('pk-phone'));
     $('pk-grid').addEventListener('click', (e) => { const b = e.target.closest('[data-pk]'); if (b) open(b.dataset.pk); });
