@@ -874,6 +874,14 @@
       closePay();
       svcBox.querySelectorAll('input').forEach((i) => { i.checked = st.selected.includes(i.value); });
       syncServiceChoiceCounts();
+      // Selecciones que llegan desde Servicios o desde un enlace de reserva
+      // deben quedar visibles al abrir su categoría y su subservicio.
+      svcBox.querySelectorAll('input:checked').forEach(input => {
+        const group = input.closest('.bk-service-group');
+        const category = input.closest('.bk-service-category');
+        if (group) group.open = true;
+        if (category) category.open = true;
+      });
       if (st.dateKey) {
         const { y, m } = M.parseKey(st.dateKey);
         if (y !== view.y || m !== view.m) view = { y, m };
