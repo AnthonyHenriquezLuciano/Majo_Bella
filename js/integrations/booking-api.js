@@ -153,6 +153,17 @@
 
     applyCatalog(data) {
       applied = true;
+      // Los cinco campos de «Ver detalle» se administran desde el catálogo.
+      // Sin personalización se conserva la ficha local existente.
+      const applyDetail = (s, details) => {
+        if (!details || typeof details !== 'object') return;
+        const lines = (v) => Array.isArray(v) ? v.map(String).filter(Boolean) : String(v || '').split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+        s.idealFor = String(details.idealFor || '');
+        s.includes = lines(details.includes);
+        s.results = String(details.results || '');
+        s.prep = lines(details.prep);
+        s.aftercare = lines(details.aftercare);
+      };
       M.serviceCategories = data.categories || [];
       M.serviceGroups = data.serviceGroups || [];
       M.consentTemplates = data.consentTemplates || [];
@@ -193,6 +204,7 @@
           s.parentId = r.parentId || ''; s.description = r.description === undefined ? s.description : r.description;
           s.price = r.price; s.durationMinutes = r.durationMinutes; s.priceFrom = !!r.priceFrom;
           s.depositPercent = r.depositPercent; s.consentTemplateId = r.consentTemplateId || ''; s.order = r.order ?? i;
+          applyDetail(s, r.details);
           M.services.push(s);
         });
       }
