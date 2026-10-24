@@ -51,6 +51,9 @@
     let payingId = null, proofId = null, moveId = null;
     const move = { days: null, key: null, time: null, slots: null, busy: false, msg: '' };
     const esc = M.escapeHtml;
+    // Corrige separadores literales heredados «/n» o «\\n» en datos visibles.
+    const readable = (value) => String(value == null ? '' : value)
+      .replace(/(?:\\\\n|\/n|\r?\n)+/gi, ' ').replace(/\s{2,}/g, ' ').trim();
 
     function paymentLine(a) {
       const p = a.payment;
@@ -77,9 +80,9 @@
 
     function item(a, past) {
       const { y, m, d } = M.parseKey(a.date);
-      const names = (a.services || []).map((s) => s.name).join(' + ');
+      const names = (a.services || []).map((s) => readable(s.name)).filter(Boolean).join(' + ');
       const st = a.status || 'pendiente';
-      const label = past && st === 'confirmada' ? 'Realizada' : st === 'retenida' ? 'Falta el comprobante' : M.STATUS[st] || st;
+      const label = readable(past && st === 'confirmada' ? 'Realizada' : st === 'retenida' ? 'Falta el comprobante' : M.STATUS[st] || st);
       const cancelled = st === 'cancelada' || st === 'cancelacion-solicitada';
       const ids = (a.services || []).map((s) => s.id).filter((id) => M.serviceById[id]);
       const prep = !past && !cancelled ? M.prepFor(ids) : [];
@@ -162,14 +165,14 @@
       return M.WhatsApp.isConfigured();
     }
     function calendarUrl(a) {
-      const names = (a.services || []).map((s) => s.name).join(' + ');
+      const names = (a.services || []).map((s) => readable(s.name)).filter(Boolean).join(' + ');
       return M.CalendarLinks.googleUrl({
         title: `Cita en MAJOBELLA · ${names}`, start: new Date(a.start), end: new Date(a.end),
         description: `Servicio: ${names}`, location: M.config.contact.address || 'MAJOBELLA Beauty Studio',
       });
     }
     function waLink(a, kind) {
-      const names = (a.services || []).map((s) => s.name).join(' + ');
+      const names = (a.services || []).map((s) => readable(s.name)).filter(Boolean).join(' + ');
       const intro = kind === 'cancelar' ? 'Hola, quiero cancelar mi cita en MAJOBELLA.'
         : a.remote ? 'Hola, tengo una pregunta sobre mi cita en MAJOBELLA.' : 'Hola, quiero reprogramar mi cita en MAJOBELLA.';
       return M.WhatsApp.link(`${intro}\n\nServicio: ${names}\n\nFecha: ${M.weekdayName(a.date)} ${M.dayMonth(a.date)}\n\nHora: ${M.fmtTime12(a.time)}${a.id && !String(a.id).startsWith('web-') ? `\n\nCódigo: ${a.id}` : ''}${a.client && a.client.name ? `\n\nNombre: ${a.client.name}` : ''}`);
@@ -199,7 +202,7 @@
         : `<li class="citas-empty"><p>${view === 'proximas' ? 'No tienes citas próximas.' : 'Aún no hay citas anteriores.'}</p>${view === 'proximas' ? '<a class="btn btn-primary" href="reservar.html">Agendar cita</a>' : ''}</li>`;
       source.textContent = src === 'agenda'
         ? 'Actualizadas con la agenda de MAJOBELLA.'
-        : (error ? `No pudimos leer la agenda (${error}). Se muestran las citas guardadas en este dispositivo.` : 'Se muestran las citas reservadas desde este dispositivo.');
+        : (error ? `No pudimos leer la agenda (${readable(error)}). Se muestran las citas guardadas en este dispositivo.` : 'Se muestran las citas reservadas desde este dispositivo.');
       if (payingId) mountBalance(payingId);
       renderLoyalty();
     }
