@@ -44,9 +44,11 @@
     function open() {
       lastFocus = document.activeElement;
       if (M.closeMenu) M.closeMenu();
-      render();
+      // Google Identity Services necesita un contenedor visible para dibujar el botón.
       modal.hidden = false;
       document.body.classList.add('modal-open');
+      render();
+      M.Auth.renderButtons();
       if (!M.reduceMotion()) {
         gsap.fromTo(modal.querySelector('.am-backdrop'), { opacity: 0 }, { opacity: 1, duration: 0.4 });
         gsap.fromTo(modal.querySelector('.am-panel'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' });
