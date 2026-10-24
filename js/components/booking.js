@@ -114,18 +114,38 @@
       svcBox.innerHTML = categories.map(cat => {
         const items = M.services.filter(s => s.categoryId === cat.id || (!s.categoryId && s.category === cat.name));
         if (!items.length) return '';
+        const chosen = items.filter(s => selected.has(s.id)).length;
         const parents = groups.filter(g => g.categoryId === cat.id && items.some(s => s.parentId === g.id));
-        const children = new Set(parents.map(g => g.id));
-        const direct = items.filter(s => !s.parentId || !children.has(s.parentId));
-        return `<section class="bk-service-category" aria-label="${M.escapeHtml(cat.name)}">
-          <div class="bk-category-head"><h3>${M.escapeHtml(cat.name)}</h3><span>${items.length} ${items.length === 1 ? 'opción' : 'opciones'}</span></div>
-          ${parents.map(g => `<div class="bk-service-group">
-            <h4>${M.escapeHtml(g.name)}</h4>${g.description ? `<p>${M.escapeHtml(g.description)}</p>` : ''}
-            <div class="bk-service-options">${items.filter(s => s.parentId === g.id).map(option).join('')}</div>
-          </div>`).join('')}
-          ${direct.length ? `<div class="bk-service-options">${direct.map(option).join('')}</div>` : ''}
-        </section>`;
+        const parentIds = new Set(parents.map(g => g.id));
+        const direct = items.filter(s => !s.parentId || !parentIds.has(s.parentId));
+        return `<details class="bk-service-category"${chosen ? ' open' : ''}>
+          <summary class="bk-category-head">
+            <span class="bk-category-copy"><strong>${M.escapeHtml(cat.name)}</strong>
+              <small>${items.length} ${items.length === 1 ? 'opción' : 'opciones'}</small></span>
+            <span class="bk-category-status" data-bk-selected>${chosen ? chosen + ' seleccionada' + (chosen !== 1 ? 's' : '') : 'Ver servicios'}</span>
+            <span class="bk-accordion-chevron" aria-hidden="true">⌄</span>
+          </summary>
+          <div class="bk-category-content">
+            ${parents.map(g => {
+              const children = items.filter(s => s.parentId === g.id);
+              const active = children.some(s => selected.has(s.id));
+              return `<details class="bk-service-group"${active ? ' open' : ''}>
+                <summary class="bk-service-group-head"><span>${M.escapeHtml(g.name)}</span><span class="bk-accordion-chevron" aria-hidden="true">⌄</span></summary>
+                ${g.description ? `<p>${M.escapeHtml(g.description)}</p>` : ''}
+                <div class="bk-service-options">${children.map(option).join('')}</div>
+              </details>`;
+            }).join('')}
+            ${direct.length ? `<div class="bk-service-options">${direct.map(option).join('')}</div>` : ''}
+          </div>
+        </details>`;
       }).join('') || '<p class="bk-service-none">Pronto estarán disponibles nuestros servicios. Escríbenos para recibir información.</p>';
+    }
+    function syncServiceChoiceCounts() {
+      svcBox.querySelectorAll('.bk-service-category').forEach(cat => {
+        const amount = cat.querySelectorAll('input:checked').length;
+        const counter = cat.querySelector('[data-bk-selected]');
+        if (counter) counter.textContent = amount ? amount + ' seleccionada' + (amount === 1 ? '' : 's') : 'Ver servicios';
+      });
     }
     renderServiceChoices();
     svcBox.addEventListener('change', e => {
@@ -853,6 +873,7 @@
     M.on((st, source) => {
       closePay();
       svcBox.querySelectorAll('input').forEach((i) => { i.checked = st.selected.includes(i.value); });
+      syncServiceChoiceCounts();
       if (st.dateKey) {
         const { y, m } = M.parseKey(st.dateKey);
         if (y !== view.y || m !== view.m) view = { y, m };
