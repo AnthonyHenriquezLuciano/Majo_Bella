@@ -1591,3 +1591,12 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   .hero-extra-link{width:100%;justify-content:center;margin-top:2px}
 }
 @media(prefers-reduced-motion:reduce){.regal-hub-card,.regalos-page .pk-card{transition:none}.regal-hub-card:hover,.regalos-page .pk-card:hover{transform:none}}
+
+/* Cabecera: caben todas las opciones sin sacrificar legibilidad en portátil */
+@media(min-width:1280px) and (max-width:1510px){
+  .header-inner{gap:12px}
+  .main-nav ul{gap:10px}
+  .main-nav a{font-size:12px;letter-spacing:.01em}
+  .header-account{min-width:88px}
+  .header-cta{padding-inline:12px}
+}
