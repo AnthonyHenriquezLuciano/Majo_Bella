@@ -11,21 +11,38 @@
  const on=(msg,type='info')=>{const el=$('mb-public-msg');el.textContent=msg;el.dataset.state=type;};
  const safeDate=x=>x?new Date(x+'T12:00:00Z').toLocaleDateString('es-DO',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}):'—';
  function render(){
-  plans=M.membershipPlans||[];
-  if(!$('membresias'))return;
-  $('membresias').hidden=false;
-  $('mb-public-list').innerHTML=plans.length?plans.map(p=>`<article class="mb-pub-card mb-pay-card">
-    <span class="mb-pub-overline">PLAN MAJOBELLA · MENSUAL</span>
-    <h3>${esc(p.nombre)}</h3><p class="mb-pub-price">${money(p.precioRD)} <small>/ mes</small></p>
-    <p class="mb-pub-desc">${esc(p.descripcion||'Tu tiempo de belleza, diseñado para ti.')}</p>
-    <p class="mb-pub-session">${Number(p.sesionesMes)} ${Number(p.sesionesMes)===1?'sesión':'sesiones'} incluidas al mes</p>
-    ${p.beneficios?`<p class="mb-pub-benefits">${esc(p.beneficios)}</p>`:''}
-    ${capability().enabled&&p.renovacion==='automatica_disponible'? `<div class="mb-pay-choice"><span>♻ Renovación mensual automática</span><small>Cargo de US$ ${Number(p.paypalPrecioUSD||0).toFixed(2)} mensuales en PayPal · equivalente referencial ${money(p.precioRD)} al crear el plan</small><small>Gestiona tu suscripción cuando quieras</small></div>
-      <button class="btn btn-primary" type="button" data-mb-auto="${esc(p.id)}">Suscribirme con PayPal →</button>`:''}
-    <button class="btn btn-ghost" type="button" data-mb-request="${esc(p.id)}">Solicitar pago con el estudio</button>
-    <p class="mb-pay-small">La activación requiere confirmar el pago. Puedes cancelar la renovación desde tu cuenta.</p>
-    </article>`).join(''):
-   '<div class="mb-public-empty">Pronto encontrarás aquí nuestras membresías. Escríbenos si deseas conocer las opciones disponibles.</div>';
+   plans=M.membershipPlans||[];
+   if(!$('membresias'))return;
+   $('membresias').hidden=false;
+   $('mb-public-list').innerHTML=plans.length?plans.map(p=>{
+     const benefits=String(p.beneficios||'').split(/\r?\n|;/).map(x=>x.trim()).filter(Boolean).slice(0,6);
+     const monthly=Number(p.sesionesMes)||0;
+     const isRecurring=capability().enabled&&p.renovacion==='automatica_disponible';
+     return `<article class="mb-pub-card mb-pay-card">
+       <div class="mb-card-top"><span class="mb-pub-overline">TU RITUAL MAJOBELLA</span><span class="mb-card-badge">MENSUAL</span></div>
+       <h3>${esc(p.nombre)}</h3>
+       <p class="mb-pub-desc">${esc(p.descripcion||'Un plan para cuidar de ti y volver a dedicarte tiempo cada mes.')}</p>
+       <div class="mb-card-value"><p class="mb-pub-price">${money(p.precioRD)} <small>/ mes</small></p>
+         <p class="mb-pub-session">${monthly} ${monthly===1?'sesión incluida':'sesiones incluidas'} por mes</p></div>
+       ${benefits.length?`<div class="mb-card-benefits"><span>LO QUE DISFRUTAS</span><ul>${benefits.map(b=>`<li>${esc(b)}</li>`).join('')}</ul></div>`:''}
+       <div class="mb-card-actions">
+         ${isRecurring?`<button class="btn btn-primary" type="button" data-mb-auto="${esc(p.id)}">Activar mi ritual mensual</button>
+           <p class="mb-pay-small">Renovación autorizada en PayPal: US$ ${Number(p.paypalPrecioUSD||0).toFixed(2)}/mes. Puedes cancelarla desde tu cuenta.</p>`:''}
+         <button class="btn ${isRecurring?'btn-ghost':'btn-primary'}" type="button" data-mb-request="${esc(p.id)}">${isRecurring?'Consultar pago con el estudio':'Solicitar esta membresía'}</button>
+         ${!isRecurring?'<p class="mb-pay-small">Nuestro equipo te contactará para coordinar el pago. No se genera un cargo automático.</p>':''}
+       </div>
+     </article>`;
+   }).join(''):
+    '<div class="mb-public-empty"><h3>Pronto, tu ritual mensual</h3><p>Estamos preparando opciones de membresía para que puedas cuidarte con constancia. Escríbenos y te ayudaremos a elegir tu próxima experiencia.</p><a class="btn btn-line" href="index.html#contacto">Consultar al estudio</a></div>';
+ }
+ function syncAuth(){
+   const user=M.Auth?.user, signed=!!(user&&M.Auth?.token);
+   const btn=$('mb-account-login'),welcome=$('mb-account-welcome');
+   if(btn)btn.hidden=signed;
+   if(welcome){
+     welcome.hidden=!signed;
+     welcome.textContent=signed?`Hola, ${user.firstName||user.name||'bienvenida'}. Aquí están tus membresías y movimientos.`:'';
+   }
  }
  function receiptHtml(p){
   const number=esc(p.id),date=safeDate(String(p.creado||'').slice(0,10)),name=esc(M.Auth?.user?.name||'Clienta MAJOBELLA');
@@ -75,12 +92,18 @@
     <small>${safeDate(String(p.creado).slice(0,10))} · ${esc(p.id)}</small></span><strong>${dollars(p.montoUSD)} ↗</strong></button>`).join(''):'';
  }
  async function loadMine(){
-  if(!M.Auth?.token){mine=[];receipts=[];mineView();return;}
-  try{
-   const [r,p]=await Promise.all([API.post({action:'myMemberships',idToken:M.Auth.token}),
-     API.post({action:'myMembershipPayments',idToken:M.Auth.token})]);
-   mine=r.memberships||[];receipts=p.payments||[];mineView();
-  }catch(err){$('mb-mine').textContent='No pudimos cargar tus membresías. Intenta actualizar la página.';}
+   syncAuth();
+   const token=M.Auth?.token;
+   if(!token){mine=[];receipts=[];mineView();return;}
+   try{
+    const [r,p]=await Promise.all([API.post({action:'myMemberships',idToken:token}),
+      API.post({action:'myMembershipPayments',idToken:token})]);
+    if(token!==M.Auth?.token)return;
+    mine=r.memberships||[];receipts=p.payments||[];mineView();
+   }catch(err){
+    if(token!==M.Auth?.token)return;
+    $('mb-mine').textContent='No pudimos cargar tus membresías. Comprueba tu conexión o vuelve a iniciar sesión.';
+   }
  }
  async function request(id){
   if(busy)return;
