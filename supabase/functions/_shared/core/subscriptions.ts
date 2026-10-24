@@ -67,22 +67,38 @@ export async function adminSyncPaypalPlan_(d:any){
  if(!p||p.estado!=='activo')throw Error('Publica primero el plan en Administración.');
  const rate=Number(settings().tasaUSD)||0;
  if(!(rate>=30&&rate<=200))throw Error('Configura la tasa USD/RD$ de PayPal antes de activar suscripciones.');
- const usd=Math.ceil(Number(p.precioRD)/rate*100)/100;
- const version=Number(usd).toFixed(2);
+ const price=Number(p.precioRD);
+ if(!Number.isFinite(price)||price<=0)throw Error('El plan debe tener un precio mensual válido.');
+ const usd=Math.ceil(price/rate*100)/100,version=usd.toFixed(2);
+ // Límite operativo de MAJOBELLA, no un mínimo oficial de PayPal.
+ if(usd<1)throw Error('El plan '+str(p.nombre)+' cuesta RD$ '+price.toFixed(2)+' (US$ '+version+
+   '). MAJOBELLA exige al menos US$ 1.00 para cobros mensuales automáticos. Ajusta el precio en Administración y vuelve a sincronizar. No se efectuó ningún cargo.');
  if(p.paypalPlanId&&p.paypalPlanVersion===version)return {ok:true,planId:p.id,paypalPlanId:p.paypalPlanId,usd};
  let productId=str(p.paypalProductId);
  if(!productId){
-   const product=await paypal_('post','/v1/catalogs/products',{name:clean_(p.nombre,110),type:'SERVICE',category:'PERSONAL_CARE'},p.id+'-prod');
-   productId=product.id;
+  let product:any;
+  try{
+   // category es opcional; PERSONAL_CARE no pertenece al enum de PayPal.
+   product=await paypal_('post','/v1/catalogs/products',{name:clean_(p.nombre,110),type:'SERVICE'},p.id+'-prod');
+  }catch(e){throw Error('Error al crear el producto de PayPal: '+(e instanceof Error?e.message:String(e)));}
+  productId=str(product?.id);
+  if(!/^PROD-[A-Za-z0-9]+$/.test(productId))throw Error('PayPal no devolvió un identificador válido de producto.');
+  // Guardar el producto para evitar duplicarlo si PayPal rechaza el plan.
+  updateTable_('PlanesMembresia',p._row,{paypalProductId:productId});
  }
- const created=await paypal_('post','/v1/billing/plans',{
-   product_id:productId,name:clean_(p.nombre,110),description:clean_(p.descripcion||'Membresía mensual MAJOBELLA',127),
+ let created:any;
+ try{
+  created=await paypal_('post','/v1/billing/plans',{
+   product_id:productId,name:clean_(p.nombre,110),
+   description:clean_(p.descripcion||'Membresía mensual MAJOBELLA',127),
    status:'ACTIVE',
-   billing_cycles:[{frequency:{interval_unit:'MONTH',interval_count:1},tenure_type:'REGULAR',sequence:1,total_cycles:0,
-     pricing_scheme:{fixed_price:{value:version,currency_code:'USD'}}}],
+   billing_cycles:[{frequency:{interval_unit:'MONTH',interval_count:1},
+    tenure_type:'REGULAR',sequence:1,total_cycles:0,
+    pricing_scheme:{fixed_price:{value:version,currency_code:'USD'}}}],
    payment_preferences:{auto_bill_outstanding:true,setup_fee_failure_action:'CONTINUE',payment_failure_threshold:3}
- },p.id+'-'+str(uuid()).slice(0,16));
- if(!created.id)throw Error('PayPal no devolvió el identificador del plan.');
+  },p.id+'-'+str(uuid()).slice(0,16));
+ }catch(e){throw Error('Error al crear el plan de facturación PayPal: '+(e instanceof Error?e.message:String(e)));}
+ if(!/^P-[A-Za-z0-9]+$/.test(str(created?.id)))throw Error('PayPal no devolvió un identificador válido de plan.');
  const patch={paypalProductId:productId,paypalPlanId:created.id,paypalPrecioUSD:usd,paypalPlanVersion:version};
  updateTable_('PlanesMembresia',p._row,patch);
  return {ok:true,planId:p.id,paypalPlanId:created.id,usd};
