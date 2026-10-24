@@ -1739,3 +1739,82 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
  .regalos-page .regal-hub-index{font-size:13px}
  .regalos-page .regal-hub-card .regal-hub-illustration{max-width:195px;right:-1%}
 }
+
+
+/* EXPERIENCIAS MAJOBELLA · diseño aprobado · 3 tarjetas iguales, 24 octubre 2026
+   Un solo recurso WebP optimizado para que las tres imágenes carguen juntas. */
+.regalos-page .regal-hub-grid.regal-approved-trio {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:stretch;
+  gap:clamp(12px,1.85vw,24px);
+}
+.regalos-page .regal-approved-trio .regal-art-card {
+  display:block;
+  position:relative;
+  width:100%;
+  min-width:0;
+  height:auto;
+  min-height:0;
+  aspect-ratio:390/675;
+  border:0;
+  border-radius:clamp(23px,3vw,40px);
+  overflow:hidden;
+  background-color:#060606;
+  background-image:url("../assets/majobella-experiencias-aprobadas.webp");
+  background-repeat:no-repeat;
+  background-size:300% 100%;
+  box-shadow:0 13px 30px rgba(0,0,0,.085);
+  transform:translateY(0);
+  transition:transform .2s ease,box-shadow .2s ease;
+  text-decoration:none;
+  outline-offset:5px;
+}
+.regalos-page .regal-approved-trio .regal-art-gift {background-position:0% 50%}
+.regalos-page .regal-approved-trio .regal-art-membership {background-position:50% 50%}
+.regalos-page .regal-approved-trio .regal-art-packages {background-position:100% 50%}
+.regalos-page .regal-approved-trio .regal-art-card:hover {
+  transform:translateY(-5px);
+  box-shadow:0 21px 38px rgba(0,0,0,.14);
+}
+.regalos-page .regal-approved-trio .regal-art-card:focus-visible {
+  outline:3px solid #111;
+}
+.regal-art-visually-hidden {
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  clip-path:inset(50%);
+  border:0;
+}
+@media(max-width:740px) {
+  .regalos-page .regal-hub-grid.regal-approved-trio {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+  }
+  .regalos-page .regal-approved-trio .regal-art-packages {
+    grid-column:1/-1;
+    width:calc((100% - 14px)/2);
+    justify-self:center;
+  }
+}
+@media(max-width:490px) {
+  .regalos-page .regal-hub-grid.regal-approved-trio {
+    grid-template-columns:1fr;
+    gap:17px;
+  }
+  .regalos-page .regal-approved-trio .regal-art-card,
+  .regalos-page .regal-approved-trio .regal-art-packages {
+    grid-column:auto;
+    width:min(100%,390px);
+    justify-self:center;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .regalos-page .regal-approved-trio .regal-art-card{transition:none}
+  .regalos-page .regal-approved-trio .regal-art-card:hover{transform:none}
+}
