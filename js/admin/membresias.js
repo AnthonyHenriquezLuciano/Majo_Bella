@@ -111,9 +111,18 @@
     });
   }
   async function syncPaypal(btn){
+    const plan=allPlans().find(x=>x.id===btn.dataset.mbSync);
+    if(!plan)return;
     if(!confirm('PayPal creará un plan de cobro mensual en USD. Las clientas existentes conservan el importe originalmente autorizado. ¿Continuar?'))return;
+    let confirmLowValue=false;
+    // Precio de prueba: se requiere autorización adicional, nunca se aumenta
+    // automáticamente lo configurado por la administradora.
+    if(Number(plan.precioRD)<100){
+      confirmLowValue=confirm('ATENCIÓN: «'+plan.nombre+'» tiene un precio de RD$ '+Number(plan.precioRD).toFixed(2)+' mensuales. Su equivalente en USD podría ser inferior a US$ 1 y las comisiones de PayPal pueden consumir gran parte del cobro. ¿Confirmas expresamente que quieres sincronizar este importe?');
+      if(!confirmLowValue)return;
+    }
     await A.busy(btn,async()=>{try{
-      const r=await A.call('adminSyncPaypalPlan',{planId:btn.dataset.mbSync});
+      const r=await A.call('adminSyncPaypalPlan',{planId:btn.dataset.mbSync,confirmLowValue});
       const p=allPlans().find(x=>x.id===r.planId);
       if(p){p.paypalPlanId=r.paypalPlanId;p.paypalPrecioUSD=r.usd;p.paypalPlanVersion=Number(r.usd).toFixed(2);}
       render();A.toast('Plan PayPal sincronizado. Se cobrará US$ '+Number(r.usd).toFixed(2)+' mensuales.');
