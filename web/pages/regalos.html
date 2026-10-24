@@ -1,22 +1,42 @@
 <!--page {"key":"regalos","file":"regalos.html","path":"regalos.html","title":"Tarjetas de regalo y paquetes · MAJOBELLA Beauty Studio","description":"Regala una experiencia en MAJOBELLA con una tarjeta de regalo o ahorra con paquetes de sesiones. Pago seguro con PayPal y código al instante por correo.","ogTitle":"Regala MAJOBELLA","ogDescription":"Tarjetas de regalo y paquetes de sesiones, al instante por correo."}-->
-<main id="contenido" class="page-main">
+<main id="contenido" class="page-main regalos-page">
+  <section class="section regal-hub" aria-labelledby="regal-hub-title">
+    <div class="container">
+      <p class="label">EL UNIVERSO MAJOBELLA</p>
+      <h1 class="display" id="regal-hub-title">Una forma de regalarte belleza</h1>
+      <p class="regal-hub-lead">Un detalle especial, un ritual mensual o varias sesiones para disfrutar sin prisa. Elige la experiencia que más se parece a ti.</p>
+      <div class="regal-hub-grid">
+        <a class="regal-hub-card is-gift" href="#regalar"><span class="regal-hub-index">01 / UN DETALLE PERSONAL</span><span class="regal-hub-icon" aria-hidden="true">✦</span><strong>Tarjeta de regalo</strong><span>Un importe a elegir, una dedicatoria y libertad para escoger el servicio.</span><em>Crear mi regalo <span aria-hidden="true">↗</span></em></a>
+        <a class="regal-hub-card" href="#membresias"><span class="regal-hub-index">02 / TU MOMENTO CADA MES</span><span class="regal-hub-icon" aria-hidden="true">◌</span><strong>Membresías</strong><span>Rutinas de belleza mensuales con beneficios y sesiones reservadas para ti.</span><em>Explorar membresías <span aria-hidden="true">↗</span></em></a>
+        <a class="regal-hub-card" href="#paquetes"><span class="regal-hub-index">03 / MÁS MOMENTOS PARA TI</span><span class="regal-hub-icon" aria-hidden="true">✧</span><strong>Paquetes</strong><span>Varias sesiones de un tratamiento para cuidarte con continuidad.</span><em>Ver paquetes <span aria-hidden="true">↗</span></em></a>
+      </div>
+    </div>
+  </section>
 
   <!-- TARJETAS DE REGALO -->
   <section id="regalar" class="section gift" hidden>
     <div class="container gift-grid">
       <div class="gift-intro">
         <p class="label" data-reveal>Tarjetas de regalo</p>
-        <h2 class="display" data-reveal>Regala un momento para ella</h2>
-        <p class="gift-lead" data-reveal>Elige el valor, escribe una dedicatoria y paga con PayPal. La tarjeta llega al instante por correo con un código para usar al reservar cualquier servicio.</p>
+        <h2 class="display" data-reveal>Un regalo que se siente personal</h2>
+        <p class="gift-lead" data-reveal>Elige un valor, dedica unas palabras y regala la libertad de elegir su próximo momento MAJOBELLA. Una experiencia personal que podrá disfrutar cuando prefiera.</p>
         <div class="gc-preview" id="gc-preview" aria-live="polite">
-          <p class="gc-k">Tarjeta de regalo</p>
+          <div class="gc-top"><span class="gc-brand">MAJOBELLA</span><span class="gc-symbol" aria-hidden="true">✦</span></div>
+          <p class="gc-k">TARJETA DE REGALO</p>
           <p class="gc-amt" id="gc-amt">RD$ 2,500</p>
           <p class="gc-who" id="gc-who"></p>
           <p class="gc-msg" id="gc-msg"></p>
           <p class="gc-code" id="gc-code">MJB-····-····</p>
+          <p class="gc-bottom">MÁS YO, MÁS BELLA. <span>✦</span> BEAUTY STUDIO</p>
+        </div>
+        <div class="gift-benefits" aria-label="Cómo se disfruta este regalo">
+          <div><span class="gift-benefit-n">01</span><p><strong>Personalízala</strong><small>Elige el valor y añade una dedicatoria.</small></p></div>
+          <div><span class="gift-benefit-n">02</span><p><strong>Compártela</strong><small>Se envía por correo y también puedes descargarla.</small></p></div>
+          <div><span class="gift-benefit-n">03</span><p><strong>Disfrútala</strong><small>Se utiliza con un código al reservar.</small></p></div>
         </div>
       </div>
       <form class="gift-form" id="gift-form" novalidate>
+        <div class="gift-form-head"><p class="label">PERSONALIZA TU REGALO</p><h3>Hazlo inolvidable</h3><p>Solo necesitas unos datos. Podrás ver cómo queda antes de continuar.</p></div>
         <fieldset class="gf-amounts">
           <legend>Valor</legend>
           <div class="gf-chips" id="gf-chips">
@@ -44,6 +64,7 @@
         <div class="gf-pay" id="gf-pay"></div>
         <p class="gf-msg" id="gf-msg" role="status" aria-live="polite"></p>
       </form>
+      <div class="gift-unavailable" id="gift-unavailable" hidden><p class="label">Estamos preparando algo especial</p><h3>Tu próxima sorpresa empieza aquí</h3><p>La compra en línea estará disponible cuando nuestro sistema de pago esté habilitado. Por ahora, podemos ayudarte directamente.</p><a class="btn btn-primary" data-wa href="./#contacto">Consultar por WhatsApp</a></div>
       <div class="gift-done" id="gift-done" hidden tabindex="-1">
         <p class="label">Listo</p>
         <h3>Tu tarjeta está lista</h3>
@@ -83,7 +104,7 @@
           <p>Compra varias sesiones de tu servicio y ahorra. Recibes un código por correo y lo escribes al reservar cada sesión.</p>
         </div>
       </div>
-      <div class="pk-grid" id="pk-grid"></div>
+      <div class="pk-grid" id="pk-grid"></div><div class="pk-empty" id="pk-empty" hidden><p>Estamos preparando nuestros paquetes de sesiones. Puedes consultarnos para recibir una propuesta personalizada.</p><a class="btn btn-line" data-wa href="./#contacto">Consultar opciones</a></div>
       <form class="pk-buy" id="pk-buy" novalidate hidden>
         <div class="pk-buy-head"><p class="label">Comprar</p><h3 id="pk-buy-title"></h3><p id="pk-buy-sub"></p></div>
         <div class="fields">

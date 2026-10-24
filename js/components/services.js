@@ -13,13 +13,18 @@
       : [...new Set(M.services.map((s) => s.category || 'Servicios'))].map((name) => ({ id: name, name }));
 
     function details(s) {
-      const blocks = [];
-      if (s.idealFor) blocks.push(`<div><dt>Ideal para</dt><dd>${M.escapeHtml(s.idealFor)}</dd></div>`);
-      if (s.includes && s.includes.length) blocks.push(`<div><dt>Qué incluye</dt><dd>${list_(s.includes)}</dd></div>`);
-      if (s.results) blocks.push(`<div><dt>Resultado</dt><dd>${M.escapeHtml(s.results)}</dd></div>`);
-      if (s.prep && s.prep.length) blocks.push(`<div><dt>Antes de tu cita</dt><dd>${list_(s.prep)}</dd></div>`);
-      if (s.aftercare && s.aftercare.length) blocks.push(`<div><dt>Después</dt><dd>${list_(s.aftercare)}</dd></div>`);
-      return blocks.join('');
+      // Orden editorial: izquierda tratamiento / resultado; derecha indicaciones.
+      const block = (title, value, list = false) => {
+        if (!value || (Array.isArray(value) && !value.length)) return '';
+        const text = list ? list_(Array.isArray(value) ? value : String(value).split(/\r?\n/).filter(Boolean)) : M.escapeHtml(value);
+        return `<div class="svc-detail-section"><dt>${title}</dt><dd>${text}</dd></div>`;
+      };
+      const left = block('Ideal para', s.idealFor)
+        + block('Qué incluye', s.includes, true)
+        + block('Resultado', s.results);
+      const right = block('Antes de tu cita', s.prep, true)
+        + block('Cuidados posteriores', s.aftercare, true);
+      return left || right ? `<div class="svc-detail-col svc-detail-primary">${left}</div><div class="svc-detail-col svc-detail-care">${right}</div>` : '';
     }
 
     /* Precio con la promoción automática vigente, si la hay */
@@ -47,8 +52,7 @@
             <span class="svc-add-label" aria-hidden="true">${on ? '✓' : '+'}</span>
           </button>
           <dl class="svc-details" id="det-${s.id}" hidden>
-            ${s.description ? `<div><dt>Descripción</dt><dd>${M.escapeHtml(s.description)}</dd></div>` : ''}
-            ${details(s) || (!s.description ? '<div><dt>Servicio</dt><dd>Consulta precio y duración antes de reservar.</dd></div>' : '')}
+            ${details(s) || `<div class="svc-detail-col"><div class="svc-detail-section"><dt>Acerca del servicio</dt><dd>${M.escapeHtml(s.description || 'Consulta la información del tratamiento antes de reservar.')}</dd></div></div>`}
           </dl>
         </article>`;
     }

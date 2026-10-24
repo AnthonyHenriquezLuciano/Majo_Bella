@@ -49,6 +49,10 @@ export function services_() {
       id: String(r.id).trim(), name: String(r.nombre).trim(), categoryId: String(r.categoriaId || 'otros'),
       category: catNames[String(r.categoriaId || 'otros')], parentId: String(r.padreId || ''),
       description: String(r.descripcion || ''), order: Number(r.orden) || 0,
+      details: (() => {
+        try { const d = JSON.parse(String(r.detalle || '{}')); return d && typeof d === 'object' && !Array.isArray(d) ? d : null; }
+        catch { return null; }
+      })(),
       durationMinutes: Number(r.duracionMin) || 30, price: Number(r.precioRD) || 0,
       priceFrom: /^s[ií]$/i.test(String(r.precioDesde)), returnDays: Number(r.volverDias) || 0,
       depositPercent: pctOrNull_(r.depositoPct),

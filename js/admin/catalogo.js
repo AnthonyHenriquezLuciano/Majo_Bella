@@ -15,6 +15,10 @@
   const category = (id) => cats().find((x)=>x.id === id);
   const service = (id) => services().find((x)=>x.id === id);
   const title = (v) => esc(v?.nombre || 'Sin nombre');
+  const detailOf = (x) => {
+    try { const d = typeof x?.detalle === 'string' ? JSON.parse(x.detalle || '{}') : x?.detalle; return d && typeof d === 'object' && !Array.isArray(d) ? d : {}; }
+    catch { return {}; }
+  };
   const opts = (options,value) => options.map(([v,label])=>`<option value="${esc(v)}"${String(value)===v?' selected':''}>${esc(label)}</option>`).join('');
   const ensure = () => {
     if (draft && (dirty || source === A.data)) return;
@@ -113,6 +117,7 @@
       return;
     }
     const isCat=selected.kind==='categoria',group=x.tipo==='grupo',leaf=!isCat&&!group;
+    const detail = detailOf(x);
     $('cat-inspector-title').textContent= isCat?'Editar categoría':group?'Editar servicio':'Editar '+(x.padreId?'subservicio':'servicio');
     const categories= cats().slice().sort(ranks).map(c=>[c.id,c.nombre]);
     const parents= services().filter(s=>s.tipo==='grupo' && s.categoriaId===x.categoriaId && s.id!==x.id).map(s=>[s.id,s.nombre]);
@@ -139,7 +144,22 @@
             <label>Retoque en días<input type="number" name="retoqueDias" min="0" value="${esc(x.retoqueDias??0)}"></label>
           </div>
           <label class="cat-check"><input type="checkbox" name="precioDesde" ${/^(si|sí|true)$/i.test(String(x.precioDesde))?'checked':''}> Mostrar «Desde» en el precio</label>
-          <label class="cat-check"><input type="checkbox" name="consentimiento" ${/^(si|sí|true)$/i.test(String(x.consentimiento))?'checked':''}> Requiere consentimiento</label>` : ''}` : ''}
+          <label class="cat-check"><input type="checkbox" name="consentimiento" ${/^(si|sí|true)$/i.test(String(x.consentimiento))?'checked':''}> Requiere consentimiento</label>
+          <div class="cat-details-fields">
+            <p class="label">CONTENIDO DE «VER DETALLE»</p>
+            <p class="cat-editor-help">Puedes editar cada apartado por separado. Los tres primeros aparecen a la izquierda y los cuidados a la derecha. Para crear viñetas, escribe una indicación por línea.</p>
+            <div class="cat-detail-editor-grid">
+              <div>
+                <label>Ideal para <textarea name="detail.idealFor" maxlength="700" rows="3" placeholder="¿Para quién es adecuado este tratamiento?">${esc(detail.idealFor||'')}</textarea></label>
+                <label>Qué incluye <textarea name="detail.includes" maxlength="1600" rows="5" placeholder="Una prestación o etapa por línea">${esc(detail.includes||'')}</textarea></label>
+                <label>Resultado <textarea name="detail.results" maxlength="700" rows="3" placeholder="Resultado esperado y duración orientativa">${esc(detail.results||'')}</textarea></label>
+              </div>
+              <div>
+                <label>Antes de tu cita <textarea name="detail.prep" maxlength="1600" rows="5" placeholder="Una recomendación por línea">${esc(detail.prep||'')}</textarea></label>
+                <label>Cuidados posteriores <textarea name="detail.aftercare" maxlength="1600" rows="5" placeholder="Una indicación de cuidado por línea">${esc(detail.aftercare||'')}</textarea></label>
+              </div>
+            </div>
+          </div>` : ''}` : ''}
         ${statusField(x)}
       </form>
       <div class="cat-inspector-actions">
@@ -213,7 +233,8 @@
     }
     if(el.name==='categoriaId' && x.padreId && service(x.padreId)?.categoriaId!==val) x.padreId='';
     if(el.name==='padreId' && val) x.categoriaId=service(val)?.categoriaId||x.categoriaId;
-    x[el.name]=val;
+    if(el.name.startsWith('detail.')) { const d=detailOf(x); d[el.name.slice(7)]=val; x.detalle=JSON.stringify(d); }
+    else x[el.name]=val;
     if(el.name==='estado')x.activo=val==='activo'?'si':'no';
     if(el.name==='consentTemplateId' && val)x.consentimiento='si';
     updateDirty();

@@ -17,8 +17,8 @@ window.MAJOBELLA_CONFIG = {
      Ejemplo de formato: 18095551234 (código de país 1 + número).
      Mientras esté vacío, los botones de WhatsApp muestran un aviso en lugar de abrir el chat. */
   whatsapp: {
-    number: '18299784986',
-    display: '829-978-4986',
+    number: '18299435470',
+    display: '829-943-5470',
     // WhatsApp es para dudas e información; las citas se reservan y se pagan en la web.
     greeting: 'Hola, tengo una pregunta sobre MAJOBELLA.',
   },
@@ -34,7 +34,7 @@ window.MAJOBELLA_CONFIG = {
 
   /* Redes sociales (deja vacío lo que no uses) */
   social: {
-    instagram: '', // ej. https://www.instagram.com/tu_usuario
+    instagram: 'https://www.instagram.com/majobella.rd/', // cuenta oficial MAJOBELLA
     tiktok: '',    // ej. https://www.tiktok.com/@tu_usuario
   },
 

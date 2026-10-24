@@ -33,31 +33,47 @@
   }
 
   async function canvas(g, opts = {}) {
-    const logo = await loadLogo();
+    await loadLogo(); // El logotipo se mantiene disponible para otras vistas; el diseño exportado usa tipografía.
     const W = 1200, H = 720;
     const c = document.createElement('canvas');
     c.width = W; c.height = H;
     const x = c.getContext('2d');
-    x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
-    x.strokeStyle = '#111111'; x.lineWidth = 2; x.strokeRect(36, 36, W - 72, H - 72);
-    x.lineWidth = 0.8; x.strokeRect(50, 50, W - 100, H - 100);
-    if (logo && logo.naturalWidth) { const h = 92, w = (logo.naturalWidth / logo.naturalHeight) * h; x.drawImage(logo, (W - w) / 2, 96, w, h); }
-    x.fillStyle = '#575757'; x.textAlign = 'center';
-    x.font = '600 20px Georgia, serif';
-    spaced(x, 'TARJETA DE REGALO', W / 2, 250, 6);
-    x.fillStyle = '#000'; x.font = '400 96px Georgia, serif';
-    x.fillText(M.fmtPrice(Number(g.montoRD) || 0), W / 2, 360);
-    x.font = 'italic 30px Georgia, serif'; x.fillStyle = '#111';
+    // Mismo lenguaje visual que la tarjeta que personalizas en la web.
+    const bg = x.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#fcf7ee'); bg.addColorStop(.58, '#f1dfcd'); bg.addColorStop(1, '#dfc4ab');
+    x.fillStyle = bg; x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(68,39,18,.32)'; x.lineWidth = 2; x.strokeRect(31, 31, W - 62, H - 62);
+    x.strokeStyle = 'rgba(68,39,18,.16)'; x.lineWidth = 1; x.strokeRect(48, 48, W - 96, H - 96);
+    x.beginPath(); x.ellipse(1030, 610, 300, 300, 0, 0, Math.PI * 2);
+    x.fillStyle = 'rgba(68,39,18,.045)'; x.fill();
+    x.fillStyle = '#442712';
+    x.font = '600 29px Georgia, serif';
+    spaced(x, 'MAJOBELLA', W / 2, 122, 7);
+    x.font = '400 37px Georgia, serif'; x.fillText('✦', W / 2, 185);
+    x.fillStyle = '#806148'; x.font = '600 19px Georgia, serif';
+    spaced(x, 'TARJETA DE REGALO', W / 2, 246, 5);
+    x.fillStyle = '#442712'; x.font = '600 100px Georgia, serif';
+    x.fillText(M.fmtPrice(Number(g.montoRD) || 0), W / 2, 361);
     const from = g.comprador || g.de;
     const who = [g.para ? `Para ${g.para}` : '', from ? `de ${from}` : ''].filter(Boolean).join(' · ');
-    if (who) x.fillText(who, W / 2, 420);
-    if (g.mensaje) { x.font = '24px Georgia, serif'; x.fillStyle = '#575757'; wrap(x, `“${g.mensaje}”`, W / 2, 468, 860, 32); }
-    x.fillStyle = '#111'; x.fillRect(W / 2 - 230, 540, 460, 74);
-    x.fillStyle = '#fff'; x.font = '600 34px ui-monospace, Menlo, monospace';
-    spaced(x, g.codigo, W / 2, 589, 4);
-    x.fillStyle = '#575757'; x.font = '19px Georgia, serif';
+    if (who) {
+      x.font = 'italic 30px Georgia, serif'; x.fillStyle = '#442712';
+      const max = 56; x.fillText(who.length > max ? who.slice(0, max - 1) + '…' : who, W / 2, 413);
+    }
+    if (g.mensaje) {
+      x.fillStyle = '#6c5544'; x.font = '22px Georgia, serif';
+      wrap(x, `“${String(g.mensaje).slice(0, 140)}”`, W / 2, 460, 820, 28);
+    }
+    x.fillStyle = 'rgba(255,255,255,.55)'; x.fillRect(W / 2 - 205, 546, 410, 60);
+    x.strokeStyle = '#b79b82'; x.lineWidth = 1; x.strokeRect(W / 2 - 205, 546, 410, 60);
+    x.fillStyle = '#442712'; x.font = '600 26px ui-monospace, Menlo, monospace';
+    spaced(x, g.codigo || 'MJB-····-····', W / 2, 585, 2);
+    x.fillStyle = '#7b5d47'; x.font = '600 15px Georgia, serif';
+    spaced(x, 'MÁS YO, MÁS BELLA.  ✦  BEAUTY STUDIO', W / 2, 647, 1.5);
     const web = String(opts.webUrl || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
-    x.fillText(`Escribe el código al reservar${web ? ` en ${web}` : ''}${g.vence ? ` · válida hasta ${shortDate(g.vence)}` : ''}`, W / 2, 648);
+    x.font = '15px Georgia, serif';
+    const line = `Al reservar utiliza tu código${web ? ' · ' + web : ''}${g.vence ? ' · Válida hasta ' + shortDate(g.vence) : ''}`;
+    x.fillText(line.length > 125 ? line.slice(0, 124) + '…' : line, W / 2, 681);
     return c;
   }
 

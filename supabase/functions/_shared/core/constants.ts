@@ -51,7 +51,7 @@ export const DEFAULT_SETTINGS: string[][] = [
   ['tarjetaMin', '500', 'Valor mínimo de una tarjeta de regalo en la web (RD$).'],
   ['tarjetaMax', '30000', 'Valor máximo de una tarjeta de regalo en la web (RD$).'],
   ['tarjetaVenceDias', '365', 'Días de validez de las tarjetas compradas en la web.'],
-  ['whatsapp', '18299784986', 'WhatsApp del estudio con código de país, solo números (para los correos).'],
+  ['whatsapp', '18299435470', 'WhatsApp del estudio con código de país, solo números (para los correos).'],
   ['recordatorioActivo', 'si', 'si/no: correo de recordatorio antes de cada cita.'],
   ['recordatorioHoras', '24', 'Cuántas horas antes de la cita se envía el recordatorio.'],
   ['resenaActiva', 'si', 'si/no: pedir una reseña de Google después de la cita realizada.'],

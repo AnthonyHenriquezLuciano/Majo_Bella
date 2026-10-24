@@ -90,8 +90,13 @@
 
   M.initGiftShop = function () {
     shop = (M.site || {}).giftShop;
-    if (!shop || !shop.enabled || !API.enabled() || !M.PayPal.configured()) return;
     $('regalar').hidden = false;
+    if (!shop || !shop.enabled || !API.enabled() || !M.PayPal.configured()) {
+      $('gift-form').hidden = true;
+      const note = $('gift-unavailable');
+      if (note) note.hidden = false;
+      return;
+    }
     // Montos dentro del rango configurado
     document.querySelectorAll('#gf-chips input').forEach((i) => {
       if (i.value !== 'otro' && (Number(i.value) < shop.min || Number(i.value) > shop.max)) i.closest('.gf-chip').hidden = true;

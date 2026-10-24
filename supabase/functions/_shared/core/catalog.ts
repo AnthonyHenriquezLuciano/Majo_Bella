@@ -21,7 +21,7 @@ export function catalog_(): any {
     serviceGroups: serviceGroups_().filter((g) => available.some((x) => x.parentId === g.id)),
     services: available.map(function (x) {
       return { id: x.id, name: x.name, categoryId: x.categoryId, category: x.category,
-        parentId: x.parentId, description: x.description, order: x.order,
+        parentId: x.parentId, description: x.description, details: x.details, order: x.order,
         durationMinutes: x.durationMinutes, price: x.price, priceFrom: x.priceFrom, depositPercent: x.depositPercent, consentTemplateId: x.consentTemplateId };
     }),
     payments: {

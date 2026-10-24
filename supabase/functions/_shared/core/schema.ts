@@ -48,7 +48,7 @@ export const TABLES: Table[] = [
     cols: [
       c('id', 'text', { notNull: true }), c('nombre'), c('duracionMin', 'int'), c('precioRD', 'num'), c('precioDesde', 'bool'), c('activo', 'bool'),
       c('volverDias', 'int'), c('depositoPct', 'num'), c('retoqueDias', 'int'), c('consentimiento', 'bool'),
-      c('categoriaId'), c('padreId'), c('tipo'), c('orden', 'int'), c('descripcion'), c('estado'), c('consentTemplateId'),
+      c('categoriaId'), c('padreId'), c('tipo'), c('orden', 'int'), c('descripcion'), c('detalle', 'json'), c('estado'), c('consentTemplateId'),
     ],
   },
   {
