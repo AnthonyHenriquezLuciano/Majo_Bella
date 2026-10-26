@@ -1741,71 +1741,121 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 }
 
 
-/* EXPERIENCIAS MAJOBELLA · diseño aprobado · 3 tarjetas iguales, 24 octubre 2026
-   Un solo recurso WebP optimizado para que las tres imágenes carguen juntas. */
-.regalos-page .regal-hub-grid.regal-approved-trio {
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  align-items:stretch;
-  gap:clamp(12px,1.85vw,24px);
+/* CLUB MAJOBELLA · Identidad original: #442712, marfil, beige y cisne de la marca.
+   Las fichas son HTML accesible, sin texto incrustado en una imagen. */
+.regalos-page .regal-hub{background:#fffdfb}
+.regalos-page .regal-hub-heading .label{color:#826047}
+.regalos-page .regal-hub-heading h1{color:#442712}
+.regalos-page .regal-hub-heading>p:last-child{color:#68594d}
+.regalos-page .regal-hub-grid.regal-club-trio{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2.2vw,27px);
+ align-items:stretch
 }
-.regalos-page .regal-approved-trio .regal-art-card {
-  display:block;
-  position:relative;
-  width:100%;
-  min-width:0;
-  height:auto;
-  min-height:0;
-  aspect-ratio:390/675;
-  border:0;
-  border-radius:clamp(23px,3vw,40px);
-  overflow:hidden;
-  background-color:#060606;
-  background-image:url("../assets/majobella-experiencias-aprobadas.webp");
-  background-repeat:no-repeat;
-  background-size:300% 100%;
-  box-shadow:0 13px 30px rgba(0,0,0,.085);
-  transform:translateY(0);
-  transition:transform .2s ease,box-shadow .2s ease;
-  text-decoration:none;
-  outline-offset:5px;
+.regalos-page .regal-club-card{
+ --club-surface:#f6efe6;--club-ink:#442712;--club-line:rgba(68,39,18,.25);
+ --club-ring:rgba(68,39,18,.17);
+ position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;
+ aspect-ratio:3/4.35;min-height:420px;width:100%;padding:clamp(21px,2.7vw,35px);
+ box-sizing:border-box;border:1px solid var(--club-line);
+ border-radius:clamp(20px,2.4vw,28px);background:var(--club-surface);
+ color:var(--club-ink);text-decoration:none;
+ box-shadow:0 13px 26px rgba(68,39,18,.07);
+ transition:transform .26s ease,box-shadow .26s ease,border-color .26s ease
 }
-.regalos-page .regal-approved-trio .regal-art-gift {background-position:0% 50%}
-.regalos-page .regal-approved-trio .regal-art-membership {background-position:50% 50%}
-.regalos-page .regal-approved-trio .regal-art-packages {background-position:100% 50%}
-.regalos-page .regal-approved-trio .regal-art-card:hover {
-  transform:translateY(-5px);
-  box-shadow:0 21px 38px rgba(0,0,0,.14);
+.regalos-page .regal-club-card::before{
+ content:"";position:absolute;inset:10px;border:1px solid var(--club-line);
+ border-radius:calc(clamp(20px,2.4vw,28px) - 8px);
+ pointer-events:none;z-index:-1;opacity:.55
 }
-.regalos-page .regal-approved-trio .regal-art-card:focus-visible {
-  outline:3px solid #111;
+.regalos-page .regal-club-card::after{
+ content:"";position:absolute;left:50%;top:25%;width:145%;aspect-ratio:1;
+ transform:translate(-50%,-38%);border:1px solid var(--club-ring);
+ border-radius:50%;pointer-events:none;z-index:-1
 }
-.regal-art-visually-hidden {
-  position:absolute;
-  width:1px;
-  height:1px;
-  padding:0;
-  overflow:hidden;
-  clip:rect(0,0,0,0);
-  white-space:nowrap;
-  clip-path:inset(50%);
-  border:0;
+.regalos-page .regal-club-gift{
+ --club-surface:#f7f0e7;--club-ink:#442712;
+ background:radial-gradient(circle at 80% 18%,#fffaf3,#f7f0e7 68%,#efe1d3)
 }
-@media(max-width:740px) {
-  /* Sin un tercer elemento aislado: todas las tarjetas se apilan con igual ancho. */
-  .regalos-page .regal-hub-grid.regal-approved-trio {
-    grid-template-columns:1fr;
-    gap:17px;
-  }
-  .regalos-page .regal-approved-trio .regal-art-card {
-    grid-column:auto;
-    width:min(100%,390px);
-    justify-self:center;
-  }
+.regalos-page .regal-club-membership{
+ --club-surface:#442712;--club-ink:#f9f1e8;
+ --club-line:rgba(255,243,228,.28);--club-ring:rgba(255,243,228,.21);
+ background:radial-gradient(circle at 74% 26%,#5a3822,#442712 60%,#301a0d)
+}
+.regalos-page .regal-club-packages{
+ --club-surface:#e9d9c6;--club-ink:#442712;
+ background:radial-gradient(circle at 20% 16%,#fbf4e9,#e9d9c6 65%,#dbc3a9)
+}
+.regalos-page .club-card-top{display:flex;align-items:center;justify-content:space-between;
+ position:relative;z-index:2;gap:8px}
+.regalos-page .club-card-brand{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.regalos-page .club-card-brand img{display:block;width:38px;height:38px;object-fit:contain;
+ mix-blend-mode:multiply}
+.regalos-page .club-card-brand > span{font:600 12px/1.2 var(--serif,"Source Serif 4",Georgia,serif);
+ letter-spacing:.21em;white-space:nowrap}
+.regalos-page .club-card-number{font:500 10px/1.4 ui-monospace,monospace;letter-spacing:.1em;
+ opacity:.66;white-space:nowrap}
+.regalos-page .club-card-art{position:relative;display:grid;place-items:center;
+ width:100%;flex:1;min-height:85px;max-height:230px;margin:8px auto 4px}
+.regalos-page .club-card-orbit{position:absolute;display:block;width:min(75%,225px);
+ aspect-ratio:1;border:1px solid var(--club-ring);border-radius:50%;transform:rotate(-28deg)}
+.regalos-page .club-card-orbit::before{content:"";position:absolute;inset:-14%;
+ border:1px solid var(--club-ring);border-radius:50%;border-left-color:transparent;border-bottom-color:transparent;
+ transform:rotate(26deg)}
+.regalos-page .club-card-emblem{display:block;position:relative;z-index:1;
+ width:clamp(90px,10vw,143px);height:auto;aspect-ratio:1;object-fit:contain;
+ mix-blend-mode:multiply;transition:transform .35s ease}
+.regalos-page .regal-club-membership .club-card-brand img,
+.regalos-page .regal-club-membership .club-card-emblem{
+ filter:invert(1);mix-blend-mode:screen
+}
+.regalos-page .regal-club-gift .club-card-art{transform:rotate(-7deg)}
+.regalos-page .regal-club-packages .club-card-art{transform:rotate(7deg)}
+.regalos-page .club-card-copy{position:relative;z-index:2;display:flex;flex-direction:column;
+ gap:11px;margin-top:auto}
+.regalos-page .club-card-kicker{font:600 10px/1.35 Arial,system-ui,sans-serif;
+ letter-spacing:.17em;text-transform:uppercase;opacity:.72}
+.regalos-page .club-card-title{font:600 clamp(25px,3vw,40px)/1.08 var(--serif,"Source Serif 4",Georgia,serif);
+ letter-spacing:-.025em}
+.regalos-page .club-card-description{font:400 clamp(13px,1.36vw,15px)/1.55 var(--serif,"Source Serif 4",Georgia,serif);
+ max-width:27ch;opacity:.88}
+.regalos-page .club-card-bottom{position:relative;z-index:2;display:flex;align-items:center;
+ justify-content:space-between;gap:12px;margin-top:23px;padding-top:16px;
+ border-top:1px solid var(--club-line);font:600 10px/1.4 Arial,system-ui,sans-serif;
+ letter-spacing:.115em;text-transform:uppercase}
+.regalos-page .club-card-arrow{display:grid;place-items:center;flex:none;width:35px;height:35px;
+ border:1px solid var(--club-line);border-radius:50%;font:400 20px/1 Arial,sans-serif;
+ transition:transform .28s ease,background-color .28s ease,color .28s ease}
+.regalos-page .regal-club-card:hover{transform:translateY(-5px);
+ box-shadow:0 22px 39px rgba(68,39,18,.13);border-color:var(--club-ink)}
+.regalos-page .regal-club-card:hover .club-card-emblem{transform:scale(1.05)}
+.regalos-page .regal-club-card:hover .club-card-arrow{transform:translate(2px,-2px);
+ background:var(--club-ink);color:var(--club-surface)}
+.regalos-page .regal-club-card:focus-visible{outline:3px solid #442712;outline-offset:4px}
+@media(max-width:1050px){
+ .regalos-page .regal-club-card{min-height:385px;padding:21px}
+ .regalos-page .club-card-title{font-size:clamp(23px,3vw,33px)}
+ .regalos-page .club-card-bottom{letter-spacing:.04em;font-size:9px}
+ .regalos-page .club-card-brand > span{font-size:11px;letter-spacing:.14em}
+}
+@media(max-width:800px){
+ .regalos-page .regal-hub-grid.regal-club-trio{grid-template-columns:1fr;gap:18px}
+ .regalos-page .regal-club-card{aspect-ratio:4/4.35;min-height:420px;
+  max-width:450px;justify-self:center;padding:clamp(25px,6vw,35px)}
+ .regalos-page .club-card-title{font-size:clamp(32px,7vw,41px)}
+ .regalos-page .club-card-art{min-height:125px}
+ .regalos-page .club-card-emblem{width:130px}
+ .regalos-page .club-card-bottom{font-size:10px;letter-spacing:.11em}
+}
+@media(max-width:380px){
+ .regalos-page .regal-club-card{min-height:385px}
+ .regalos-page .club-card-art{min-height:92px}
+ .regalos-page .club-card-brand > span{letter-spacing:.11em}
 }
 @media(prefers-reduced-motion:reduce){
-  .regalos-page .regal-approved-trio .regal-art-card{transition:none}
-  .regalos-page .regal-approved-trio .regal-art-card:hover{transform:none}
+ .regalos-page .regal-club-card,.regalos-page .club-card-emblem,
+ .regalos-page .club-card-arrow{transition:none}
+ .regalos-page .regal-club-card:hover,.regalos-page .regal-club-card:hover .club-card-emblem,
+ .regalos-page .regal-club-card:hover .club-card-arrow{transform:none}
 }
 
 /* CLUB MAJOBELLA: aria-current conserva la ubicación para accesibilidad;
