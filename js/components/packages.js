@@ -28,22 +28,40 @@
     const grid = $('pk-grid'), empty = $('pk-empty');
     if (!grid) return;
     empty.hidden = list.length > 0;
+    grid.classList.toggle('pk-single-package', list.length === 1);
     grid.innerHTML = list.map(k => {
       const original = Number(k.regular) || 0, savings = Math.max(0, Number(k.savings) || 0);
       const savingPercent = original > 0 ? Math.round(savings / original * 100) : 0;
       const help = M.WhatsApp?.link(`Hola, quiero información del paquete ${k.name} de MAJOBELLA.`) || 'index.html#contacto';
       return `<article class="pk-card">
-        <div class="pk-card-top"><span class="pk-svc">${esc(k.serviceName)}</span>${savingPercent > 0 ? `<span class="pk-discount">AHORRA ${savingPercent}%</span>` : ''}</div>
-        <h3>${esc(k.name)}</h3>
-        <p class="pk-desc">${esc(k.description||'Tu tratamiento, en varias sesiones para disfrutarlo con continuidad.')}</p>
-        <div class="pk-card-benefits">
-          <div><span>SESIONES INCLUIDAS</span><strong>${Number(k.sessions)||0}</strong></div>
-          <div><span>VIGENCIA</span><strong>${esc(validity(k.validDays))}</strong></div>
+        <div class="pk-card-visual">
+          <div class="pk-card-visual-top"><span>MAJOBELLA</span><span>CLUB · PAQUETES</span></div>
+          <img class="pk-card-flower" src="assets/flower-majobella.svg" alt="" loading="lazy" width="190" height="190">
+          <span class="pk-card-glint" aria-hidden="true">✧</span>
+          <div class="pk-card-visual-bottom">
+            <span>UN MOMENTO QUE FLORECE</span>
+            <strong>${esc(k.name)}</strong>
+            <small>MÁS YO, MÁS BELLA.</small>
+          </div>
         </div>
-        <div class="pk-card-bottom"><p class="pk-price">${M.fmtPrice(k.price)}</p>
-          ${savings > 0 ? `<p class="pk-save">Ahorras ${M.fmtPrice(savings)} <s>${M.fmtPrice(original)}</s></p>` : ''}
-          ${canPurchase() ? `<button type="button" class="btn btn-primary" data-pk="${esc(k.id)}">Elegir este paquete</button>`
-          : `<a class="btn btn-line" href="${esc(help)}" rel="noopener"${/^https?:/.test(help)?' target="_blank"':''}>Consultar este paquete</a>`}
+        <div class="pk-card-body">
+          <div class="pk-card-top">
+            <span class="pk-svc">${esc(k.serviceName)}</span>
+            ${savingPercent > 0 ? `<span class="pk-discount">AHORRA ${savingPercent}%</span>` : ''}
+          </div>
+          <h3>${esc(k.name)}</h3>
+          <p class="pk-desc">${esc(k.description||'Tu tratamiento, en varias sesiones para disfrutarlo con continuidad.')}</p>
+          <div class="pk-card-benefits">
+            <div><span>SESIONES INCLUIDAS</span><strong>${Number(k.sessions)||0}</strong></div>
+            <div><span>VIGENCIA</span><strong>${esc(validity(k.validDays))}</strong></div>
+          </div>
+          <div class="pk-card-bottom">
+            <span class="pk-price-label">TU INVERSIÓN</span>
+            <p class="pk-price">${M.fmtPrice(k.price)}</p>
+            ${savings > 0 ? `<p class="pk-save">Ahorras ${M.fmtPrice(savings)} <s>${M.fmtPrice(original)}</s></p>` : ''}
+            ${canPurchase() ? `<button type="button" class="btn btn-primary pk-main-action" data-pk="${esc(k.id)}">Elegir este paquete <span aria-hidden="true">↗</span></button>`
+            : `<a class="btn btn-line pk-main-action" href="${esc(help)}" rel="noopener"${/^https?:/.test(help)?' target="_blank"':''}>Consultar este paquete <span aria-hidden="true">↗</span></a>`}
+          </div>
         </div>
       </article>`;
     }).join('');
