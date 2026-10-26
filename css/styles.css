@@ -2459,33 +2459,33 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   color:#111111;
 }
 .regalos-page .mb-club-hero{
-  background:#ffffff;border:1px solid #dedede;
-  box-shadow:0 17px 48px rgba(0,0,0,.075),0 2px 8px rgba(0,0,0,.025);
+  background:#0b0b0b;border:1px solid #161616;
+  box-shadow:0 24px 59px rgba(0,0,0,.18),0 3px 12px rgba(0,0,0,.07);
 }
-.regalos-page .mb-club-hero-copy{background:#ffffff;color:#111111}
-.regalos-page .mb-club-hero h2{color:#111111}
-.regalos-page .mb-club-hero h2 em{color:#474747}
-.regalos-page .mb-club-eyebrow,.regalos-page .mb-club-hero-footnote{color:#555555}
-.regalos-page .mb-club-dot{background:#111111}
-.regalos-page .mb-club-hero-lead{color:#555555}
+.regalos-page .mb-club-hero-copy{background:#0b0b0b;color:#ffffff}
+.regalos-page .mb-club-hero h2{color:#ffffff}
+.regalos-page .mb-club-hero h2 em{color:#d3d3d3}
+.regalos-page .mb-club-eyebrow,.regalos-page .mb-club-hero-footnote{color:#eeeeee}
+.regalos-page .mb-club-dot{background:#ffffff;box-shadow:0 0 0 5px rgba(255,255,255,.11)}
+.regalos-page .mb-club-hero-lead{color:#e0e0e0}
 .regalos-page .mb-club-hero-cta{
-  color:#ffffff;background:#111111;border:1px solid #111111;
-  box-shadow:none;
+  color:#111111;background:#ffffff;border:1px solid #ffffff;
+  box-shadow:0 9px 20px rgba(0,0,0,.2);
 }
-.regalos-page .mb-club-hero-cta:hover{background:#303030;color:#ffffff}
-.regalos-page .mb-club-hero-cta:focus-visible{outline:3px solid #111111;outline-offset:4px}
+.regalos-page .mb-club-hero-cta:hover{background:#e4e4e4;color:#111111;border-color:#e4e4e4}
+.regalos-page .mb-club-hero-cta:focus-visible{outline:3px solid #ffffff;outline-offset:4px}
 .regalos-page .mb-club-hero-art{
-  background:radial-gradient(circle at 45% 35%,#333333 0%,#151515 52%,#050505 100%);
-  border-left:1px solid #dedede;
+  background:radial-gradient(circle at 42% 36%,#ffffff 0%,#eeeeee 60%,#cfcfcf 100%);
+  border-left:1px solid #626262;
 }
-.regalos-page .mb-club-hero-art::before{border-color:rgba(255,255,255,.25)}
-.regalos-page .mb-club-orbit{border-color:rgba(255,255,255,.25)}
-.regalos-page .mb-club-orbit-two{border-color:rgba(255,255,255,.12)}
-.regalos-page .mb-club-light{color:#f1f1f1}
-.regalos-page .mb-club-swan{filter:invert(1) contrast(1.15);mix-blend-mode:screen}
-.regalos-page .mb-club-art-caption{color:#ffffff}
+.regalos-page .mb-club-hero-art::before{border-color:rgba(0,0,0,.25)}
+.regalos-page .mb-club-orbit{border-color:rgba(0,0,0,.25)}
+.regalos-page .mb-club-orbit-two{border-color:rgba(0,0,0,.12)}
+.regalos-page .mb-club-light{color:#555555}
+.regalos-page .mb-club-swan{filter:contrast(1.2);mix-blend-mode:multiply}
+.regalos-page .mb-club-art-caption{color:#404040}
 
-/* Los tres cuadros de beneficios permanecen blancos: borde, ritmo y sombra. */
+/* Tarjetas elevadas sobre fondo blanco; una negra crea la jerarquía del Club. */
 .regalos-page .mb-club-features{gap:17px}
 .regalos-page .mb-club-features>div,
 .regalos-page .mb-club-features>div:nth-child(2){
@@ -2497,24 +2497,27 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   content:"";position:absolute;top:0;left:23px;width:50px;height:2px;
   background:#111111;border-radius:0 0 2px 2px;
 }
-.regalos-page .mb-club-features>div:nth-child(2)::before{background:#111111}
+.regalos-page .mb-club-features>div:nth-child(2){background:#111111;border-color:#111111;box-shadow:0 18px 37px rgba(0,0,0,.18)}
+.regalos-page .mb-club-features>div:nth-child(2)::before{background:#ffffff}
 .regalos-page .mb-club-feature-icon,
 .regalos-page .mb-club-features>div:nth-child(2) .mb-club-feature-icon{
   width:42px;height:42px;border:1px solid #e2e2e2;
   background:#f8f8f8;color:#111111;border-radius:12px;
 }
-.regalos-page .mb-club-features>div:nth-child(2) strong{color:#111111}
-.regalos-page .mb-club-features>div:nth-child(2)>div>span{color:#555555}
+.regalos-page .mb-club-features>div:nth-child(2) strong{color:#ffffff}
+.regalos-page .mb-club-features>div:nth-child(2)>div>span{color:#dfdfdf}
+
+.regalos-page .mb-club-features>div:nth-child(2) .mb-club-feature-icon{background:#303030;border-color:#777777;color:#ffffff}
 
 /* Planes: formato tarjeta de lujo en negro + ficha clara sobre lienzo blanco. */
 .regalos-page .mb-public-grid{gap:24px}
 .regalos-page .mb-pub-card.mb-pay-card{
-  background:#ffffff!important;border:1px solid #d1d1d1;border-radius:27px;
-  box-shadow:0 18px 43px rgba(0,0,0,.105),0 3px 10px rgba(0,0,0,.035);
+  background:#ffffff!important;border:1px solid #b9b9b9;border-radius:27px;
+  box-shadow:0 27px 57px rgba(0,0,0,.16),0 4px 13px rgba(0,0,0,.045);
 }
 .regalos-page .mb-pub-card.mb-pay-card:hover{
   transform:translateY(-4px);
-  box-shadow:0 25px 52px rgba(0,0,0,.145),0 4px 12px rgba(0,0,0,.045);
+  box-shadow:0 35px 67px rgba(0,0,0,.20),0 5px 16px rgba(0,0,0,.055);
 }
 .regalos-page .mb-pub-card.mb-pay-card:focus-within{border-color:#111111}
 .regalos-page .mb-plan-visual{
@@ -2560,34 +2563,34 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   outline:3px solid #111111;outline-offset:3px;
 }
 
-/* Espacio personal y FAQ: cuadros blancos claramente delimitados. */
+/* Espacio personal y FAQ: contraste editorial dentro del lienzo blanco. */
 .regalos-page .mb-public-empty{
-  background:#ffffff;border:1px solid #d4d4d4;color:#111111;
-  box-shadow:0 12px 29px rgba(0,0,0,.07);
+  background:linear-gradient(140deg,#252525,#0b0b0b);border:1px solid #111111;color:#ffffff;
+  box-shadow:0 25px 48px rgba(0,0,0,.18);
 }
-.regalos-page .mb-public-empty>span{color:#444444}
-.regalos-page .mb-public-empty h4,.regalos-page .mb-public-empty p{color:#111111}
-.regalos-page .mb-public-empty .btn{background:#111111;color:#ffffff;border-color:#111111}
+.regalos-page .mb-public-empty>span{color:#eeeeee}
+.regalos-page .mb-public-empty h4,.regalos-page .mb-public-empty p{color:#ffffff}
+.regalos-page .mb-public-empty .btn{background:#ffffff;color:#111111;border-color:#ffffff}
 .regalos-page .mb-public-account{
-  padding:clamp(21px,3vw,35px);border:1px solid #d6d6d6;
+  padding:clamp(20px,2.8vw,32px);border:1px solid #cacaca;
   border-radius:24px;background:#ffffff;
-  box-shadow:0 13px 35px rgba(0,0,0,.065);
+  box-shadow:0 22px 53px rgba(0,0,0,.11);
 }
 .regalos-page .mb-account-head{
-  padding:0 0 24px;border-bottom:1px solid #e4e4e4;
-  background:#ffffff;color:#111111;
+  padding:clamp(22px,3vw,34px);border:0;border-radius:18px;
+  background:linear-gradient(125deg,#0b0b0b,#292929);color:#ffffff;
 }
 .regalos-page .mb-account-avatar{
-  background:#111111;border:1px solid #111111;color:#ffffff;
+  background:#ffffff;border:1px solid #ffffff;color:#111111;
 }
-.regalos-page .mb-account-head .label{color:#666666}
-.regalos-page .mb-account-head h3{color:#111111}
-.regalos-page .mb-account-head p:not(.label){color:#555555}
+.regalos-page .mb-account-head .label{color:#e1e1e1}
+.regalos-page .mb-account-head h3{color:#ffffff}
+.regalos-page .mb-account-head p:not(.label){color:#dddddd}
 .regalos-page .mb-account-head .btn{
-  background:#111111!important;color:#ffffff!important;border:1px solid #111111!important;
+  background:#ffffff!important;color:#111111!important;border:1px solid #ffffff!important;
 }
-.regalos-page .mb-account-head .btn:hover{background:#303030!important}
-.regalos-page .mb-account-head .btn:focus-visible{outline:3px solid #111111;outline-offset:3px}
+.regalos-page .mb-account-head .btn:hover{background:#e7e7e7!important}
+.regalos-page .mb-account-head .btn:focus-visible{outline:3px solid #ffffff;outline-offset:3px}
 .regalos-page .mb-account-welcome{border-color:#dedede;background:#fafafa}
 .regalos-page .mb-account-prompt{
   background:#fafafa;border:1px solid #dedede;
@@ -2601,9 +2604,9 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .regalos-page .mb-receipt-item:hover{background:#f9f9f9;border-color:#777777}
 .regalos-page .mb-receipt-item:focus-visible{outline:2px solid #111111;outline-offset:3px}
 .regalos-page .mb-club-faq{
-  border:1px solid #dddddd;border-radius:24px;background:#ffffff;
+  border:1px solid #cccccc;border-radius:24px;background:#ffffff;
   padding:clamp(25px,3.7vw,43px);
-  box-shadow:0 10px 28px rgba(0,0,0,.05);
+  box-shadow:0 19px 44px rgba(0,0,0,.095);
 }
 .regalos-page .mb-club-faq-items details{border-color:#dddddd}
 .regalos-page .mb-club-faq-items summary{color:#111111}
@@ -2611,7 +2614,7 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .regalos-page .mb-public-terms{color:#555555}
 
 @media(max-width:760px){
-  .regalos-page .mb-club-hero-art{border-left:0;border-top:1px solid #dedede}
+  .regalos-page .mb-club-hero-art{border-left:0;border-top:1px solid #555555}
   .regalos-page .mb-club-features{gap:12px}
   .regalos-page .mb-club-features>div::before{left:18px}
   .regalos-page .mb-club-faq{padding:24px}
@@ -2620,7 +2623,7 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   .regalos-page .mb-club-hero-copy{padding:32px 24px}
   .regalos-page .mb-plan-price-row{padding:17px 15px}
   .regalos-page .mb-public-account{padding:22px 17px}
-  .regalos-page .mb-account-head{padding:0 0 20px}
+  .regalos-page .mb-account-head{padding:22px 18px}
   .regalos-page .mb-club-faq{padding:22px 19px}
 }
 @media(prefers-reduced-motion:reduce){.regalos-page .mb-receipt-item{transition:none}}
