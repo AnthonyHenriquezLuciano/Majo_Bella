@@ -15,9 +15,37 @@
         if (selected) link.setAttribute('aria-current', 'location');
         else link.removeAttribute('aria-current');
       });
+      // La opción principal CLUB MJOBELLA permanece destacada en cualquiera
+      // de sus tres secciones; dentro se destaca solamente el enlace elegido.
+      document.querySelectorAll('.nav-club-trigger, .mobile-club-trigger').forEach(trigger => {
+        if (isGiftPage) trigger.setAttribute('aria-current', 'location');
+        else trigger.removeAttribute('aria-current');
+      });
     };
     syncExperienceNavigation();
     window.addEventListener('hashchange', syncExperienceNavigation);
+    // <details> es navegable por teclado; en escritorio se abre también
+    // con el cursor, y se cierra al salir, hacer clic fuera o elegir opción.
+    document.querySelectorAll('.nav-club-details, .mobile-club-details').forEach(dropdown => {
+      if (dropdown.classList.contains('nav-club-details')) {
+        const desktopHover = window.matchMedia('(hover: hover) and (min-width: 1280px)');
+        dropdown.addEventListener('mouseenter', () => {
+          if (desktopHover.matches) dropdown.open = true;
+        });
+        dropdown.addEventListener('mouseleave', () => {
+          if (desktopHover.matches) dropdown.open = false;
+        });
+      }
+      dropdown.addEventListener('click', e => {
+        if (e.target.closest('.nav-club-submenu a, .mobile-club-submenu a')) dropdown.open = false;
+      });
+    });
+    document.addEventListener('click', e => {
+      document.querySelectorAll('.nav-club-details[open], .mobile-club-details[open]').forEach(d => {
+        if (!d.contains(e.target)) d.open = false;
+      });
+    });
+
 
     const btn = document.querySelector('.menu-toggle');
     const panel = document.getElementById('mobile-menu');
