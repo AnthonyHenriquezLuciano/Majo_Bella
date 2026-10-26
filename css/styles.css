@@ -2748,3 +2748,152 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   .regalos-page .mb-plan-visual-bottom>span{font-size:9px;letter-spacing:.14em;}
   .regalos-page .mb-plan-visual-bottom small::before{margin-bottom:11px;}
 }
+
+
+/* CLUB MAJOBELLA · hero blanco, acento dorado y movimiento accesible (2026-10-26). */
+/* La sección general sigue siendo blanca; solo el panel derecho cambia a blanco puro. */
+.regalos-page .mb-club-hero{
+  --mb-club-gold:#e2bf77;
+  --mb-club-gold-ink:#956c28;
+  box-shadow:0 24px 56px rgba(0,0,0,.17),0 3px 12px rgba(0,0,0,.06);
+}
+.regalos-page .mb-club-hero h2 em{
+  color:var(--mb-club-gold);
+  text-shadow:0 0 1px rgba(226,191,119,.14);
+  animation:mjbClubGoldBreathe 5.5s ease-in-out infinite alternate;
+}
+.regalos-page .mb-club-dot{
+  background:var(--mb-club-gold);
+  box-shadow:0 0 0 5px rgba(226,191,119,.15);
+}
+.regalos-page .mb-club-hero-art{
+  background:#ffffff;
+  background-image:none;
+  border-left:1px solid #d5b775;
+  color:#121212;
+}
+.regalos-page .mb-club-hero-art::before{
+  border-color:rgba(163,121,44,.34);
+}
+.regalos-page .mb-club-orbit{
+  border-color:rgba(163,121,44,.31);
+  animation:mjbClubOrbitOne 17s ease-in-out infinite alternate;
+}
+.regalos-page .mb-club-orbit-two{
+  border-color:rgba(163,121,44,.18);
+  animation:mjbClubOrbitTwo 21s ease-in-out infinite alternate;
+}
+.regalos-page .mb-club-light{
+  color:#ad8037;
+  text-shadow:0 0 13px rgba(226,191,119,.23);
+  animation:mjbClubTwinkle 5s ease-in-out infinite alternate;
+}
+.regalos-page .mb-club-light-b{animation-delay:-2.5s}
+.regalos-page .mb-club-swan{
+  filter:contrast(1.18);
+  mix-blend-mode:multiply;
+  animation:mjbClubSwanFloat 7s ease-in-out infinite alternate;
+}
+.regalos-page .mb-club-art-caption{
+  color:var(--mb-club-gold-ink);
+  font-weight:600;
+}
+/* Delicada interacción para dispositivos con ratón; sin transformar el contenedor. */
+@media(hover:hover) and (pointer:fine){
+  .regalos-page .mb-club-hero-cta{
+    transition:background-color .22s ease,color .22s ease,box-shadow .22s ease,transform .22s ease;
+  }
+  .regalos-page .mb-club-hero-cta:hover{
+    box-shadow:0 9px 23px rgba(226,191,119,.18);
+  }
+}
+@keyframes mjbClubGoldBreathe{
+  from{text-shadow:0 0 0 rgba(226,191,119,0)}
+  to{text-shadow:0 0 13px rgba(226,191,119,.2)}
+}
+@keyframes mjbClubOrbitOne{
+  from{transform:rotate(-24deg) scaleX(1.24)}
+  to{transform:rotate(-15deg) scaleX(1.24)}
+}
+@keyframes mjbClubOrbitTwo{
+  from{transform:rotate(22deg) scaleY(.72)}
+  to{transform:rotate(31deg) scaleY(.72)}
+}
+@keyframes mjbClubSwanFloat{
+  from{transform:translate(-50%,-50%) translateY(0)}
+  to{transform:translate(-50%,-50%) translateY(-7px)}
+}
+@keyframes mjbClubTwinkle{
+  from{opacity:.65;transform:scale(.94)}
+  to{opacity:1;transform:scale(1.07)}
+}
+/* Tablet y móvil: los elementos conservan proporciones y el encabezado respira. */
+@media(max-width:980px){
+  .regalos-page .mb-club-hero{
+    grid-template-columns:minmax(0,1fr);
+  }
+  .regalos-page .mb-club-hero-copy{
+    min-width:0;
+    padding:clamp(30px,5.3vw,55px);
+  }
+  .regalos-page .mb-club-hero h2{
+    max-width:16ch;
+    font-size:clamp(42px,6.4vw,67px);
+    text-wrap:balance;
+  }
+  .regalos-page .mb-club-hero-art{
+    min-height:300px;
+    border-left:0;
+    border-top:1px solid #d5b775;
+  }
+  .regalos-page .mb-club-swan{width:clamp(145px,20vw,190px)}
+  .regalos-page .mb-club-features{gap:12px}
+}
+@media(max-width:760px){
+  .regalos-page .mb-club-hero-art{min-height:260px}
+  .regalos-page .mb-club-features{grid-template-columns:minmax(0,1fr);gap:12px}
+  .regalos-page .mb-club-features>div{min-width:0}
+  .regalos-page .mb-club-hero-cta{min-height:48px;box-sizing:border-box}
+}
+@media(max-width:480px){
+  .regalos-page .mb-club-hero{
+    border-radius:24px;
+  }
+  .regalos-page .mb-club-hero-copy{
+    padding:clamp(23px,6vw,32px);
+  }
+  .regalos-page .mb-club-hero h2{
+    font-size:clamp(37px,10.4vw,48px);
+    max-width:13ch;
+    overflow-wrap:normal;
+  }
+  .regalos-page .mb-club-hero-lead{
+    font-size:15px;
+    line-height:1.65;
+  }
+  .regalos-page .mb-club-hero-art{min-height:225px}
+  .regalos-page .mb-club-swan{width:136px}
+  .regalos-page .mb-club-art-caption{
+    bottom:8%;
+    font-size:9px;
+    letter-spacing:.13em;
+  }
+  .regalos-page .mb-club-features>div{padding:17px}
+}
+@media(max-width:350px){
+  .regalos-page .mb-club-hero h2{font-size:35px}
+  .regalos-page .mb-club-hero-cta{gap:12px}
+  .regalos-page .mb-club-hero-art{min-height:205px}
+  .regalos-page .mb-club-swan{width:116px}
+}
+/* Accesibilidad, ahorro de energía y respeto a preferencias de movimiento. */
+@media(prefers-reduced-motion:reduce), (prefers-reduced-data:reduce){
+  .regalos-page .mb-club-hero h2 em,
+  .regalos-page .mb-club-orbit,
+  .regalos-page .mb-club-light,
+  .regalos-page .mb-club-swan{
+    animation:none!important;
+  }
+  .regalos-page .mb-club-hero-cta{transition:none!important}
+  .regalos-page .mb-club-hero-cta:hover{transform:none!important}
+}
