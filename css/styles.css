@@ -2627,3 +2627,123 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   .regalos-page .mb-club-faq{padding:22px 19px}
 }
 @media(prefers-reduced-motion:reduce){.regalos-page .mb-receipt-item{transition:none}}
+
+
+/* CLUB MAJOBELLA · fichas de membresía a altura completa y composición centrada.
+   Mantener el lienzo blanco: solo el panel visual es negro. */
+.regalos-page .mb-pub-card.mb-pay-card {
+  align-items:stretch; /* Neutraliza el align-items:flex-start de .mb-pub-card. */
+}
+.regalos-page .mb-plan-visual {
+  box-sizing:border-box;
+  align-self:stretch;
+  height:100%;
+  min-height:320px;
+  justify-content:flex-start;
+}
+.regalos-page .mb-plan-visual-top {
+  position:relative;
+  z-index:3;
+}
+.regalos-page .mb-plan-visual-center {
+  position:relative;
+  z-index:2;
+  flex:1;
+  min-width:0;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:clamp(16px,2vw,24px);
+  padding:clamp(28px,4vw,54px) 0 clamp(22px,3vw,38px);
+}
+.regalos-page .mb-plan-visual-center .mb-plan-visual-swan {
+  display:block;
+  position:relative;
+  inset:auto;
+  top:auto;
+  left:auto;
+  transform:none;
+  z-index:2;
+  width:clamp(88px,10vw,128px);
+  height:auto;
+  aspect-ratio:1;
+  object-fit:contain;
+  filter:invert(1) brightness(1.15);
+  mix-blend-mode:screen;
+  opacity:.94;
+}
+.regalos-page .mb-plan-visual-bottom {
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:clamp(12px,1.8vw,20px);
+  margin:0;
+  color:#ffffff;
+  text-align:center;
+}
+.regalos-page .mb-plan-visual-bottom>span {
+  max-width:100%;
+  font:600 clamp(9px,.9vw,11px)/1.5 system-ui,sans-serif;
+  letter-spacing:.19em;
+}
+.regalos-page .mb-plan-visual-bottom strong {
+  max-width:100%;
+  font:500 clamp(29px,3.5vw,46px)/1.14 var(--serif,"Source Serif 4",Georgia,serif);
+  letter-spacing:-.045em;
+  color:#ffffff;
+  overflow-wrap:anywhere;
+  text-wrap:balance;
+}
+.regalos-page .mb-plan-visual-bottom small {
+  font:500 10px/1.5 system-ui,sans-serif;
+  letter-spacing:.22em;
+  color:#e6e6e6;
+  opacity:1;
+}
+.regalos-page .mb-plan-visual-bottom small::before {
+  content:"";
+  display:block;
+  width:38px;
+  height:1px;
+  margin:0 auto 16px;
+  background:rgba(255,255,255,.74);
+}
+.regalos-page .mb-plan-visual-ring {
+  position:absolute;
+  z-index:0;
+  width:135%;
+  aspect-ratio:1;
+  left:-25%;
+  bottom:-84%;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:50%;
+  pointer-events:none;
+}
+.regalos-page .mb-star-one {top:28%;right:17%;font-size:28px;}
+.regalos-page .mb-star-two {top:auto;bottom:22%;left:12%;font-size:15px;opacity:.63;}
+/* Cuando existe un único plan, ambos lados respiran en equilibrio vertical. */
+.regalos-page .mb-public-grid.mb-single-plan .mb-plan-content {
+  justify-content:center;
+}
+.regalos-page .mb-public-grid.mb-single-plan .mb-plan-content .mb-card-actions {
+  margin-top:0;
+}
+@media(max-width:760px) {
+  .regalos-page .mb-plan-visual{height:auto;min-height:350px;}
+  .regalos-page .mb-plan-visual-center{gap:15px;padding:30px 0 22px;}
+  .regalos-page .mb-plan-visual-center .mb-plan-visual-swan{width:106px;}
+  .regalos-page .mb-plan-visual-bottom strong{font-size:clamp(28px,6.4vw,40px);}
+  .regalos-page .mb-star-one{top:26%;right:20%;}
+}
+@media(max-width:540px) {
+  .regalos-page .mb-plan-visual{min-height:330px;}
+  .regalos-page .mb-plan-visual-center{padding:23px 0 16px;gap:13px;}
+  .regalos-page .mb-plan-visual-center .mb-plan-visual-swan{width:90px;}
+  .regalos-page .mb-plan-visual-bottom{gap:10px;}
+  .regalos-page .mb-plan-visual-bottom>span{font-size:9px;letter-spacing:.14em;}
+  .regalos-page .mb-plan-visual-bottom small::before{margin-bottom:11px;}
+}
