@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" fill="none" aria-hidden="true">
+<title>Flor MajoBella</title>
+<g stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M240 244C177 191 161 145 187 103c17-28 48-38 53-67 5 29 36 39 53 67 26 42 10 88-53 141Z"/>
+<path d="M240 244C177 191 161 145 187 103c17-28 48-38 53-67 5 29 36 39 53 67 26 42 10 88-53 141Z" transform="rotate(60 240 244)"/>
+<path d="M240 244C177 191 161 145 187 103c17-28 48-38 53-67 5 29 36 39 53 67 26 42 10 88-53 141Z" transform="rotate(120 240 244)"/>
+<path d="M240 244C177 191 161 145 187 103c17-28 48-38 53-67 5 29 36 39 53 67 26 42 10 88-53 141Z" transform="rotate(180 240 244)"/>
+<path d="M240 244C177 191 161 145 187 103c17-28 48-38 53-67 5 29 36 39 53 67 26 42 10 88-53 141Z" transform="rotate(240 240 244)"/>
+<path d="M240 244C177 191 161 145 187 103c17-28 48-38 53-67 5 29 36 39 53 67 26 42 10 88-53 141Z" transform="rotate(300 240 244)"/>
+<circle cx="240" cy="244" r="24" stroke="#E2BF77" stroke-width="2.5"/>
+<circle cx="240" cy="244" r="9" stroke="#E2BF77" stroke-width="2"/>
+<path d="M240 253c17 62 3 108-23 166" opacity=".7"/>
+<path d="M233 341c-20-19-51-23-70-16 12 24 37 36 62 36" opacity=".7"/>
+</g>
+</svg>
