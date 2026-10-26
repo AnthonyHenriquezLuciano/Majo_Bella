@@ -1741,25 +1741,25 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 }
 
 
-/* CLUB MAJOBELLA · Identidad original: #442712, marfil, beige y cisne de la marca.
+/* CLUB MAJOBELLA · Identidad original: #333333, marfil, beige y cisne de la marca.
    Las fichas son HTML accesible, sin texto incrustado en una imagen. */
-.regalos-page .regal-hub{background:#fffdfb}
-.regalos-page .regal-hub-heading .label{color:#826047}
-.regalos-page .regal-hub-heading h1{color:#442712}
-.regalos-page .regal-hub-heading>p:last-child{color:#68594d}
+.regalos-page .regal-hub{background:#ffffff}
+.regalos-page .regal-hub-heading .label{color:#777777}
+.regalos-page .regal-hub-heading h1{color:#333333}
+.regalos-page .regal-hub-heading>p:last-child{color:#555555}
 .regalos-page .regal-hub-grid.regal-club-trio{
  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2.2vw,27px);
  align-items:stretch
 }
 .regalos-page .regal-club-card{
- --club-surface:#f6efe6;--club-ink:#442712;--club-line:rgba(68,39,18,.25);
- --club-ring:rgba(68,39,18,.17);
+ --club-surface:#f7f7f7;--club-ink:#333333;--club-line:rgba(0,0,0,.25);
+ --club-ring:rgba(0,0,0,.17);
  position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;
  aspect-ratio:3/4.35;min-height:420px;width:100%;padding:clamp(21px,2.7vw,35px);
  box-sizing:border-box;border:1px solid var(--club-line);
  border-radius:clamp(20px,2.4vw,28px);background:var(--club-surface);
  color:var(--club-ink);text-decoration:none;
- box-shadow:0 13px 26px rgba(68,39,18,.07);
+ box-shadow:0 13px 26px rgba(0,0,0,.07);
  transition:transform .26s ease,box-shadow .26s ease,border-color .26s ease
 }
 .regalos-page .regal-club-card::before{
@@ -1773,17 +1773,17 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
  border-radius:50%;pointer-events:none;z-index:-1
 }
 .regalos-page .regal-club-gift{
- --club-surface:#f7f0e7;--club-ink:#442712;
- background:radial-gradient(circle at 80% 18%,#fffaf3,#f7f0e7 68%,#efe1d3)
+ --club-surface:#ffffff;--club-ink:#111111;
+ background:#ffffff
 }
 .regalos-page .regal-club-membership{
- --club-surface:#442712;--club-ink:#f9f1e8;
- --club-line:rgba(255,243,228,.28);--club-ring:rgba(255,243,228,.21);
- background:radial-gradient(circle at 74% 26%,#5a3822,#442712 60%,#301a0d)
+ --club-surface:#111111;--club-ink:#ffffff;
+ --club-line:rgba(255,255,255,.28);--club-ring:rgba(255,255,255,.18);
+ background:#111111
 }
 .regalos-page .regal-club-packages{
- --club-surface:#e9d9c6;--club-ink:#442712;
- background:radial-gradient(circle at 20% 16%,#fbf4e9,#e9d9c6 65%,#dbc3a9)
+ --club-surface:#ffffff;--club-ink:#111111;
+ background:#ffffff
 }
 .regalos-page .club-card-top{display:flex;align-items:center;justify-content:space-between;
  position:relative;z-index:2;gap:8px}
@@ -1826,11 +1826,11 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
  border:1px solid var(--club-line);border-radius:50%;font:400 20px/1 Arial,sans-serif;
  transition:transform .28s ease,background-color .28s ease,color .28s ease}
 .regalos-page .regal-club-card:hover{transform:translateY(-5px);
- box-shadow:0 22px 39px rgba(68,39,18,.13);border-color:var(--club-ink)}
+ box-shadow:0 22px 39px rgba(0,0,0,.13);border-color:var(--club-ink)}
 .regalos-page .regal-club-card:hover .club-card-emblem{transform:scale(1.05)}
 .regalos-page .regal-club-card:hover .club-card-arrow{transform:translate(2px,-2px);
  background:var(--club-ink);color:var(--club-surface)}
-.regalos-page .regal-club-card:focus-visible{outline:3px solid #442712;outline-offset:4px}
+.regalos-page .regal-club-card:focus-visible{outline:3px solid #333333;outline-offset:4px}
 @media(max-width:1050px){
  .regalos-page .regal-club-card{min-height:385px;padding:21px}
  .regalos-page .club-card-title{font-size:clamp(23px,3vw,33px)}
@@ -2143,10 +2143,10 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .regalos-page #club{scroll-margin-top:95px}
 
 
-/* MAJOBELLA CLUB · Membresías 2.0 · experiencia editorial luminosa */
+/* MAJOBELLA CLUB · Membresías 2.0 · identidad únicamente blanco y negro */
 .regalos-page .mb-public{
-  --mb-ink:#231d19;--mb-cream:#fbf7f0;--mb-sand:#efe6d8;--mb-line:#e5ded5;
-  background:linear-gradient(180deg,#fffefb 0%,#f7f5f1 55%,#fffdf9 100%);
+  --mb-ink:#111111;--mb-cream:#f7f7f7;--mb-sand:#f7f7f7;--mb-line:#eaeaea;
+  background:linear-gradient(180deg,#ffffff 0%,#f7f7f7 55%,#ffffff 100%);
   padding:clamp(50px,7vw,96px) 0 clamp(50px,6vw,86px);
   color:var(--mb-ink);
 }
@@ -2154,27 +2154,27 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .regalos-page .mb-club-wrap{max-width:1220px}
 .regalos-page .mb-club-hero{
   display:grid;grid-template-columns:1.12fr .88fr;min-height:355px;
-  border-radius:clamp(21px,3vw,34px);background:#f3e9dd;overflow:hidden;position:relative;
-  border:1px solid #e9ddce;
-  box-shadow:0 16px 45px rgba(54,39,25,.055)
+  border-radius:clamp(21px,3vw,34px);background:#ffffff;overflow:hidden;position:relative;
+  border:1px solid #eaeaea;
+  box-shadow:0 16px 45px rgba(0,0,0,.055)
 }
 .regalos-page .mb-club-hero-copy{
   display:flex;flex-direction:column;align-items:flex-start;
   padding:clamp(34px,5vw,67px);position:relative;z-index:1;
 }
 .regalos-page .mb-club-eyebrow,.regalos-page .mb-club-hero-footnote{
-  font:600 10px/1.5 system-ui,sans-serif;letter-spacing:.19em;color:#6d5544;
+  font:600 10px/1.5 system-ui,sans-serif;letter-spacing:.19em;color:#555555;
 }
 .regalos-page .mb-club-eyebrow{display:flex;align-items:center;gap:11px;margin:0 0 23px}
-.regalos-page .mb-club-dot{width:7px;height:7px;border-radius:50%;background:#8c6b53}
+.regalos-page .mb-club-dot{width:7px;height:7px;border-radius:50%;background:#777777}
 .regalos-page .mb-club-hero h2{
   font:400 clamp(42px,5.5vw,75px)/1.02 var(--serif,"Source Serif 4",Georgia,serif);
-  letter-spacing:-.052em;color:#201c18;max-width:11ch;margin:0 0 18px
+  letter-spacing:-.052em;color:#111111;max-width:11ch;margin:0 0 18px
 }
-.regalos-page .mb-club-hero h2 em{font-weight:400;font-style:italic;color:#70523a}
+.regalos-page .mb-club-hero h2 em{font-weight:400;font-style:italic;color:#555555}
 .regalos-page .mb-club-hero-lead{
   font:400 clamp(15px,1.55vw,18px)/1.7 var(--serif,"Source Serif 4",Georgia,serif);
-  color:#54483f;max-width:47ch;margin:0 0 25px
+  color:#555555;max-width:47ch;margin:0 0 25px
 }
 .regalos-page .mb-club-hero-cta{
   display:inline-flex;align-items:center;gap:35px;background:#141414;color:#fff;
@@ -2182,23 +2182,23 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   font:600 11px/1.5 system-ui,sans-serif;letter-spacing:.035em;
   transition:transform .22s ease,background-color .22s ease
 }
-.regalos-page .mb-club-hero-cta:hover{background:#442712;transform:translateY(-2px)}
+.regalos-page .mb-club-hero-cta:hover{background:#333333;transform:translateY(-2px)}
 .regalos-page .mb-club-hero-cta:focus-visible{outline:3px solid #111;outline-offset:4px}
 .regalos-page .mb-club-hero-cta span{font-size:17px;font-weight:400}
 .regalos-page .mb-club-hero-footnote{margin:auto 0 0;padding-top:30px;opacity:.75}
 .regalos-page .mb-club-hero-art{
   isolation:isolate;position:relative;overflow:hidden;min-height:330px;
-  background:radial-gradient(circle at 40% 45%,#fffdf6,#e8dccb 64%,#d6c3ad)
+  background:radial-gradient(circle at 40% 35%,#ffffff 0%,#f3f3f3 60%,#e7e7e7 100%)
 }
 .regalos-page .mb-club-hero-art::before{
-  content:"";position:absolute;inset:8%;border:1px solid rgba(113,83,57,.3);
+  content:"";position:absolute;inset:8%;border:1px solid rgba(0,0,0,.3);
   border-radius:50%;transform:scale(1.1);pointer-events:none
 }
-.regalos-page .mb-club-orbit{position:absolute;inset:16%;border:1px solid rgba(122,92,69,.27);
+.regalos-page .mb-club-orbit{position:absolute;inset:16%;border:1px solid rgba(0,0,0,.27);
   border-radius:50%;transform:rotate(-24deg) scaleX(1.24)}
 .regalos-page .mb-club-orbit-two{inset:5%;transform:rotate(22deg) scaleY(.72);
   border-color:rgba(255,255,255,.68)}
-.regalos-page .mb-club-light{position:absolute;z-index:2;line-height:1;color:#a88762}
+.regalos-page .mb-club-light{position:absolute;z-index:2;line-height:1;color:#999999}
 .regalos-page .mb-club-light-a{font-size:46px;top:20%;right:19%}
 .regalos-page .mb-club-light-b{font-size:28px;bottom:26%;left:18%}
 .regalos-page .mb-club-swan{
@@ -2208,35 +2208,35 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 }
 .regalos-page .mb-club-art-caption{position:absolute;z-index:3;bottom:10%;left:50%;
   transform:translateX(-50%);white-space:nowrap;letter-spacing:.2em;text-transform:uppercase;
-  font:500 10px/1.5 system-ui,sans-serif;color:#5e4939}
+  font:500 10px/1.5 system-ui,sans-serif;color:#555555}
 .regalos-page .mb-club-features{
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;
   margin:16px 0 clamp(46px,6vw,80px)
 }
 .regalos-page .mb-club-features>div{
   display:flex;align-items:flex-start;gap:16px;min-height:100px;padding:22px;
-  background:#fff;border:1px solid #eee9e1;border-radius:18px
+  background:#fff;border:1px solid #f7f7f7;border-radius:18px
 }
 .regalos-page .mb-club-feature-icon{
   display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:12px;
-  background:#f3e9dc;color:#442712;font:24px/1 Georgia,serif
+  background:#f7f7f7;color:#333333;font:24px/1 Georgia,serif
 }
 .regalos-page .mb-club-features>div>div{display:grid;gap:6px}
-.regalos-page .mb-club-features strong{font:600 17px/1.28 var(--serif,Georgia,serif);color:#28211b}
+.regalos-page .mb-club-features strong{font:600 17px/1.28 var(--serif,Georgia,serif);color:#111111}
 .regalos-page .mb-club-features>div>div>span{
-  font:400 13px/1.55 var(--serif,Georgia,serif);color:#6b6259
+  font:400 13px/1.55 var(--serif,Georgia,serif);color:#555555
 }
 .regalos-page .mb-club-plans-heading{
   display:flex;align-items:end;justify-content:space-between;gap:25px;
   margin-bottom:23px
 }
-.regalos-page .mb-club-plans-heading .label{margin:0 0 11px;color:#88715d}
+.regalos-page .mb-club-plans-heading .label{margin:0 0 11px;color:#777777}
 .regalos-page .mb-club-plans-heading h3{
   font:500 clamp(30px,4vw,47px)/1.13 var(--serif,Georgia,serif);
-  letter-spacing:-.035em;color:#1e1a16;margin:0
+  letter-spacing:-.035em;color:#111111;margin:0
 }
 .regalos-page .mb-club-plans-heading>p{
-  color:#6b5f54;max-width:35ch;font:400 15px/1.6 var(--serif,Georgia,serif);margin:0
+  color:#555555;max-width:35ch;font:400 15px/1.6 var(--serif,Georgia,serif);margin:0
 }
 .regalos-page #mb-public-list{scroll-margin-top:110px}
 .regalos-page .mb-public-grid{
@@ -2246,12 +2246,12 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .regalos-page .mb-public-grid.mb-single-plan{grid-template-columns:minmax(0,1fr)}
 .regalos-page .mb-pub-card.mb-pay-card{
   display:grid;grid-template-columns:minmax(0,1fr);gap:0;min-width:0;padding:0;
-  border:1px solid #e8dfd4;border-radius:27px;background:#fff!important;overflow:hidden;
-  box-shadow:0 22px 56px rgba(57,42,26,.08);
+  border:1px solid #eaeaea;border-radius:27px;background:#fff!important;overflow:hidden;
+  box-shadow:0 22px 56px rgba(0,0,0,.08);
   transition:transform .24s ease,box-shadow .24s ease
 }
 .regalos-page .mb-pub-card.mb-pay-card:hover{
-  transform:translateY(-3px);box-shadow:0 28px 62px rgba(57,42,26,.12)
+  transform:translateY(-3px);box-shadow:0 28px 62px rgba(0,0,0,.12)
 }
 .regalos-page .mb-public-grid.mb-single-plan .mb-pub-card.mb-pay-card{
   grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);min-height:450px
@@ -2259,11 +2259,11 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .regalos-page .mb-plan-visual{
   display:flex;flex-direction:column;justify-content:space-between;
   position:relative;isolation:isolate;overflow:hidden;min-height:280px;
-  padding:clamp(24px,3vw,37px);background:linear-gradient(145deg,#f0e5d7,#e5d2bc);
+  padding:clamp(24px,3vw,37px);background:linear-gradient(145deg,#ffffff,#ededed);
 }
 .regalos-page .mb-plan-visual::before{
   content:"";position:absolute;z-index:-1;width:85%;aspect-ratio:1;
-  border:1px solid rgba(98,70,49,.25);border-radius:50%;left:50%;top:34%;
+  border:1px solid rgba(0,0,0,.25);border-radius:50%;left:50%;top:34%;
   transform:translate(-50%,-50%)
 }
 .regalos-page .mb-plan-visual::after{
@@ -2272,15 +2272,15 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   transform:translate(-50%,-50%)
 }
 .regalos-page .mb-plan-visual-top{display:flex;align-items:center;justify-content:space-between;
-  gap:10px;font:600 10px/1.3 system-ui,sans-serif;letter-spacing:.17em;color:#523e2e}
+  gap:10px;font:600 10px/1.3 system-ui,sans-serif;letter-spacing:.17em;color:#555555}
 .regalos-page .mb-plan-visual-top span:last-child{font-size:9px;letter-spacing:.08em;opacity:.8}
 .regalos-page .mb-plan-visual-swan{display:block;position:absolute;z-index:-1;width:112px;
   height:112px;top:37%;left:50%;transform:translate(-50%,-50%);
   mix-blend-mode:multiply;object-fit:contain}
-.regalos-page .mb-plan-visual-star{position:absolute;z-index:1;color:#94744e}
+.regalos-page .mb-plan-visual-star{position:absolute;z-index:1;color:#777777}
 .regalos-page .mb-star-one{top:23%;right:20%;font-size:34px}
 .regalos-page .mb-star-two{top:48%;left:17%;font-size:20px}
-.regalos-page .mb-plan-visual-bottom{display:grid;gap:10px;margin-top:auto;color:#32251d}
+.regalos-page .mb-plan-visual-bottom{display:grid;gap:10px;margin-top:auto;color:#333333}
 .regalos-page .mb-plan-visual-bottom>span{font:600 10px/1.5 system-ui,sans-serif;letter-spacing:.15em}
 .regalos-page .mb-plan-visual-bottom strong{
   font:500 clamp(28px,3.1vw,43px)/1.12 var(--serif,Georgia,serif);
@@ -2291,44 +2291,44 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 }
 .regalos-page .mb-plan-content{
   min-width:0;display:flex;flex-direction:column;gap:19px;padding:clamp(27px,3.8vw,48px);
-  background:linear-gradient(180deg,#fff,#fffdfa)
+  background:linear-gradient(180deg,#fff,#ffffff)
 }
 .regalos-page .mb-plan-heading{display:grid;gap:11px}
 .regalos-page .mb-plan-eyebrow{display:flex;align-items:center;gap:8px;
-  font:600 10px/1.4 system-ui,sans-serif;letter-spacing:.16em;color:#755b48}
-.regalos-page .mb-plan-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#9f8068}
+  font:600 10px/1.4 system-ui,sans-serif;letter-spacing:.16em;color:#555555}
+.regalos-page .mb-plan-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#777777}
 .regalos-page .mb-plan-heading h4{
   font:500 clamp(30px,3.5vw,43px)/1.1 var(--serif,Georgia,serif);
-  margin:0;letter-spacing:-.04em;color:#211c18;overflow-wrap:anywhere
+  margin:0;letter-spacing:-.04em;color:#111111;overflow-wrap:anywhere
 }
 .regalos-page .mb-plan-heading .mb-pub-desc{
-  font:400 15px/1.65 var(--serif,Georgia,serif);color:#74665a;white-space:normal
+  font:400 15px/1.65 var(--serif,Georgia,serif);color:#777777;white-space:normal
 }
 .regalos-page .mb-plan-price-row{
   display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:20px;
-  align-items:end;padding:17px 0;border-block:1px solid #eee8e1
+  align-items:end;padding:17px 0;border-block:1px solid #f7f7f7
 }
 .regalos-page .mb-plan-price-label{grid-column:1/-1;font:600 10px/1.4 system-ui,sans-serif;
-  letter-spacing:.14em;color:#8a7867;margin:0 0 6px}
+  letter-spacing:.14em;color:#777777;margin:0 0 6px}
 .regalos-page .mb-plan-price-row .mb-pub-price{
   font:600 clamp(27px,3.5vw,39px)/1.2 var(--serif,Georgia,serif);
-  margin:0;color:#1d1a17;white-space:nowrap
+  margin:0;color:#111111;white-space:nowrap
 }
 .regalos-page .mb-plan-price-row .mb-pub-price small{
-  font:400 14px/1.5 var(--serif,Georgia,serif);color:#706357
+  font:400 14px/1.5 var(--serif,Georgia,serif);color:#777777
 }
 .regalos-page .mb-plan-included{display:flex;align-items:center;gap:10px;border-radius:12px;
-  background:#f4ebdf;padding:10px 13px}
-.regalos-page .mb-plan-included>strong{font:600 33px/1 var(--serif,Georgia,serif);color:#39291e}
-.regalos-page .mb-plan-included>span{font:600 12px/1.35 var(--serif,Georgia,serif);color:#4a3529}
-.regalos-page .mb-plan-included small{display:block;font-size:11px;font-weight:400;color:#796b5f}
+  background:#f7f7f7;padding:10px 13px}
+.regalos-page .mb-plan-included>strong{font:600 33px/1 var(--serif,Georgia,serif);color:#333333}
+.regalos-page .mb-plan-included>span{font:600 12px/1.35 var(--serif,Georgia,serif);color:#333333}
+.regalos-page .mb-plan-included small{display:block;font-size:11px;font-weight:400;color:#777777}
 .regalos-page .mb-plan-content .mb-card-benefits{
   display:grid;gap:10px;border:0;padding:0;margin:0
 }
-.regalos-page .mb-plan-content .mb-card-benefits>span{color:#887160}
+.regalos-page .mb-plan-content .mb-card-benefits>span{color:#777777}
 .regalos-page .mb-plan-content .mb-card-benefits ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 16px}
 .regalos-page .mb-plan-content .mb-card-benefits li{font:400 13.5px/1.5 var(--serif,Georgia,serif)}
-.regalos-page .mb-plan-content .mb-card-benefits li::before{content:"✓";color:#80634a}
+.regalos-page .mb-plan-content .mb-card-benefits li::before{content:"✓";color:#777777}
 .regalos-page .mb-plan-content .mb-card-actions{display:grid;gap:12px;margin-top:auto;padding:0}
 .regalos-page .mb-plan-main-action{
   display:flex!important;align-items:center;justify-content:space-between!important;
@@ -2337,14 +2337,14 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   font:600 12px/1.45 system-ui,sans-serif!important;letter-spacing:.02em!important;
   text-align:left!important;transition:background-color .22s ease,transform .22s ease
 }
-.regalos-page .mb-plan-main-action:hover{background:#442712!important;transform:translateY(-1px)}
+.regalos-page .mb-plan-main-action:hover{background:#333333!important;transform:translateY(-1px)}
 .regalos-page .mb-plan-main-action span{font-size:19px;font-weight:400}
-.regalos-page .mb-plan-content .mb-pay-small{font:400 12px/1.6 var(--serif,Georgia,serif);color:#73655a}
-.regalos-page .mb-plan-content .mb-pay-small strong{font-weight:600;color:#2c2420}
+.regalos-page .mb-plan-content .mb-pay-small{font:400 12px/1.6 var(--serif,Georgia,serif);color:#777777}
+.regalos-page .mb-plan-content .mb-pay-small strong{font-weight:600;color:#111111}
 .regalos-page .mb-plan-secondary-action{
   justify-self:start;cursor:pointer;display:inline-flex;gap:12px;align-items:center;
-  border:0;border-bottom:1px solid #b8aa9c;padding:7px 0;margin:0;
-  width:max-content;max-width:100%;color:#493d34;background:transparent;
+  border:0;border-bottom:1px solid #c7c7c7;padding:7px 0;margin:0;
+  width:max-content;max-width:100%;color:#333333;background:transparent;
   font:500 12px/1.5 system-ui,sans-serif
 }
 .regalos-page .mb-plan-secondary-action:hover{color:#111;border-color:#111}
@@ -2352,15 +2352,15 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .regalos-page .mb-public-msg:not(:empty){margin:12px 0 20px;padding:14px 18px;
   border-radius:13px;font:400 14px/1.55 var(--serif,Georgia,serif)}
 .regalos-page .mb-public-account{
-  padding:clamp(22px,3vw,37px);border:1px solid #ece4da;border-radius:21px;
-  background:#fff;margin:22px 0 0;box-shadow:0 10px 26px rgba(40,30,18,.035)
+  padding:clamp(22px,3vw,37px);border:1px solid #f7f7f7;border-radius:21px;
+  background:#fff;margin:22px 0 0;box-shadow:0 10px 26px rgba(0,0,0,.035)
 }
 .regalos-page .mb-account-head{margin:0;display:flex;align-items:center;
   justify-content:space-between;gap:20px}
 .regalos-page .mb-account-ident{display:flex;align-items:center;gap:18px}
 .regalos-page .mb-account-avatar{flex:none;display:grid;place-items:center;width:54px;
-  height:54px;border-radius:50%;background:#f3e8dc;color:#806044;font:30px/1 Georgia,serif}
-.regalos-page .mb-account-head .label{color:#816b59;font-size:10px}
+  height:54px;border-radius:50%;background:#f7f7f7;color:#777777;font:30px/1 Georgia,serif}
+.regalos-page .mb-account-head .label{color:#777777;font-size:10px}
 .regalos-page .mb-account-head h3{margin:4px 0 4px;font-size:27px}
 .regalos-page .mb-account-head .btn{
   flex:none;border-radius:10px!important;white-space:nowrap;
@@ -2369,39 +2369,39 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .regalos-page .mb-account-head .btn span{margin-left:11px}
 .regalos-page .mb-account-welcome{margin:20px 0 9px}
 .regalos-page #mb-mine{display:grid;gap:10px;margin:12px 0 0}
-.regalos-page .mb-account-prompt{background:#faf7f2;padding:14px 18px;margin:0;
-  border:1px dashed #e2d8cc;border-radius:12px;color:#6d6258}
+.regalos-page .mb-account-prompt{background:#f7f7f7;padding:14px 18px;margin:0;
+  border:1px dashed #eaeaea;border-radius:12px;color:#555555}
 .regalos-page .mb-payment-history{margin:18px 0 0}
 .regalos-page .mb-club-faq{
   display:grid;grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);
-  gap:clamp(25px,5vw,72px);border-top:1px solid #e8e2da;
+  gap:clamp(25px,5vw,72px);border-top:1px solid #eaeaea;
   margin:clamp(45px,6vw,72px) 0 0;padding-top:clamp(28px,4vw,45px)
 }
-.regalos-page .mb-club-faq-intro .label{color:#8a7463;margin:0 0 14px}
+.regalos-page .mb-club-faq-intro .label{color:#777777;margin:0 0 14px}
 .regalos-page .mb-club-faq-intro h3{font:500 clamp(26px,3vw,37px)/1.2 var(--serif,Georgia,serif);
-  color:#211d19;max-width:15ch;margin:0}
+  color:#111111;max-width:15ch;margin:0}
 .regalos-page .mb-club-faq-items{display:grid;gap:0}
-.regalos-page .mb-club-faq-items details{border-bottom:1px solid #e5dbd0}
+.regalos-page .mb-club-faq-items details{border-bottom:1px solid #eaeaea}
 .regalos-page .mb-club-faq-items summary{
   display:flex;align-items:center;justify-content:space-between;gap:18px;
   padding:17px 0;list-style:none;cursor:pointer;
-  font:600 16px/1.4 var(--serif,Georgia,serif);color:#2c2520
+  font:600 16px/1.4 var(--serif,Georgia,serif);color:#333333
 }
 .regalos-page .mb-club-faq-items summary::-webkit-details-marker{display:none}
 .regalos-page .mb-club-faq-items summary::after{content:"+";font:400 25px/1 system-ui,sans-serif}
 .regalos-page .mb-club-faq-items details[open] summary::after{content:"−"}
 .regalos-page .mb-club-faq-items p{
-  margin:0 0 19px;font:400 14px/1.7 var(--serif,Georgia,serif);color:#75695d;max-width:64ch
+  margin:0 0 19px;font:400 14px/1.7 var(--serif,Georgia,serif);color:#777777;max-width:64ch
 }
 .regalos-page .mb-club-faq-items summary:focus-visible{outline:2px solid #111;outline-offset:4px}
 .regalos-page .mb-public-terms{font:400 12px/1.65 var(--serif,Georgia,serif);
-  color:#80756b;max-width:95ch;margin:24px 0 0}
+  color:#777777;max-width:95ch;margin:24px 0 0}
 .regalos-page .mb-public-empty{
   text-align:center;display:grid;justify-items:center;gap:14px;padding:60px 20px;
-  background:linear-gradient(145deg,#fff,#f2e8da);border:1px solid #e5d8c9;
-  border-radius:25px;color:#362c25
+  background:linear-gradient(145deg,#fff,#f7f7f7);border:1px solid #eaeaea;
+  border-radius:25px;color:#333333
 }
-.regalos-page .mb-public-empty>span{font-size:52px;color:#a68a6d}
+.regalos-page .mb-public-empty>span{font-size:52px;color:#999999}
 .regalos-page .mb-public-empty h4{font:500 32px/1.2 var(--serif,Georgia,serif);margin:0}
 .regalos-page .mb-public-empty p{font:400 15px/1.6 var(--serif,Georgia,serif);max-width:47ch;margin:0 0 7px}
 @media(max-width:1000px){
