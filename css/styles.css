@@ -1808,23 +1808,8 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   .regalos-page .regal-approved-trio .regal-art-card:hover{transform:none}
 }
 
-/* MAJOBELLA · Estado activo por sección de regalos, membresía y paquetes */
-.main-nav a[aria-current="location"], .mobile-menu a[aria-current="location"] {
- text-decoration:underline;
- text-underline-offset:6px;
- text-decoration-thickness:1px;
-}
-.main-nav a[href*="regalos.html#"][aria-current="location"]{
- text-decoration:none;
- position:relative;
-}
-.main-nav a[href*="regalos.html#"][aria-current="location"]::after{
- content:"";position:absolute;left:0;right:0;bottom:-7px;height:1px;
- background:currentColor;
-}
-@media(max-width:1100px){
- .main-nav a[href*="regalos.html#"][aria-current="location"]::after{bottom:-5px}
-}
+/* CLUB MAJOBELLA: aria-current conserva la ubicación para accesibilidad;
+   el subrayado se anima solamente al interactuar, no queda fijo. */
 
 /* Reservar cita: grupos nativos desplegables, accesibles con teclado */
 .booking-section details.bk-service-category{padding:0;overflow:hidden;border:1px solid #dedede}
@@ -1866,9 +1851,18 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .main-nav .nav-club{position:relative}
 .main-nav .nav-club-details{position:relative}
 .main-nav .nav-club-trigger{
- display:inline-flex;align-items:center;gap:9px;min-height:36px;padding:6px 0;
+ position:relative;display:inline-flex;align-items:center;gap:9px;min-height:36px;padding:6px 0;
  cursor:pointer;list-style:none;color:var(--text);font:400 12px/1.4 var(--sans,Arial,sans-serif);
  letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;
+}
+.main-nav .nav-club-trigger::after{
+ content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
+ background:currentColor;transform:scaleX(0);transform-origin:right;
+ transition:transform .6s var(--ease);
+}
+.main-nav .nav-club-trigger:hover::after,
+.main-nav .nav-club-trigger:focus-visible::after{
+ transform:scaleX(1);transform-origin:left;
 }
 .main-nav .nav-club-trigger::-webkit-details-marker,.mobile-club-trigger::-webkit-details-marker{display:none}
 .main-nav .nav-club-trigger:focus-visible,.mobile-club-trigger:focus-visible{
@@ -1881,36 +1875,70 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .mobile-club-details[open] > .mobile-club-trigger .nav-club-chevron{
  transform:translateY(2px) rotate(225deg);
 }
-.main-nav .nav-club-trigger[aria-current="location"]{
- text-decoration:underline;text-underline-offset:7px;text-decoration-thickness:1px;
-}
 .main-nav .nav-club-submenu{position:absolute;z-index:100;top:100%;left:-15px;
  min-width:225px;display:grid;gap:2px;padding:12px 8px 8px;
  background:#fff;border:1px solid #dedede;border-radius:12px;
  box-shadow:0 18px 45px rgba(0,0,0,.11);
 }
 .main-nav .nav-club-submenu a{
- display:block;padding:12px 11px;border-radius:7px;
- font:600 15px/1.35 var(--serif,"Source Serif 4",Georgia,serif);
- letter-spacing:normal;text-transform:none;color:#111;
+ display:block;padding:12px 11px;border-radius:7px;text-decoration:none;
+ font:400 12px/1.45 var(--sans,Arial,sans-serif);
+ letter-spacing:.12em;text-transform:uppercase;color:#111;
+}
+.main-nav .nav-club-submenu a > span{
+ position:relative;display:inline-block;
+}
+.main-nav .nav-club-submenu a > span::after{
+ content:"";position:absolute;left:0;right:0;bottom:-4px;height:1px;
+ background:currentColor;transform:scaleX(0);transform-origin:right;
+ transition:transform .6s var(--ease);
+}
+.main-nav .nav-club-submenu a:hover > span::after,
+.main-nav .nav-club-submenu a:focus-visible > span::after{
+ transform:scaleX(1);transform-origin:left;
 }
 .main-nav .nav-club-submenu a:hover,.main-nav .nav-club-submenu a:focus-visible{
  background:#f5f5f5;text-decoration:none;outline-offset:0;
 }
 .main-nav .nav-club-submenu a::after{display:none}
-.main-nav .nav-club-submenu a[aria-current="location"]{background:#f4f4f4;text-decoration:underline;
- text-underline-offset:4px;text-decoration-thickness:1px}
-.mobile-menu .mobile-club-trigger{display:flex;align-items:center;justify-content:space-between;
+.main-nav .nav-club-submenu a:is([aria-current="location"],[aria-current="page"]){
+ text-decoration:none;background:transparent;
+}
+.mobile-menu .mobile-club-trigger{position:relative;display:flex;align-items:center;justify-content:space-between;
  gap:15px;padding:16px 0;cursor:pointer;list-style:none;color:var(--ink);font-size:26px;line-height:1.35}
 .mobile-menu .mobile-club-trigger .nav-club-chevron{width:11px;height:11px;margin-right:7px}
-.mobile-menu .mobile-club-trigger[aria-current="location"]{text-decoration:underline;text-underline-offset:7px}
+.mobile-menu .mobile-club-trigger::after{
+ content:"";position:absolute;left:0;right:0;bottom:12px;height:1px;background:currentColor;
+ transform:scaleX(0);transform-origin:right;transition:transform .6s var(--ease);
+}
+.mobile-menu .mobile-club-trigger:hover::after,
+.mobile-menu .mobile-club-trigger:focus-visible::after{
+ transform:scaleX(1);transform-origin:left;
+}
 .mobile-menu .mobile-club-submenu{display:grid;gap:0;padding:0 0 12px 18px;
  border-left:1px solid #ccc;margin:0 0 12px 4px}
 .mobile-menu .mobile-club-submenu a{display:block;padding:12px 14px;
- font:600 20px/1.4 var(--serif,"Source Serif 4",Georgia,serif);color:#333;text-decoration:none}
-.mobile-menu .mobile-club-submenu a[aria-current="location"]{text-decoration:underline;text-underline-offset:5px}
+ font:400 17px/1.5 var(--sans,Arial,sans-serif);letter-spacing:.09em;
+ text-transform:uppercase;color:#333;text-decoration:none}
+.mobile-menu .mobile-club-submenu a:is([aria-current="location"],[aria-current="page"]){text-decoration:none}
+.mobile-menu .mobile-club-submenu a > span{position:relative;display:inline-block}
+.mobile-menu .mobile-club-submenu a > span::after{
+ content:"";position:absolute;left:0;right:0;bottom:-4px;height:1px;
+ background:currentColor;transform:scaleX(0);transform-origin:right;
+ transition:transform .6s var(--ease);
+}
+.mobile-menu .mobile-club-submenu a:hover > span::after,
+.mobile-menu .mobile-club-submenu a:focus-visible > span::after{
+ transform:scaleX(1);transform-origin:left;
+}
 @media(min-width:1280px) and (max-width:1510px){
  .main-nav .nav-club-trigger{font-size:12px;letter-spacing:.01em}
+}
+@media(prefers-reduced-motion:reduce){
+ .main-nav .nav-club-trigger::after,
+ .main-nav .nav-club-submenu a > span::after,
+ .mobile-menu .mobile-club-trigger::after,
+ .mobile-menu .mobile-club-submenu a > span::after{transition:none}
 }
 
 /* Servicios con opciones: mismas proporciones y estilo que los servicios individuales */
