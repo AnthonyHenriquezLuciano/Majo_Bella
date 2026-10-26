@@ -12,28 +12,55 @@
  const safeDate=x=>x?new Date(x+'T12:00:00Z').toLocaleDateString('es-DO',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}):'—';
  function render(){
    plans=M.membershipPlans||[];
-   if(!$('membresias'))return;
-   $('membresias').hidden=false;
-   $('mb-public-list').innerHTML=plans.length?plans.map(p=>{
+   const area=$('membresias'),grid=$('mb-public-list');
+   if(!area||!grid)return;
+   area.hidden=false;
+   grid.classList.toggle('mb-single-plan',plans.length===1);
+   grid.innerHTML=plans.length?plans.map((p,i)=>{
      const benefits=String(p.beneficios||'').split(/\r?\n|;/).map(x=>x.trim()).filter(Boolean).slice(0,6);
-     const monthly=Number(p.sesionesMes)||0;
-     const isRecurring=capability().enabled&&p.renovacion==='automatica_disponible';
+     const monthly=Math.max(0,Number(p.sesionesMes)||0);
+     const price=Number(p.precioRD)||0;
+     const autoUSD=Number(p.paypalPrecioUSD)||0;
+     const isRecurring=capability().enabled&&p.renovacion==='automatica_disponible'&&autoUSD>0;
      return `<article class="mb-pub-card mb-pay-card">
-       <div class="mb-card-top"><span class="mb-pub-overline">TU RITUAL MAJOBELLA</span><span class="mb-card-badge">MENSUAL</span></div>
-       <h3>${esc(p.nombre)}</h3>
-       <p class="mb-pub-desc">${esc(p.descripcion||'Un plan para cuidar de ti y volver a dedicarte tiempo cada mes.')}</p>
-       <div class="mb-card-value"><p class="mb-pub-price">${money(p.precioRD)} <small>/ mes</small></p>
-         <p class="mb-pub-session">${monthly} ${monthly===1?'sesión incluida':'sesiones incluidas'} por mes</p></div>
-       ${benefits.length?`<div class="mb-card-benefits"><span>LO QUE DISFRUTAS</span><ul>${benefits.map(b=>`<li>${esc(b)}</li>`).join('')}</ul></div>`:''}
-       <div class="mb-card-actions">
-         ${isRecurring?`<button class="btn btn-primary" type="button" data-mb-auto="${esc(p.id)}">Activar mi ritual mensual</button>
-           <p class="mb-pay-small">Renovación autorizada en PayPal: US$ ${Number(p.paypalPrecioUSD||0).toFixed(2)}/mes. Puedes cancelarla desde tu cuenta.</p>`:''}
-         <button class="btn ${isRecurring?'btn-ghost':'btn-primary'}" type="button" data-mb-request="${esc(p.id)}">${isRecurring?'Consultar pago con el estudio':'Solicitar esta membresía'}</button>
-         ${!isRecurring?'<p class="mb-pay-small">Nuestro equipo te contactará para coordinar el pago. No se genera un cargo automático.</p>':''}
+       <div class="mb-plan-visual">
+         <div class="mb-plan-visual-top"><span>MAJOBELLA</span><span>CLUB · MEMBRESÍA</span></div>
+         <span class="mb-plan-visual-star mb-star-one" aria-hidden="true">✦</span>
+         <span class="mb-plan-visual-star mb-star-two" aria-hidden="true">✧</span>
+         <span class="mb-plan-visual-ring" aria-hidden="true"></span>
+         <img class="mb-plan-visual-swan" src="assets/favicon.png" alt="" loading="lazy" width="112" height="112">
+         <div class="mb-plan-visual-bottom">
+           <span>UN MOMENTO SOLO PARA TI</span>
+           <strong>${esc(p.nombre)}</strong>
+           <small>MÁS YO, MÁS BELLA.</small>
+         </div>
+       </div>
+       <div class="mb-plan-content">
+         <div class="mb-plan-heading">
+           <span class="mb-plan-eyebrow"><span class="mb-plan-eyebrow-dot" aria-hidden="true"></span> TU RITUAL MENSUAL</span>
+           <h4>${esc(p.nombre)}</h4>
+           <p class="mb-pub-desc">${esc(p.descripcion||'Tu espacio para dedicarte tiempo y cuidarte cada mes.')}</p>
+         </div>
+         <div class="mb-plan-price-row">
+           <p class="mb-plan-price-label">TU INVERSIÓN MENSUAL</p>
+           <p class="mb-pub-price">${money(price)}<small> / mes</small></p>
+           <div class="mb-plan-included">
+             <strong>${monthly}</strong><span>${monthly===1?'sesión incluida':'sesiones incluidas'}<small>cada mes</small></span>
+           </div>
+         </div>
+         ${benefits.length?`<div class="mb-card-benefits"><span>LO QUE INCLUYE TU PLAN</span>
+             <ul>${benefits.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}
+         <div class="mb-card-actions">
+           ${isRecurring?`<button class="btn btn-primary mb-plan-main-action" type="button" data-mb-auto="${esc(p.id)}">Quiero esta membresía <span aria-hidden="true">↗</span></button>
+             <p class="mb-pay-small">Suscripción con PayPal · <strong>US$ ${autoUSD.toFixed(2)} al mes</strong>. Confirmarás el importe antes de autorizar la renovación.</p>`
+           : `<button class="btn btn-primary mb-plan-main-action" type="button" data-mb-request="${esc(p.id)}">Solicitar mi membresía <span aria-hidden="true">↗</span></button>
+             <p class="mb-pay-small">Nuestro equipo te ayudará a coordinar el pago. Esta solicitud no genera cargos automáticos.</p>`}
+           ${isRecurring?`<button class="mb-plan-secondary-action" type="button" data-mb-request="${esc(p.id)}">Prefiero consultar con el estudio <span aria-hidden="true">→</span></button>`:''}
+         </div>
        </div>
      </article>`;
    }).join(''):
-    '<div class="mb-public-empty"><h3>Pronto, tu ritual mensual</h3><p>Estamos preparando opciones de membresía para que puedas cuidarte con constancia. Escríbenos y te ayudaremos a elegir tu próxima experiencia.</p><a class="btn btn-line" href="index.html#contacto">Consultar al estudio</a></div>';
+   '<div class="mb-public-empty"><span aria-hidden="true">✧</span><h4>Tu próximo ritual comienza aquí</h4><p>Estamos preparando las próximas membresías de MAJOBELLA. Si quieres conocer las opciones disponibles, nuestro equipo estará encantado de ayudarte.</p><a class="btn btn-primary" href="index.html#contacto">Hablar con el estudio <span aria-hidden="true">↗</span></a></div>';
  }
  function syncAuth(){
    const user=M.Auth?.user, signed=!!(user&&M.Auth?.token);
