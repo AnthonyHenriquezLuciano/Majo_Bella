@@ -1860,3 +1860,116 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
  .booking-section .bk-category-copy{display:grid;gap:3px}
 }
 @media(prefers-reduced-motion:reduce){.booking-section .bk-accordion-chevron{transition:none}}
+
+
+/* MAJOBELLA · CLUB MJOBELLA — menú compacto y accesible */
+.main-nav .nav-club{position:relative}
+.main-nav .nav-club-details{position:relative}
+.main-nav .nav-club-trigger{
+ display:inline-flex;align-items:center;gap:9px;min-height:36px;padding:6px 0;
+ cursor:pointer;list-style:none;color:var(--text);font:400 12px/1.4 var(--sans,Arial,sans-serif);
+ letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;
+}
+.main-nav .nav-club-trigger::-webkit-details-marker,.mobile-club-trigger::-webkit-details-marker{display:none}
+.main-nav .nav-club-trigger:focus-visible,.mobile-club-trigger:focus-visible{
+ outline:2px solid #111;outline-offset:4px;border-radius:2px;
+}
+.nav-club-chevron{display:block;width:7px;height:7px;flex:none;
+ border-right:1px solid currentColor;border-bottom:1px solid currentColor;
+ transform:translateY(-2px) rotate(45deg);transition:transform .18s ease}
+.nav-club-details[open] > .nav-club-trigger .nav-club-chevron,
+.mobile-club-details[open] > .mobile-club-trigger .nav-club-chevron{
+ transform:translateY(2px) rotate(225deg);
+}
+.main-nav .nav-club-trigger[aria-current="location"]{
+ text-decoration:underline;text-underline-offset:7px;text-decoration-thickness:1px;
+}
+.main-nav .nav-club-submenu{position:absolute;z-index:100;top:100%;left:-15px;
+ min-width:225px;display:grid;gap:2px;padding:12px 8px 8px;
+ background:#fff;border:1px solid #dedede;border-radius:12px;
+ box-shadow:0 18px 45px rgba(0,0,0,.11);
+}
+.main-nav .nav-club-submenu a{
+ display:block;padding:12px 11px;border-radius:7px;
+ font:600 15px/1.35 var(--serif,"Source Serif 4",Georgia,serif);
+ letter-spacing:normal;text-transform:none;color:#111;
+}
+.main-nav .nav-club-submenu a:hover,.main-nav .nav-club-submenu a:focus-visible{
+ background:#f5f5f5;text-decoration:none;outline-offset:0;
+}
+.main-nav .nav-club-submenu a::after{display:none}
+.main-nav .nav-club-submenu a[aria-current="location"]{background:#f4f4f4;text-decoration:underline;
+ text-underline-offset:4px;text-decoration-thickness:1px}
+.mobile-menu .mobile-club-trigger{display:flex;align-items:center;justify-content:space-between;
+ gap:15px;padding:16px 0;cursor:pointer;list-style:none;color:var(--ink);font-size:26px;line-height:1.35}
+.mobile-menu .mobile-club-trigger .nav-club-chevron{width:11px;height:11px;margin-right:7px}
+.mobile-menu .mobile-club-trigger[aria-current="location"]{text-decoration:underline;text-underline-offset:7px}
+.mobile-menu .mobile-club-submenu{display:grid;gap:0;padding:0 0 12px 18px;
+ border-left:1px solid #ccc;margin:0 0 12px 4px}
+.mobile-menu .mobile-club-submenu a{display:block;padding:12px 14px;
+ font:600 20px/1.4 var(--serif,"Source Serif 4",Georgia,serif);color:#333;text-decoration:none}
+.mobile-menu .mobile-club-submenu a[aria-current="location"]{text-decoration:underline;text-underline-offset:5px}
+@media(min-width:1280px) and (max-width:1510px){
+ .main-nav .nav-club-trigger{font-size:12px;letter-spacing:.01em}
+}
+
+/* Servicios con opciones: mismas proporciones y estilo que los servicios individuales */
+.services-section #services-list{gap:12px}
+.services-section #services-list .svc-card,
+.services-section #services-list .menu-service-group > summary{min-height:160px}
+.services-section #services-list .menu-service-group{
+ margin:0;border:1px solid #e3e3e3;border-radius:18px;box-shadow:none;
+ background:#fff;overflow:hidden;
+}
+.services-section #services-list .menu-service-group > summary{
+ display:grid;grid-template-columns:minmax(0,1fr) auto;
+ align-items:center;gap:16px 24px;
+ padding:20px 22px;list-style:none;cursor:pointer;
+ color:#111;background:#fff;
+}
+.services-section #services-list .menu-service-group > summary:hover{background:#fafafa}
+.services-section #services-list .menu-service-group > summary:focus-visible{
+ outline:2px solid #111;outline-offset:-3px
+}
+.services-section #services-list .menu-group-copy{min-width:0;display:flex;flex-direction:column;
+ align-items:flex-start;justify-content:center;gap:7px}
+.services-section #services-list .menu-group-name{
+ display:block;margin:0;color:#111;
+ font:600 18px/1.3 var(--serif,"Source Serif 4",Georgia,serif)
+}
+.services-section #services-list .menu-group-hint{
+ display:block;margin:0;color:#6b6b6b;
+ font:400 14.5px/1.5 var(--serif,"Source Serif 4",Georgia,serif);
+ text-transform:none;letter-spacing:normal;
+}
+.services-section #services-list .menu-group-expand{
+ flex:0 0 44px;width:44px;height:44px;display:block;position:relative;
+ border:1px solid #d4d4d4;border-radius:999px;background:#fff;color:#111;
+ transition:background-color .2s ease,border-color .2s ease;
+ transform:none;
+}
+.services-section #services-list .menu-group-expand::before,
+.services-section #services-list .menu-group-expand::after{
+ content:"";position:absolute;left:50%;top:50%;background:currentColor;
+ transform:translate(-50%,-50%);border-radius:1px
+}
+.services-section #services-list .menu-group-expand::before{width:15px;height:1.6px}
+.services-section #services-list .menu-group-expand::after{width:1.6px;height:15px}
+.services-section #services-list .menu-service-group[open] .menu-group-expand{
+ transform:none;background:#111;color:#fff;border-color:#111
+}
+.services-section #services-list .menu-service-group[open] .menu-group-expand::after{display:none}
+.services-section #services-list .menu-service-children{
+ display:flex;flex-direction:column;gap:12px;padding:16px;
+ background:#fafafa;border-top:1px solid #e3e3e3
+}
+.services-section #services-list .menu-service-children .svc-card{background:#fff}
+@media(max-width:650px){
+ .services-section #services-list .svc-card,
+ .services-section #services-list .menu-service-group > summary{min-height:145px}
+ .services-section #services-list .menu-service-group > summary{grid-template-columns:minmax(0,1fr) auto;
+   flex-wrap:nowrap;gap:12px;padding:18px 20px}
+ .services-section #services-list .menu-group-name{font-size:18px}
+ .services-section #services-list .menu-group-hint{font-size:14.5px}
+}
+@media(prefers-reduced-motion:reduce){.nav-club-chevron,.services-section #services-list .menu-group-expand{transition:none}}
