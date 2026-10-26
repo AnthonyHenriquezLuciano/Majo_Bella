@@ -81,11 +81,19 @@
       list.innerHTML = `<div class="menu-category-heading"><h3>${M.escapeHtml(cat.name)}</h3></div>
         ${parents.map((g) => {
           const children = items.filter((s) => s.parentId === g.id);
-          return `<details class="menu-service-group"><summary><span>${M.escapeHtml(g.name)}</span>
-            <span class="menu-group-expand" aria-hidden="true">+</span>
-            <small>Ver opciones</small></summary>
+          if (!children.length) return '';
+          return `<details class="menu-service-group">
+            <summary aria-label="Ver opciones de ${M.escapeHtml(g.name)}">
+              <span class="menu-group-copy">
+                <span class="menu-group-name">${M.escapeHtml(g.name)}</span>
+                <span class="menu-group-hint">Ver opciones</span>
+              </span>
+              <span class="menu-group-expand" aria-hidden="true"></span>
+            </summary>
             <div class="menu-service-children">${g.description ? `<p>${M.escapeHtml(g.description)}</p>` : ''}
-            ${children.map(card).join('')}</div></details>`;
+              ${children.map(card).join('')}
+            </div>
+          </details>`;
         }).join('')}
         ${direct.map(card).join('')}`;
     }
