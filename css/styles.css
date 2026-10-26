@@ -1901,7 +1901,7 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
  background:#f5f5f5;text-decoration:none;outline-offset:0;
 }
 .main-nav .nav-club-submenu a::after{display:none}
-.main-nav .nav-club-submenu a[aria-current="location"]{
+.main-nav .nav-club-submenu a:is([aria-current="location"],[aria-current="page"]){
  text-decoration:none;background:transparent;
 }
 .mobile-menu .mobile-club-trigger{position:relative;display:flex;align-items:center;justify-content:space-between;
@@ -1920,7 +1920,7 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .mobile-menu .mobile-club-submenu a{display:block;padding:12px 14px;
  font:400 17px/1.5 var(--sans,Arial,sans-serif);letter-spacing:.09em;
  text-transform:uppercase;color:#333;text-decoration:none}
-.mobile-menu .mobile-club-submenu a[aria-current="location"]{text-decoration:none}
+.mobile-menu .mobile-club-submenu a:is([aria-current="location"],[aria-current="page"]){text-decoration:none}
 .mobile-menu .mobile-club-submenu a > span{position:relative;display:inline-block}
 .mobile-menu .mobile-club-submenu a > span::after{
  content:"";position:absolute;left:0;right:0;bottom:-4px;height:1px;
