@@ -2447,3 +2447,196 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
  .regalos-page .mb-club-hero-cta:hover,.regalos-page .mb-pub-card.mb-pay-card:hover,
  .regalos-page .mb-plan-main-action:hover{transform:none!important}
 }
+
+
+/* CLUB MAJOBELLA · renovación de membresías — contraste editorial monocromo.
+   Capas en blanco / negro / grises neutros: ninguna tonalidad beige ni marrón.
+   Estilos limitados a la página Club; no afectan checkout ni administración. */
+.regalos-page .mb-public{
+  --mb-ink:#0b0b0b;--mb-cream:#f1f1f1;--mb-sand:#eeeeee;--mb-line:#d1d1d1;
+  background:radial-gradient(ellipse at 96% 0%,#ffffff 0%,transparent 40%),
+    linear-gradient(180deg,#e9e9e9 0%,#f3f3f3 53%,#e8e8e8 100%);
+  border-top:1px solid #cfcfcf;
+}
+.regalos-page .mb-club-hero{
+  background:#0b0b0b;border:1px solid #111111;
+  box-shadow:0 25px 65px rgba(0,0,0,.18),0 4px 12px rgba(0,0,0,.09);
+}
+.regalos-page .mb-club-hero-copy{background:#0b0b0b;color:#ffffff}
+.regalos-page .mb-club-hero h2{color:#ffffff}
+.regalos-page .mb-club-hero h2 em{color:#d5d5d5}
+.regalos-page .mb-club-eyebrow,.regalos-page .mb-club-hero-footnote{color:#dbdbdb}
+.regalos-page .mb-club-dot{background:#ffffff;box-shadow:0 0 0 5px rgba(255,255,255,.13)}
+.regalos-page .mb-club-hero-lead{color:#dddddd}
+.regalos-page .mb-club-hero-cta{
+  color:#111111;background:#ffffff;border:1px solid #ffffff;
+  box-shadow:0 8px 22px rgba(0,0,0,.18);
+}
+.regalos-page .mb-club-hero-cta:hover{background:#e7e7e7;border-color:#e7e7e7;color:#111111}
+.regalos-page .mb-club-hero-cta:focus-visible{outline:3px solid #ffffff;outline-offset:4px}
+.regalos-page .mb-club-hero-art{
+  background:radial-gradient(circle at 46% 36%,#ffffff 2%,#eeeeee 52%,#cfcfcf 100%);
+  border-left:1px solid #555555;
+}
+.regalos-page .mb-club-hero-art::before{border-color:rgba(0,0,0,.23)}
+.regalos-page .mb-club-orbit{border-color:rgba(0,0,0,.3)}
+.regalos-page .mb-club-orbit-two{border-color:rgba(0,0,0,.13)}
+.regalos-page .mb-club-light{color:#444444}
+.regalos-page .mb-club-swan{filter:contrast(1.25)}
+.regalos-page .mb-club-art-caption{color:#333333}
+
+/* Los tres beneficios se distinguen del fondo; la pieza central aporta ritmo. */
+.regalos-page .mb-club-features{gap:18px}
+.regalos-page .mb-club-features>div{
+  position:relative;min-width:0;border:1px solid #cbcbcb;border-radius:19px;
+  background:#ffffff;box-shadow:0 12px 28px rgba(0,0,0,.075);
+}
+.regalos-page .mb-club-features>div::before{
+  content:"";position:absolute;left:22px;top:0;width:54px;height:3px;
+  background:#111111;border-radius:0 0 3px 3px;
+}
+.regalos-page .mb-club-feature-icon{
+  width:43px;height:43px;border:1px solid #dedede;background:#f0f0f0;
+  color:#111111;border-radius:13px;
+}
+.regalos-page .mb-club-features>div:nth-child(2){
+  background:#111111;border-color:#111111;
+  box-shadow:0 16px 34px rgba(0,0,0,.16);
+}
+.regalos-page .mb-club-features>div:nth-child(2)::before{background:#ffffff}
+.regalos-page .mb-club-features>div:nth-child(2) strong{color:#ffffff}
+.regalos-page .mb-club-features>div:nth-child(2)>div>span{color:#d9d9d9}
+.regalos-page .mb-club-features>div:nth-child(2) .mb-club-feature-icon{
+  background:#292929;color:#ffffff;border-color:#5b5b5b;
+}
+
+/* Ficha de membresía: tarjeta oscura de marca + información clara y elevada. */
+.regalos-page .mb-public-grid{gap:25px}
+.regalos-page .mb-pub-card.mb-pay-card{
+  border:1px solid #bcbcbc;border-radius:29px;
+  background:#ffffff!important;
+  box-shadow:0 27px 62px rgba(0,0,0,.145),0 4px 12px rgba(0,0,0,.045);
+}
+.regalos-page .mb-pub-card.mb-pay-card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 36px 72px rgba(0,0,0,.2),0 6px 16px rgba(0,0,0,.06);
+}
+.regalos-page .mb-pub-card.mb-pay-card:focus-within{
+  border-color:#111111;
+}
+.regalos-page .mb-plan-visual{
+  background:radial-gradient(circle at 76% 24%,#333333 0%,transparent 39%),
+    linear-gradient(150deg,#202020 0%,#070707 62%,#151515 100%);
+  color:#ffffff;
+}
+.regalos-page .mb-plan-visual::before{border-color:rgba(255,255,255,.33)}
+.regalos-page .mb-plan-visual::after{border-color:rgba(255,255,255,.15)}
+.regalos-page .mb-plan-visual-top{position:relative;z-index:2;color:#f1f1f1}
+.regalos-page .mb-plan-visual-swan{
+  z-index:0;filter:invert(1) brightness(1.15);mix-blend-mode:screen;opacity:.9;
+}
+.regalos-page .mb-plan-visual-star{color:#eeeeee}
+.regalos-page .mb-plan-visual-bottom{position:relative;z-index:2;color:#ffffff}
+.regalos-page .mb-plan-visual-bottom small{opacity:.9}
+.regalos-page .mb-plan-content{
+  background:#ffffff;
+  gap:21px;
+}
+.regalos-page .mb-plan-heading .mb-pub-desc{color:#555555}
+.regalos-page .mb-plan-eyebrow{color:#444444}
+.regalos-page .mb-plan-eyebrow-dot{background:#111111}
+.regalos-page .mb-plan-price-row{
+  border:1px solid #dcdcdc;border-radius:17px;background:#f4f4f4;
+  padding:18px 19px;gap:14px;align-items:center;
+}
+.regalos-page .mb-plan-price-label{color:#555555}
+.regalos-page .mb-plan-price-row .mb-pub-price small{color:#555555}
+.regalos-page .mb-plan-included{
+  color:#ffffff;background:#111111;border:1px solid #111111;
+  border-radius:12px;padding:12px 15px;
+}
+.regalos-page .mb-plan-included>strong,.regalos-page .mb-plan-included>span{color:#ffffff}
+.regalos-page .mb-plan-included small{color:#d7d7d7}
+.regalos-page .mb-plan-content .mb-card-benefits>span{color:#555555}
+.regalos-page .mb-plan-content .mb-card-benefits li{
+  display:flex;align-items:flex-start;gap:10px;color:#222222;
+}
+.regalos-page .mb-plan-content .mb-card-benefits li::before{
+  content:"✓";display:grid;place-items:center;flex:0 0 20px;
+  width:20px;height:20px;margin:1px 0 0;border-radius:50%;
+  color:#ffffff;background:#111111;font:600 11px/1 system-ui,sans-serif;
+}
+.regalos-page .mb-plan-main-action{
+  box-shadow:0 9px 18px rgba(0,0,0,.14);
+}
+.regalos-page .mb-plan-main-action:focus-visible,
+.regalos-page .mb-plan-secondary-action:focus-visible{
+  outline:3px solid #111111;outline-offset:3px;
+}
+
+/* Estado vacío, panel privado y preguntas: cajas con límites reconocibles. */
+.regalos-page .mb-public-empty{
+  background:linear-gradient(140deg,#222222,#080808);color:#ffffff;
+  border:1px solid #111111;box-shadow:0 22px 50px rgba(0,0,0,.18);
+}
+.regalos-page .mb-public-empty>span{color:#eeeeee}
+.regalos-page .mb-public-empty h4,.regalos-page .mb-public-empty p{color:#ffffff}
+.regalos-page .mb-public-empty .btn{
+  background:#ffffff;color:#111111;border-color:#ffffff;
+}
+.regalos-page .mb-public-account{
+  border:1px solid #c6c6c6;border-radius:26px;background:#ffffff;
+  box-shadow:0 24px 57px rgba(0,0,0,.105);padding:clamp(17px,2.5vw,30px);
+}
+.regalos-page .mb-account-head{
+  padding:clamp(22px,2.8vw,34px);border-radius:18px;
+  background:linear-gradient(120deg,#0c0c0c,#2a2a2a);color:#ffffff;
+}
+.regalos-page .mb-account-avatar{
+  background:#ffffff;border:1px solid #ffffff;color:#111111;
+}
+.regalos-page .mb-account-head .label{color:#dddddd}
+.regalos-page .mb-account-head h3{color:#ffffff}
+.regalos-page .mb-account-head p:not(.label){color:#d7d7d7}
+.regalos-page .mb-account-head .btn{
+  background:#ffffff!important;color:#111111!important;border:1px solid #ffffff!important;
+}
+.regalos-page .mb-account-head .btn:hover{background:#e5e5e5!important}
+.regalos-page .mb-account-head .btn:focus-visible{outline:3px solid #ffffff;outline-offset:3px}
+.regalos-page .mb-account-welcome{border-color:#d5d5d5;background:#f2f2f2}
+.regalos-page .mb-account-prompt{
+  padding:21px 24px;background:#f3f3f3;
+  border:1px solid #d7d7d7;color:#333333;border-radius:14px;
+}
+.regalos-page .mb-member-premium{box-shadow:0 11px 26px rgba(0,0,0,.12)}
+.regalos-page .mb-receipt-item{
+  border-color:#d7d7d7;background:#f7f7f7;
+  transition:background-color .2s ease,border-color .2s ease;
+}
+.regalos-page .mb-receipt-item:hover{background:#ffffff;border-color:#777777}
+.regalos-page .mb-receipt-item:focus-visible{outline:2px solid #111111;outline-offset:3px}
+.regalos-page .mb-club-faq{
+  border:1px solid #cccccc;border-radius:25px;
+  padding:clamp(25px,3.7vw,43px);background:#ffffff;
+  box-shadow:0 19px 44px rgba(0,0,0,.075);
+}
+.regalos-page .mb-club-faq-items details{border-color:#d5d5d5}
+.regalos-page .mb-club-faq-items summary{color:#111111}
+.regalos-page .mb-club-faq-items p{color:#555555}
+.regalos-page .mb-public-terms{color:#4e4e4e}
+@media(max-width:760px){
+  .regalos-page .mb-club-hero-art{border-left:0;border-top:1px solid #5a5a5a}
+  .regalos-page .mb-club-features{gap:11px}
+  .regalos-page .mb-club-features>div::before{left:18px}
+  .regalos-page .mb-club-faq{padding:24px}
+}
+@media(max-width:540px){
+  .regalos-page .mb-club-hero-copy{padding:32px 24px}
+  .regalos-page .mb-plan-price-row{padding:17px 15px}
+  .regalos-page .mb-public-account{padding:13px}
+  .regalos-page .mb-account-head{padding:22px 18px}
+  .regalos-page .mb-club-faq{padding:22px 19px}
+}
+@media(prefers-reduced-motion:reduce){
+  .regalos-page .mb-receipt-item{transition:none}
+}
