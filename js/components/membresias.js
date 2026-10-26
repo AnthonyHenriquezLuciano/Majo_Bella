@@ -28,11 +28,13 @@
          <span class="mb-plan-visual-star mb-star-one" aria-hidden="true">✦</span>
          <span class="mb-plan-visual-star mb-star-two" aria-hidden="true">✧</span>
          <span class="mb-plan-visual-ring" aria-hidden="true"></span>
-         <img class="mb-plan-visual-swan" src="assets/favicon.png" alt="" loading="lazy" width="112" height="112">
-         <div class="mb-plan-visual-bottom">
-           <span>UN MOMENTO SOLO PARA TI</span>
-           <strong>${esc(p.nombre)}</strong>
-           <small>MÁS YO, MÁS BELLA.</small>
+         <div class="mb-plan-visual-center">
+           <img class="mb-plan-visual-swan" src="assets/favicon.png" alt="" loading="lazy" width="112" height="112">
+           <div class="mb-plan-visual-bottom">
+             <span>UN MOMENTO SOLO PARA TI</span>
+             <strong>${esc(p.nombre)}</strong>
+             <small>MÁS YO, MÁS BELLA.</small>
+           </div>
          </div>
        </div>
        <div class="mb-plan-content">
