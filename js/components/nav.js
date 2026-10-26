@@ -15,27 +15,29 @@
         if (selected) link.setAttribute('aria-current', 'location');
         else link.removeAttribute('aria-current');
       });
-      // La opción principal CLUB MJOBELLA permanece destacada en cualquiera
-      // de sus tres secciones; dentro se destaca solamente el enlace elegido.
-      document.querySelectorAll('.nav-club-trigger, .mobile-club-trigger').forEach(trigger => {
-        if (isGiftPage) trigger.setAttribute('aria-current', 'location');
-        else trigger.removeAttribute('aria-current');
+      // Club abre la portada de las tres tarjetas, sin confundirla
+      // con una de sus subcategorías.
+      document.querySelectorAll('.nav-club-link, .mobile-club-link').forEach(link => {
+        if (isGiftPage) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
       });
     };
     syncExperienceNavigation();
     window.addEventListener('hashchange', syncExperienceNavigation);
-    // <details> es navegable por teclado; en escritorio se abre también
-    // con el cursor, y se cierra al salir, hacer clic fuera o elegir opción.
+    // El título de Club es un enlace real a las tres tarjetas.
+    // El control independiente (flecha) sigue siendo accesible mediante teclado.
+    const desktopHover = window.matchMedia('(hover: hover) and (min-width: 1280px)');
+    document.querySelectorAll('.main-nav .nav-club').forEach(item => {
+      const dropdown = item.querySelector('.nav-club-details');
+      if (!dropdown) return;
+      item.addEventListener('mouseenter', () => {
+        if (desktopHover.matches) dropdown.open = true;
+      });
+      item.addEventListener('mouseleave', () => {
+        if (desktopHover.matches) dropdown.open = false;
+      });
+    });
     document.querySelectorAll('.nav-club-details, .mobile-club-details').forEach(dropdown => {
-      if (dropdown.classList.contains('nav-club-details')) {
-        const desktopHover = window.matchMedia('(hover: hover) and (min-width: 1280px)');
-        dropdown.addEventListener('mouseenter', () => {
-          if (desktopHover.matches) dropdown.open = true;
-        });
-        dropdown.addEventListener('mouseleave', () => {
-          if (desktopHover.matches) dropdown.open = false;
-        });
-      }
       dropdown.addEventListener('click', e => {
         if (e.target.closest('.nav-club-submenu a, .mobile-club-submenu a')) dropdown.open = false;
       });
@@ -46,6 +48,14 @@
       });
     });
 
+
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      document.querySelectorAll('.nav-club-details[open], .mobile-club-details[open]').forEach(dropdown => {
+        dropdown.open = false;
+        dropdown.querySelector('summary')?.focus();
+      });
+    });
 
     const btn = document.querySelector('.menu-toggle');
     const panel = document.getElementById('mobile-menu');
