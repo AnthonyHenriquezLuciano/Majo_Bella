@@ -2,9 +2,9 @@
    - Páginas: primero la red (siempre lo más nuevo) y, sin conexión, la copia guardada.
    - Archivos con ?v= (CSS, JS): se guardan y se sirven al instante; cambian de nombre al actualizar.
    - No toca nada de otros dominios (Google, PayPal, reservas). */
-const VERSION = 'mjb-20261026member2';
+const VERSION = 'mjb-20261026bw1';
 const SHELL = [
-  './app/', './app/app.css?v=20261024ux3', './app/app.js?v=20261024ux3',
+  './app/', './app/app.css?v=20261026bw1', './app/app.js?v=20261024ux3',
   './js/config.js?v=20261024ux3', './js/data/services.js?v=20261024ux3', './js/core/utils.js?v=20261024ux3', './js/core/validate.js?v=20261024ux3',
   './js/integrations/whatsapp.js?v=20261024ux3', './js/integrations/calendar.js?v=20261024ux3', './js/integrations/booking-api.js?v=20261024ux3',
   './js/integrations/paypal.js?v=20261024ux3', './js/integrations/google-auth.js?v=20261024ux3', './js/integrations/appointments.js?v=20261024ux3',
