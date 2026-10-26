@@ -191,21 +191,52 @@
     </div>
   </section>
 
-  <!-- PAQUETES -->
-  <section id="paquetes" class="section packages" hidden>
-    <div class="container">
-      <div class="section-head" data-reveal>
-        <div>
-          <p class="label">Paquetes</p>
-          <h2 class="display">Más sesiones, más momentos</h2>
+  <!-- PAQUETES · CLUB MAJOBELLA -->
+  <section id="paquetes" class="section packages pk-club" hidden aria-labelledby="pk-hero-title">
+    <div class="container pk-club-wrap">
+      <div class="pk-club-hero">
+        <div class="pk-club-hero-copy">
+          <p class="pk-club-eyebrow"><span class="pk-club-dot" aria-hidden="true"></span> CLUB MAJOBELLA · PAQUETES</p>
+          <h2 class="display" id="pk-hero-title">Más sesiones, <em>más momentos.</em></h2>
+          <p class="pk-club-lead">Hay momentos que merecen repetirse. Elige un paquete de sesiones pensado para disfrutar tus servicios favoritos a tu ritmo.</p>
+          <a class="pk-club-hero-cta" href="#pk-grid">Descubre los paquetes <span aria-hidden="true">↗</span></a>
+          <p class="pk-club-signature">MÁS YO, MÁS BELLA.</p>
         </div>
-        <div class="section-head-side">
-          <p>Descubre experiencias en varias sesiones: más constancia para tus resultados y una mejor relación entre el número de citas y el precio. Cada paquete muestra sus beneficios y vigencia.</p>
+        <div class="pk-club-hero-art" aria-hidden="true">
+          <span class="pk-club-art-ring pk-club-art-ring-one"></span>
+          <span class="pk-club-art-ring pk-club-art-ring-two"></span>
+          <span class="pk-club-art-glint pk-club-art-glint-one">✦</span>
+          <span class="pk-club-art-glint pk-club-art-glint-two">✧</span>
+          <img src="assets/flower-majobella.svg" class="pk-club-flower" alt="" width="360" height="360" loading="lazy">
+          <span class="pk-club-art-caption">BELLEZA QUE FLORECE</span>
         </div>
       </div>
-      <div class="pk-grid" id="pk-grid"></div><div class="pk-empty" id="pk-empty" hidden><p>Estamos preparando nuestros paquetes de sesiones. Puedes consultarnos para recibir una propuesta personalizada.</p><a class="btn btn-line" data-wa href="./#contacto">Consultar opciones</a></div>
-      <form class="pk-buy" id="pk-buy" novalidate hidden>
-        <div class="pk-buy-head"><p class="label">Comprar</p><h3 id="pk-buy-title"></h3><p id="pk-buy-sub"></p></div>
+
+      <div class="pk-club-features" aria-label="Ventajas de los paquetes">
+        <div><span class="pk-club-feature-icon" aria-hidden="true">✧</span><div><strong>Más tiempo para ti</strong><span>Sesiones para mantener tu rutina de belleza.</span></div></div>
+        <div><span class="pk-club-feature-icon" aria-hidden="true">◌</span><div><strong>Todo claro desde el inicio</strong><span>Consulta precio, sesiones y vigencia.</span></div></div>
+        <div><span class="pk-club-feature-icon" aria-hidden="true">↗</span><div><strong>Reserva a tu ritmo</strong><span>Usa el código de tu paquete al reservar.</span></div></div>
+      </div>
+
+      <div class="pk-club-plans-heading">
+        <div><p class="label">ELIGE TU EXPERIENCIA</p><h3>Tu próximo momento empieza aquí.</h3></div>
+        <p>Descubre lo que incluye cada paquete y encuentra el que mejor va contigo.</p>
+      </div>
+      <div class="pk-grid" id="pk-grid"></div>
+      <div class="pk-empty" id="pk-empty" hidden>
+        <span class="pk-empty-symbol" aria-hidden="true">✧</span>
+        <h3>Algo especial está floreciendo.</h3>
+        <p>Estamos preparando nuestros próximos paquetes de sesiones. Mientras tanto, podemos ayudarte a elegir tu experiencia.</p>
+        <a class="btn btn-primary" data-wa href="./#contacto">Hablar con el estudio <span aria-hidden="true">↗</span></a>
+      </div>
+
+      <form class="pk-buy" id="pk-buy" novalidate hidden aria-labelledby="pk-buy-title">
+        <div class="pk-buy-head">
+          <p class="label">TU EXPERIENCIA MAJOBELLA</p>
+          <h3 id="pk-buy-title"></h3>
+          <p class="pk-buy-instruction">Completa tus datos y revisa el total antes de confirmar el pago.</p>
+          <p id="pk-buy-sub"></p>
+        </div>
         <div class="fields">
           <div class="field"><label for="pk-first">Nombre</label><input id="pk-first" autocomplete="given-name"><span class="field-error">Escribe tu nombre (solo letras).</span></div>
           <div class="field"><label for="pk-last">Apellido</label><input id="pk-last" autocomplete="family-name"><span class="field-error">Escribe tu apellido (solo letras).</span></div>
