@@ -2647,7 +2647,8 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 }
 .regalos-page .mb-plan-visual-center {
   position:relative;
-  z-index:2;
+  /* Sin contexto de apilamiento propio, el logo se funde con el degradado real. */
+  z-index:auto;
   flex:1;
   min-width:0;
   width:100%;
