@@ -65,7 +65,7 @@
   }
 
   function done(gift) {
-    const card = selectedVariant();
+    const card = order?.giftVariant || selectedVariant();
     sold = {...gift, giftVariant: card.key};
     const finalCard = $('gd-variant');
     if (finalCard) finalCard.textContent = card.name;
@@ -90,7 +90,7 @@
           try {
             const v = values();
             const res = await API.giftOrder(v);
-            order = { ...res, correoPara: v.correoPara };
+            order = { ...res, correoPara: v.correoPara, giftVariant: selectedVariant() };
             msg('');
             return res.orderId;
           } catch (err) { msg(err.message, 'error'); throw err; }
