@@ -11,6 +11,18 @@
     const v = (document.querySelector('#gf-chips input:checked') || {}).value;
     return v === 'otro' ? Math.round(Number($('gf-other').value) || 0) : Number(v) || 0;
   };
+  const giftVariant = (custom = false, value = amount()) => {
+    if (custom) return {key: 'personalizada', name: 'Majobella Personalizada'};
+    const cards = {
+      1500: {key: 'gold', name: 'Majobella Gold'},
+      2000: {key: 'infinity', name: 'Majobella Infinity'},
+      5000: {key: 'black', name: 'Majobella Black'},
+    };
+    return cards[Number(value)] || {key: 'personalizada', name: 'Majobella Personalizada'};
+  };
+  const selectedVariant = () => giftVariant(
+    (document.querySelector('#gf-chips input:checked') || {}).value === 'otro'
+  );
   const values = () => {
     const f = $('gift-form');
     return { montoRD: amount(), para: f.para.value.trim(), de: f.de.value.trim(), mensaje: f.mensaje.value.trim(), correo: f.correo.value.trim(), correoPara: f.correoPara.value.trim() };
@@ -19,6 +31,12 @@
 
   function preview() {
     const v = values();
+    const card = selectedVariant();
+    const art = $('gc-card-image');
+    art.src = `assets/gift-${card.key}-majobella.svg`;
+    art.alt = `Tarjeta de regalo ${card.name}`;
+    $('gc-preview').dataset.variant = card.key;
+    $('gc-variant-label').textContent = card.name;
     $('gc-amt').textContent = M.fmtPrice(v.montoRD || 0);
     $('gc-who').textContent = [v.para ? `Para ${v.para}` : '', v.de ? `de ${v.de}` : ''].filter(Boolean).join(' · ');
     $('gc-msg').textContent = v.mensaje ? `“${v.mensaje}”` : '';
@@ -47,14 +65,17 @@
   }
 
   function done(gift) {
-    sold = gift;
+    const card = selectedVariant();
+    sold = {...gift, giftVariant: card.key};
+    const finalCard = $('gd-variant');
+    if (finalCard) finalCard.textContent = card.name;
     $('gift-form').hidden = true;
     $('gift-done').hidden = false;
     $('gc-code').textContent = gift.codigo;
     $('gd-code').textContent = gift.codigo;
     $('gd-text').textContent = `Te enviamos la tarjeta de ${M.fmtPrice(gift.montoRD)} a tu correo${order && order.correoPara ? ' y a quien la recibe' : ''}. Se usa escribiendo el código al reservar.${gift.vence ? ` Válida hasta el ${new Intl.DateTimeFormat('es', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${gift.vence}T12:00:00Z`))}.` : ''}`;
     const web = new URL('.', location.href).href;
-    const text = `${gift.para ? `${gift.para}, ` : ''}te regalo una experiencia en MAJOBELLA Beauty Studio 🎁\nTarjeta de regalo: ${M.fmtPrice(gift.montoRD)}\nCódigo: ${gift.codigo}${gift.mensaje ? `\n“${gift.mensaje}”` : ''}\nReserva en ${web}reservar.html y escribe el código al confirmar.`;
+    const text = `${gift.para ? `${gift.para}, ` : ''}te regalo una experiencia en MAJOBELLA Beauty Studio 🎁\nTarjeta: ${card.name}\nValor: ${M.fmtPrice(gift.montoRD)}\nCódigo: ${gift.codigo}${gift.mensaje ? `\n“${gift.mensaje}”` : ''}\nReserva en ${web}reservar.html y escribe el código al confirmar.`;
     $('gd-wa').href = `https://wa.me/?text=${encodeURIComponent(text)}`;
     $('gift-done').focus();
   }
