@@ -32,6 +32,20 @@
     if (line) ctx.fillText(line, cx, y);
   }
 
+  const giftArtwork = (g) => {
+    const variants = {gold:'gold',infinity:'infinity',black:'black',personalizada:'personalizada'};
+    const tier = variants[g.giftVariant] || ({1500:'gold',2000:'infinity',5000:'black'}[Number(g.montoRD)] || 'personalizada');
+    return { tier, url: (M.assetBase || '') + 'assets/gift-' + tier + '-majobella.svg' };
+  };
+  function loadArtwork(url) {
+    return new Promise(resolve => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = url;
+    });
+  }
+
   async function canvas(g, opts = {}) {
     // Exportación autosuficiente: sin dependencias remotas ni imágenes bloqueadas.
     const W = 1200, H = 720;
@@ -72,6 +86,29 @@
     x.font = '15px Georgia, serif';
     const line = `Usa tu código al reservar${g.vence ? ' · Válida hasta ' + shortDate(g.vence) : ''}${web ? ' · ' + web : ''}`;
     x.fillText(line, W / 2, 682, W - 140);
+
+    // Misma identidad visual que la tarjeta elegida, con código legible para usarla.
+    const artwork = giftArtwork(g);
+    const photo = await loadArtwork(artwork.url);
+    if (photo) {
+      x.clearRect(0, 0, W, H);
+      x.drawImage(photo, 0, 0, W, H);
+      x.fillStyle = 'rgba(8,8,8,.89)';
+      x.fillRect(0, 590, W, 130);
+      x.textAlign = 'left';
+      x.fillStyle = '#ffffff';
+      x.font = '600 24px Georgia,serif';
+      x.fillText(M.fmtPrice(Number(g.montoRD) || 0), 74, 633, 370);
+      x.font = '600 23px ui-monospace,Menlo,monospace';
+      x.fillText(g.codigo || 'MJB-····-····', 74, 681, 490);
+      x.textAlign = 'right';
+      x.font = '18px Georgia,serif';
+      const fromName = g.comprador || g.de;
+      const recipient = [g.para ? 'Para ' + g.para : '', fromName ? 'De ' + fromName : ''].filter(Boolean).join(' · ');
+      if (recipient) x.fillText(recipient, 1128, 633, 540);
+      if (g.vence) x.fillText('Válida hasta ' + shortDate(g.vence), 1128, 680, 480);
+      x.textAlign = 'center';
+    }
     return c;
   }
 
