@@ -196,14 +196,17 @@
         <p class="label" data-reveal>Tarjetas de regalo</p>
         <h2 class="display" data-reveal>Un regalo que se siente personal</h2>
         <p class="gift-lead" data-reveal>Elige un valor, dedica unas palabras y regala la libertad de elegir su próximo momento MAJOBELLA. Una experiencia personal que podrá disfrutar cuando prefiera.</p>
-        <div class="gc-preview" id="gc-preview" aria-live="polite">
-          <div class="gc-top"><span class="gc-brand">MAJOBELLA</span><span class="gc-symbol" aria-hidden="true">✦</span></div>
-          <p class="gc-k">TARJETA DE REGALO</p>
-          <p class="gc-amt" id="gc-amt">RD$ 2,500</p>
-          <p class="gc-who" id="gc-who"></p>
-          <p class="gc-msg" id="gc-msg"></p>
-          <p class="gc-code" id="gc-code">MJB-····-····</p>
-          <p class="gc-bottom">MÁS YO, MÁS BELLA. <span>✦</span> BEAUTY STUDIO</p>
+        <div class="gc-preview" id="gc-preview" data-variant="infinity">
+          <img class="gc-card-image" id="gc-card-image"
+               src="assets/gift-infinity-majobella.svg"
+               width="1000" height="600" alt="Tarjeta de regalo Majobella Infinity">
+          <div class="gc-preview-details" aria-live="polite" aria-atomic="true">
+            <p class="gc-variant-label" id="gc-variant-label">Majobella Infinity</p>
+            <p class="gc-amt" id="gc-amt">RD$ 2,000</p>
+            <p class="gc-who" id="gc-who"></p>
+            <p class="gc-msg" id="gc-msg"></p>
+            <p class="gc-code" id="gc-code">MJB-····-····</p>
+          </div>
         </div>
         <div class="gift-benefits" aria-label="Cómo se disfruta este regalo">
           <div><span class="gift-benefit-n">01</span><p><strong>Personalízala</strong><small>Elige el valor y añade una dedicatoria.</small></p></div>
@@ -217,7 +220,7 @@
           <legend>Valor</legend>
           <div class="gf-chips" id="gf-chips">
             <label class="gf-chip"><input type="radio" name="amt" value="1500"><span>RD$ 1,500</span></label>
-            <label class="gf-chip"><input type="radio" name="amt" value="2500" checked><span>RD$ 2,500</span></label>
+            <label class="gf-chip"><input type="radio" name="amt" value="2000" checked><span>RD$ 2,000</span></label>
             <label class="gf-chip"><input type="radio" name="amt" value="5000"><span>RD$ 5,000</span></label>
             <label class="gf-chip"><input type="radio" name="amt" value="otro"><span>Otro</span></label>
           </div>
@@ -244,6 +247,7 @@
       <div class="gift-done" id="gift-done" hidden tabindex="-1">
         <p class="label">Listo</p>
         <h3>Tu tarjeta está lista</h3>
+        <p class="gd-variant" id="gd-variant"></p>
         <p id="gd-text"></p>
         <p class="gd-code" id="gd-code"></p>
         <div class="gd-actions">
