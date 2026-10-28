@@ -850,7 +850,7 @@
         ${consent ? `<div class="warn-box" style="margin-bottom:12px">Antes de tu cita, firma el consentimiento. Toma 2 minutos.</div><a class="btn btn-block" href="${esc(r.consent.url)}">${I.pen} Firmar consentimiento</a>` : ''}
         <div class="stack" style="margin-top:12px">
           <a class="btn btn-block ${consent ? 'btn-ghost' : ''}" href="${esc(cal)}" target="_blank" rel="noopener">${I.calPlus} Añadir a mi calendario</a>
-          <a class="btn btn-block btn-ghost" href="#citas">Ver mis citas</a>
+          <a class="btn btn-block btn-ghost" href="#citas">Ver Mis Citas</a>
         </div>`;
     },
   };
@@ -907,7 +907,7 @@
   }
 
   /* ======================================================================
-     MIS CITAS
+     Mis Citas
      ====================================================================== */
   let citasView = 'proximas';
   function renderCitas() {
