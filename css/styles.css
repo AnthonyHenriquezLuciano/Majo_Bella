@@ -3525,13 +3525,13 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   object-fit:contain;
   border-radius:clamp(16px,2vw,27px);
   box-shadow:0 22px 46px rgba(0,0,0,.17),0 4px 12px rgba(0,0,0,.08);
-  background:#111111;
+  background:transparent;
   transition:opacity .22s ease,transform .32s ease,box-shadow .32s ease;
 }
 .regalos-page .gc-preview[data-variant="gold"] .gc-card-image{
   box-shadow:0 24px 48px rgba(142,104,30,.22),0 6px 14px rgba(0,0,0,.08);
 }
-.regalos-page .gc-preview[data-variant="infinity"] .gc-card-image{
+.regalos-page .gc-preview[data-variant="platinum"] .gc-card-image{
   box-shadow:0 23px 44px rgba(85,91,100,.18),0 6px 14px rgba(0,0,0,.07);
 }
 .regalos-page .gc-preview[data-variant="black"] .gc-card-image{
