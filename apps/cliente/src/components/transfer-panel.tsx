@@ -9,7 +9,7 @@ import { Button, Card, Field, Icon, IconButton, Notice, Screen, T } from '@majob
 import { api, useApp } from '@/lib/app-state';
 import { pickProof } from '@/lib/files';
 
-export function TransferPanel({ h, onDone, onLater, auth, laterLabel = 'Lo envío después desde Mis citas' }: { h: { id: string; manageToken?: string; accounts: TransferAccount[]; depositRD?: number; expiresAt?: string }; onDone: (a: Appointment) => void; onLater: () => void; auth?: { token: string } | { idToken: string }; laterLabel?: string }) {
+export function TransferPanel({ h, onDone, onLater, auth, laterLabel = 'Lo envío después desde Mis Citas' }: { h: { id: string; manageToken?: string; accounts: TransferAccount[]; depositRD?: number; expiresAt?: string }; onDone: (a: Appointment) => void; onLater: () => void; auth?: { token: string } | { idToken: string }; laterLabel?: string }) {
   const app = useApp();
   const [acc, setAcc] = useState(h.accounts[0] ? h.accounts[0].id : '');
   const [ref, setRef] = useState('');

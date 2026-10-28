@@ -48,7 +48,7 @@ body {
   background: var(--ivory);
   color: var(--text);
   font-family: var(--serif);
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.65;
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
@@ -63,7 +63,7 @@ button { font: inherit; color: inherit; }
 
 .container {
   width: 100%;
-  max-width: 1240px;
+  max-width: 1320px;
   margin-inline: auto;
   padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
   padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
@@ -254,7 +254,7 @@ body::before {
 .principles div { border-top: 1px solid var(--line-strong); padding-top: 16px; display: flex; flex-direction: column; gap: 6px; }
 .principles dt { font-size: 12px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--espresso); }
 .principles dd { margin: 0; font-size: 15.5px; color: var(--muted); }
-.slogan-band { display: flex; align-items: center; gap: 24px; margin: clamp(40px, 5vw, 64px) auto 0; max-width: 1240px; padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px)); font-size: 13px; letter-spacing: 0.42em; color: var(--espresso); white-space: nowrap; }
+.slogan-band { display: flex; align-items: center; gap: 24px; margin: clamp(40px, 5vw, 64px) auto 0; max-width: 1320px; padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px)); font-size: 13px; letter-spacing: 0.42em; color: var(--espresso); white-space: nowrap; }
 .slogan-band .rule { flex: 1; height: 1px; background: var(--line-strong); }
 
 /* Servicios (menú estilo Fresha: blanco y negro, tarjetas y pestañas) */
@@ -306,7 +306,7 @@ body::before {
   padding-block: 14px calc(14px + env(safe-area-inset-bottom, 0px));
 }
 .sb-inner {
-  max-width: 1240px; margin-inline: auto; display: flex; align-items: center; gap: 12px 22px;
+  max-width: 1320px; margin-inline: auto; display: flex; align-items: center; gap: 12px 22px;
   padding-left: max(var(--gutter), env(safe-area-inset-left, 0px)); padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
 }
 .sb-text { flex: 1; min-width: 0; }
@@ -661,7 +661,7 @@ body.modal-open { overflow: hidden; }
   .footer-brand { grid-column: 1 / -1; }
 }
 @media (max-width: 640px) {
-  body { font-size: 16.5px; }
+  body { font-size: 17.5px; }
   .header-cta { display: none; }
   .menu-toggle { margin-left: auto !important; }
   .brand img { height: 42px; }
@@ -1531,7 +1531,7 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .regal-hub-card>span:not(.regal-hub-index):not(.regal-hub-icon){font:400 15px/1.6 var(--serif,Georgia,serif);opacity:.85}
 .regal-hub-card em{margin-top:auto;font:600 13px/1.5 var(--serif,Georgia,serif);font-style:normal;border-bottom:1px solid currentColor;padding-bottom:4px}
 .regalos-page .gift{background:linear-gradient(180deg,#fff,#ffffff);padding-block:clamp(50px,6vw,90px)}
-.regalos-page .gift-grid{grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:clamp(30px,5vw,72px);align-items:start}
+.regalos-page .gift-grid{grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:clamp(30px,4vw,64px);align-items:start}
 .regalos-page .gift-intro{gap:18px}
 .regalos-page .gift-lead{font-size:16px;line-height:1.75;max-width:52ch}
 .regalos-page .gc-preview{max-width:none;min-height:300px;aspect-ratio:1.62/1;position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:48px 26px 40px;border:1px solid #999999;border-radius:18px;outline:none;background:radial-gradient(ellipse at 90% 10%,#eaeaea 0%,transparent 50%),linear-gradient(145deg,#ffffff 0%,#eaeaea 70%,#eaeaea 100%);box-shadow:0 18px 42px rgba(0,0,0,.12)}
@@ -3605,14 +3605,10 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 }
 
 /* Original gift artwork: responsive viewport, preserving every card detail. */
-.regalos-page .gc-art-frame{position:relative;width:100%;aspect-ratio:1252/718;overflow:hidden;border-radius:clamp(16px,2vw,25px);box-shadow:0 18px 38px #0002}
-.regalos-page .gc-art-frame .gc-card-image{position:absolute;max-width:none;height:auto;aspect-ratio:auto;object-fit:initial;border-radius:0;box-shadow:none;transform:none!important;width:115.655%;left:-7.907%;top:-26.323%}
-.regalos-page [data-variant="gold"] .gc-art-frame{aspect-ratio:1153/688}
-.regalos-page [data-variant="gold"] .gc-card-image{width:125.585%;left:-12.923%;top:-33.576%}
-.regalos-page [data-variant="black"] .gc-art-frame{aspect-ratio:1182/700}
-.regalos-page [data-variant="black"] .gc-card-image{width:122.504%;left:-11.421%;top:-29.571%}
-.regalos-page [data-variant="personalizada"] .gc-art-frame{aspect-ratio:1177/703}
-.regalos-page [data-variant="personalizada"] .gc-card-image{width:123.025%;left:-11.64%;top:-28.876%}
+.regalos-page .gc-art-frame{position:relative;width:100%;aspect-ratio:5/3;overflow:hidden;border-radius:clamp(16px,2vw,25px);box-shadow:0 18px 38px #0002}
+.regalos-page .gc-art-frame .gc-card-image{position:absolute;max-width:none;height:151.253%;aspect-ratio:auto;object-fit:fill;border-radius:0;box-shadow:none;transform:none!important;width:115.655%;left:-7.907%;top:-26.323%}
+.regalos-page [data-variant="gold"] .gc-card-image{width:125.585%;height:157.849%;left:-12.923%;top:-33.576%}
+.regalos-page [data-variant="black"] .gc-card-image{width:122.504%;height:155.143%;left:-11.421%;top:-29.571%}
+.regalos-page [data-variant="personalizada"] .gc-card-image{width:123.025%;height:154.481%;left:-11.64%;top:-28.876%}
 .regalos-page .gf-chip span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-transform:none}
-.regalos-page .gf-chip small{font-size:.8em;font-weight:400;white-space:nowrap}
 .main-nav a,.main-nav .nav-club-submenu a,.mobile-menu a,.mobile-club-submenu a,.services-section .svc-name,.services-section .menu-group-name,.services-section .menu-category-tile strong,.services-section .menu-tab{text-transform:none!important;letter-spacing:normal}

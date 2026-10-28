@@ -35,7 +35,7 @@
   const giftArtwork = (g) => {
     const variants = {gold:'gold',platinum:'platinum',black:'black',personalizada:'personalizada'};
     const tier = variants[g.giftVariant] || ({1500:'gold',2000:'platinum',5000:'black'}[Number(g.montoRD)] || 'personalizada');
-    return { tier, url: (M.assetBase || '') + 'assets/gift-' + tier + '-original.png', fallback: (M.assetBase || '') + 'assets/gift-' + tier + '-majobella.svg' };
+    return { tier, url: (M.assetBase || '') + (tier === 'personalizada' ? 'assets/gift-personalizada-rosegold.png' : 'assets/gift-' + tier + '-original.png'), fallback: (M.assetBase || '') + 'assets/gift-' + tier + '-majobella.svg' };
   };
   function loadArtwork(url) {
     return new Promise(resolve => {

@@ -84,7 +84,7 @@
       }
     });
 
-    /* Cuenta unificada en TODAS las páginas (no solo Mis citas). */
+    /* Cuenta unificada en TODAS las páginas (no solo Mis Citas). */
     function syncHeader(user) {
       const slot=document.getElementById('header-account');
       const safe=M.escapeHtml;

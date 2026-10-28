@@ -42,7 +42,7 @@
           art.src = `assets/gift-${card.key}-majobella.svg`;
         }
       };
-      art.src = `assets/gift-${card.key}-original.png`;
+      art.src = card.key === 'personalizada' ? 'assets/gift-personalizada-rosegold.png' : `assets/gift-${card.key}-original.png`;
     }
     art.alt = `Tarjeta de regalo ${card.name}`;
     $('gc-preview').dataset.variant = card.key;

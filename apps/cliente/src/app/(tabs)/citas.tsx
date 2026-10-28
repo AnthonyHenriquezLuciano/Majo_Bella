@@ -1,4 +1,4 @@
-/* Mis citas: próximas y anteriores (de la cuenta y las reservadas en este celular) */
+/* Mis Citas: próximas y anteriores (de la cuenta y las reservadas en este celular) */
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -19,7 +19,7 @@ export default function Citas() {
   const list = tab === 'proximas' ? upcoming : past;
   return (
     <Screen refreshing={loadingAppointments && appointments.length > 0} onRefresh={refreshAppointments} testID="citas">
-      <Header kicker="Tu agenda" title="Mis citas" />
+      <Header kicker="Tu agenda" title="Mis Citas" />
       <Row gap={8} style={{ marginBottom: space.lg }}>
         <Chip label={`Próximas${upcoming.length ? ` (${upcoming.length})` : ''}`} selected={tab === 'proximas'} onPress={() => setTab('proximas')} />
         <Chip label="Anteriores" selected={tab === 'pasadas'} onPress={() => setTab('pasadas')} />

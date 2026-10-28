@@ -1,6 +1,6 @@
 /* ==========================================================================
    MAJOBELLA · App móvil
-   Inicio · Reservar · Mis citas · Billetera · Perfil
+   Inicio · Reservar · Mis Citas · Billetera · Perfil
    Usa el mismo sistema de reservas, pagos y citas que la web (js/integrations/*).
    ========================================================================== */
 (function (M) {
@@ -148,7 +148,7 @@
   const sheetHead = (title, sub) => `<div class="sheet-head"><div><h2 id="sheet-title">${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div><button type="button" class="sheet-x" data-close aria-label="Cerrar">${I.x}</button></div>`;
 
   /* ---------- Navegación ---------- */
-  const TITLES = { inicio: 'Inicio', servicios: 'Servicios', reservar: 'Reservar', citas: 'Mis citas', billetera: 'Billetera', perfil: 'Cuenta' };
+  const TITLES = { inicio: 'Inicio', servicios: 'Servicios', reservar: 'Reservar', citas: 'Mis Citas', billetera: 'Billetera', perfil: 'Cuenta' };
   function route() {
     const raw = (location.hash || '#inicio').slice(1);
     const [tab, sub] = raw.split('/');
@@ -372,7 +372,7 @@
       ${hero}
       <div class="quick">
         <a href="#reservar">${I.calPlus}<span>Reservar</span></a>
-        <a href="#citas">${I.cal}<span>Mis citas</span></a>
+        <a href="#citas">${I.cal}<span>Mis Citas</span></a>
         <a href="#billetera">${I.wallet}<span>Billetera</span></a>
         ${wa ? `<a href="${esc(wa)}" target="_blank" rel="noopener">${I.chat}<span>WhatsApp</span></a>` : `<a href="#perfil">${I.user}<span>Perfil</span></a>`}
       </div>
@@ -740,7 +740,7 @@
         b.innerHTML = sheetHead('Transfiere y sube el comprobante', '') + `
           <p class="note" style="margin-top:0"><span class="timer" id="pay-timer">${I.clock}<span></span></span></p>
           ${proofHtml(h.accounts || M.Transfer.accounts(), h.depositRD, 'tf')}
-          <p class="note">¿Lo haces luego? Cierra esta ventana: tu horario queda apartado y lo subes desde <b>Mis citas</b>.</p>`;
+          <p class="note">¿Lo haces luego? Cierra esta ventana: tu horario queda apartado y lo subes desde <b>Mis Citas</b>.</p>`;
         this.startTimer(b);
         mountProof(b, 'tf', async (file, account, ref) => {
           const res = await API.transferProof(h.id, { token: h.manageToken }, file, account, ref);
@@ -756,7 +756,7 @@
           this.stopTimer();
           if (this.hold && this.hold.transfer && !this.tfSent) {
             const h = this.hold; this.hold = null;
-            toast(`Tu horario está apartado hasta las ${M.Transfer.deadlineText({ payment: { transfer: { deadline: h.expiresAt } } })}: sube el comprobante desde Mis citas`);
+            toast(`Tu horario está apartado hasta las ${M.Transfer.deadlineText({ payment: { transfer: { deadline: h.expiresAt } } })}: sube el comprobante desde Mis Citas`);
             this.ids = []; this.date = null; this.time = null;
             app.apptsAt = 0; loadAppts(true);
             setTimeout(() => { location.hash = '#citas'; }, 30);
@@ -917,7 +917,7 @@
     const list = citasView === 'proximas' ? up : past;
     const src = app.apptsSource === 'agenda' ? 'Actualizadas con la agenda del estudio.' : app.apptsError ? 'Sin conexión: se muestran las guardadas en este celular.' : (M.Auth.user ? '' : 'Citas reservadas desde este celular. Inicia sesión para verlas en cualquier dispositivo.');
     $('s-citas').innerHTML = `
-      <div class="head"><h1 class="large-title">Mis citas</h1>${src ? `<p class="lead">${esc(src)}</p>` : ''}</div>
+      <div class="head"><h1 class="large-title">Mis Citas</h1>${src ? `<p class="lead">${esc(src)}</p>` : ''}</div>
       <div class="seg" role="tablist"><button type="button" class="${citasView === 'proximas' ? 'on' : ''}" data-cview="proximas" role="tab">Próximas${up.length ? ` · ${up.length}` : ''}</button><button type="button" class="${citasView === 'anteriores' ? 'on' : ''}" data-cview="anteriores" role="tab">Anteriores</button></div>
       ${!app.apptsAt ? '<div class="skeleton" style="height:90px"></div><div class="skeleton" style="height:90px;margin-top:10px"></div>'
         : list.length ? list.map((a, i) => apptCard(a, citasView === 'proximas' && i === 0)).join('')
@@ -1017,7 +1017,7 @@
     } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
   }
 
-  /* ---- Comprobante de transferencia (en la reserva y en Mis citas) ---- */
+  /* ---- Comprobante de transferencia (en la reserva y en Mis Citas) ---- */
   function proofHtml(accounts, amount, prefix) {
     return `<div class="tf-amount"><span>Transfiere</span><b>${M.fmtPrice(amount)}</b><button type="button" class="tf-copy" data-copy-tf="${amount}">Copiar monto</button></div>
       ${M.Transfer.accountsHtml(accounts, { name: `${prefix}-acc` })}

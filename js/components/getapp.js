@@ -77,7 +77,7 @@
 
   /* ---------- Cinta ---------- */
   function ribbonAllowed() {
-    // Solo en el inicio, Mis citas y Regalos: en Reservar estorbaría y en Aplicación sobra
+    // Solo en el inicio, Mis Citas y Regalos: en Reservar estorbaría y en Aplicación sobra
     if (M.Install.standalone() || ['inicio', 'citas', 'regalos'].indexOf(document.body.dataset.page) < 0) return false;
     return Date.now() - get(K.ribbon) >= RIBBON_EVERY;
   }

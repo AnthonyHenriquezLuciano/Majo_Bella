@@ -15,7 +15,7 @@
   const saveClient = (c) => { try { localStorage.setItem(CLIENT_KEY, JSON.stringify(c)); } catch (e) { /* sin almacenamiento */ } };
   const forgetClient = () => { try { localStorage.removeItem(CLIENT_KEY); } catch (e) { /* sin almacenamiento */ } };
 
-  /* Preparación y evento de calendario de una cita (también los usa Mis citas, en otra página) */
+  /* Preparación y evento de calendario de una cita (también los usa Mis Citas, en otra página) */
   M.prepFor = (ids) => {
     const seen = new Set();
     return ids.map((id) => M.serviceById[id]).filter(Boolean)
@@ -91,7 +91,7 @@
       const text = [
         mode === 'pay' && none ? 'Este servicio no requiere depósito: tu cita se confirma al instante y pagas al terminar.' : '',
         mode === 'pay' && !none ? `Para reservar tu cita, abonas ${label ? `el ${label}` : 'el importe indicado según el servicio'}. El saldo restante se paga el día de tu visita, en efectivo, transferencia o PayPal.` : '',
-        mode === 'pay' && !none && P.changeHours ? `Con ${P.changeHours} horas o más de aviso puedes cambiar la fecha desde Mis citas o cancelar y te devolvemos el depósito.` : '',
+        mode === 'pay' && !none && P.changeHours ? `Con ${P.changeHours} horas o más de aviso puedes cambiar la fecha desde Mis Citas o cancelar y te devolvemos el depósito.` : '',
         mode !== 'pay' && P.changeHours ? `Puedes cambiar o cancelar hasta ${P.changeHours} horas antes.` : '',
         P.arriveEarlyMinutes ? `Te recomendamos llegar ${P.arriveEarlyMinutes} minutos antes.` : '',
       ].filter(Boolean).join(' ');
@@ -411,7 +411,7 @@
       result.innerHTML = `
         <p class="result-title">${kind === 'paid' ? '¡Listo! Tu cita está confirmada.' : kind === 'transfer' ? '¡Recibimos tu comprobante!' : 'Tu solicitud está lista para enviar.'}</p>
         <p class="result-text">${kind === 'transfer'
-          ? `Tu horario del ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)} queda apartado. Te confirmamos la cita por correo en cuanto veamos el depósito (normalmente el mismo día). Puedes ver su estado en Mis citas.`
+          ? `Tu horario del ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)} queda apartado. Te confirmamos la cita por correo en cuanto veamos el depósito (normalmente el mismo día). Puedes ver su estado en Mis Citas.`
           : kind === 'paid'
           ? `Te esperamos el ${M.weekdayName(a.date).toLowerCase()} ${M.dayMonth(a.date)} a las ${M.fmtTime12(a.time)}. ${p.depositRD > 0 ? `Recibimos tu depósito de ${M.fmtPrice(p.depositRD)} (${M.fmtUSD(p.depositUSD)}).` : (p.giftRD > 0 ? 'Tu tarjeta de regalo cubrió el depósito.' : '')} ${p.balanceRD > 0 ? `Al terminar pagas ${M.fmtPrice(p.balanceRD)} en efectivo, transferencia o PayPal.` : 'Tu cita ya está pagada.'} Te enviamos la confirmación a ${M.escapeHtml(a.client.email)}.`
           : 'Envía el mensaje que se abrió en WhatsApp y MAJOBELLA te responderá para confirmar tu cita.'}</p>
@@ -458,7 +458,7 @@
           const wasTransfer = hold.transfer;
           hold = null; stopTimer();
           if (wasTransfer) { pay.methods.hidden = !(canPayPal && canTransfer); pay.tf.innerHTML = ''; renderTransfer(); }
-          payMessage(wasTransfer ? 'Se acabó el tiempo y el horario se liberó. Si ya transferiste, sube el comprobante desde Mis citas o escríbenos por WhatsApp.' : 'Se acabó el tiempo para pagar y el horario se liberó. Puedes intentarlo de nuevo.', 'warn');
+          payMessage(wasTransfer ? 'Se acabó el tiempo y el horario se liberó. Si ya transferiste, sube el comprobante desde Mis Citas o escríbenos por WhatsApp.' : 'Se acabó el tiempo para pagar y el horario se liberó. Puedes intentarlo de nuevo.', 'warn');
           API.refreshBusy(true).catch(() => {});
         }
       };
@@ -600,7 +600,7 @@
           <img class="tf-preview" id="bk-tf-prev" alt="" hidden>
           <label class="field tf-ref"><span>Número de referencia <em>(opcional)</em></span><input id="bk-tf-ref" maxlength="60" inputmode="text" autocomplete="off"></label>
           <button type="button" class="btn btn-primary" id="bk-tf-send" disabled>Enviar comprobante</button>
-          <p class="tf-later">¿Aún no transfieres? Puedes subirlo después desde <a href="citas.html">Mis citas</a> antes de que termine el tiempo.</p>
+          <p class="tf-later">¿Aún no transfieres? Puedes subirlo después desde <a href="citas.html">Mis Citas</a> antes de que termine el tiempo.</p>
         </div>`;
       let file = null;
       $('bk-tf-file').addEventListener('change', async (e) => {
@@ -649,7 +649,7 @@
         const res = await API.hold(a, M.Auth.token, { method: 'transferencia' });
         if (res.confirmed) { confirmedWithoutPayment(a, res); return; }
         hold = { ...res, appt: a };
-        // Queda en "Mis citas" para subir el comprobante después
+        // Queda en "Mis Citas" para subir el comprobante después
         const record = { ...a, id: res.id, status: 'retenida', token: res.manageToken, remote: true, createdAt: new Date().toISOString(),
           payment: { depositRD: res.depositRD, balanceRD: res.balanceRD, depositPaid: false, depositMethod: 'transferencia', transfer: { deadline: res.expiresAt, proof: false } } };
         M.Appointments.add(record);

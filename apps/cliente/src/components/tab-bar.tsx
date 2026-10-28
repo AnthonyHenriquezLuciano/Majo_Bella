@@ -1,4 +1,4 @@
-/* Barra de abajo: Inicio · Servicios · Reservar (al centro) · Mis citas · Cuenta */
+/* Barra de abajo: Inicio · Servicios · Reservar (al centro) · Mis Citas · Cuenta */
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
@@ -10,7 +10,7 @@ const TABS: Record<string, { label: string; icon: IconName }> = {
   index: { label: 'Inicio', icon: 'home' },
   servicios: { label: 'Servicios', icon: 'sparkle' },
   reservar: { label: 'Reservar', icon: 'plus' },
-  citas: { label: 'Mis citas', icon: 'calendar' },
+  citas: { label: 'Mis Citas', icon: 'calendar' },
   cuenta: { label: 'Cuenta', icon: 'user' },
 };
 
