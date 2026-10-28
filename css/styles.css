@@ -48,7 +48,7 @@ body {
   background: var(--ivory);
   color: var(--text);
   font-family: var(--serif);
-  font-size: 18px;
+  font-size: 18.5px;
   line-height: 1.65;
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
@@ -63,7 +63,7 @@ button { font: inherit; color: inherit; }
 
 .container {
   width: 100%;
-  max-width: 1320px;
+  max-width: 1380px;
   margin-inline: auto;
   padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
   padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
@@ -84,7 +84,7 @@ button { font: inherit; color: inherit; }
 .display {
   margin: 0;
   font-weight: 400;
-  font-size: clamp(32px, 4.2vw, 56px);
+  font-size: clamp(33px, 4.3vw, 59px);
   line-height: 1.08;
   letter-spacing: -0.01em;
   color: var(--ink);
@@ -155,7 +155,7 @@ body::before {
 /* Altura fija: cambiarla al hacer scroll movía toda la página */
 .header-inner { display: flex; align-items: center; gap: 22px; min-height: 72px; }
 .brand { flex: none; display: block; }
-.brand img { height: 50px; width: auto; transform-origin: left center; transition: transform .5s var(--ease); }
+.brand img { height: 53px; width: auto; transform-origin: left center; transition: transform .5s var(--ease); }
 .is-scrolled .brand img { transform: scale(0.86); }
 .main-nav { margin-left: auto; }
 .main-nav ul { display: flex; gap: clamp(14px, 1.3vw, 26px); list-style: none; margin: 0; padding: 0; }
@@ -1101,7 +1101,7 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .main-nav .nav-wide { display: none; }
 
 /* ==========================================================================
-   Páginas: Reservar, Mis citas, Regalos y Aplicación
+   Páginas: Reservar, Mis Citas, Regalos y Aplicación
    ========================================================================== */
 .page-main > .section:first-child { padding-top: clamp(28px, 4vw, 56px); }
 .main-nav a[aria-current="page"], .mobile-menu a[aria-current="page"] { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1px; }
@@ -3612,3 +3612,58 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
 .regalos-page [data-variant="personalizada"] .gc-card-image{width:123.025%;height:154.481%;left:-11.64%;top:-28.876%}
 .regalos-page .gf-chip span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-transform:none}
 .main-nav a,.main-nav .nav-club-submenu a,.mobile-menu a,.mobile-club-submenu a,.services-section .svc-name,.services-section .menu-group-name,.services-section .menu-category-tile strong,.services-section .menu-tab{text-transform:none!important;letter-spacing:normal}
+
+
+/* Gift cards · acabado diamante, uniformidad y claridad (2026-10). */
+.regalos-page .gc-preview{
+  grid-template-rows:auto auto;
+  align-items:stretch;
+  gap:17px;
+}
+.regalos-page .gc-art-frame{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  aspect-ratio:5 / 3;
+  border-radius:clamp(16px,2vw,25px);
+  isolation:isolate;
+  background:transparent;
+  overflow:hidden;
+  box-shadow:0 17px 36px rgba(0,0,0,.14);
+}
+/* Las cuatro tienen exactamente la misma caja, sin saltos al cambiar el monto. */
+.regalos-page .gc-preview[data-variant] .gc-art-frame{
+  aspect-ratio:5 / 3;
+}
+.regalos-page .gc-preview[data-variant="personalizada"] .gc-art-frame .gc-card-image{
+  filter:grayscale(.8) saturate(.55) brightness(1.12) contrast(1.04);
+}
+.regalos-page .gc-preview[data-variant="personalizada"] .gc-art-frame::after{
+  content:"";
+  position:absolute;
+  z-index:2;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(126deg,rgba(224,242,255,.2),rgba(255,255,255,.06) 49%,rgba(196,226,251,.18));
+  mix-blend-mode:screen;
+}
+.regalos-page .gc-preview-details{
+  grid-template-columns:minmax(0,1fr);
+  gap:9px;
+}
+.regalos-page .gc-preview-details .gc-amt{
+  font-size:clamp(24px,3vw,32px);
+  letter-spacing:-.02em;
+}
+.regalos-page .gc-preview .gc-who,
+.regalos-page .gc-preview .gc-msg,
+.regalos-page .gc-preview .gc-code{
+  grid-column:1;
+}
+@media(max-width:640px){
+  .regalos-page .gc-preview-details{padding:17px 18px;}
+  .regalos-page .gc-preview-details .gc-amt{font-size:26px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .regalos-page .gc-card-image{transition:none!important;}
+}
