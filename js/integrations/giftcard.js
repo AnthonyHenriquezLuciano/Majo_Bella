@@ -35,7 +35,7 @@
   const giftArtwork = (g) => {
     const variants = {gold:'gold',platinum:'platinum',black:'black',personalizada:'personalizada'};
     const tier = variants[g.giftVariant] || ({1500:'gold',2000:'platinum',5000:'black'}[Number(g.montoRD)] || 'personalizada');
-    return { tier, url: (M.assetBase || '') + (tier === 'personalizada' ? 'assets/gift-personalizada-rosegold.png' : 'assets/gift-' + tier + '-original.png'), fallback: (M.assetBase || '') + 'assets/gift-' + tier + '-majobella.svg' };
+    return { tier, url: (M.assetBase || '') + ('assets/gift-' + tier + '-original.png'), fallback: (M.assetBase || '') + 'assets/gift-' + tier + '-majobella.svg' };
   };
   function loadArtwork(url) {
     return new Promise(resolve => {
@@ -93,8 +93,23 @@
     if (photo) {
       x.clearRect(0, 0, W, H);
       const bounds = {gold:[149,231,1153,688],platinum:[99,189,1252,718],black:[135,207,1182,700],personalizada:[137,203,1177,703]};
+      // Acabado diamante: plata luminosa con reflejos fríos, también al descargar.
+      const diamond = artwork.tier === 'personalizada';
+      x.save();
+      if (diamond) x.filter = 'grayscale(80%) saturate(55%) brightness(112%) contrast(104%)';
       if (photo.naturalWidth === 1448) x.drawImage(photo, ...bounds[artwork.tier], 0, 0, W, H);
       else x.drawImage(photo, 0, 0, W, H);
+      x.restore();
+      if (diamond) {
+        const light = x.createLinearGradient(0, 0, W, H);
+        light.addColorStop(0, 'rgba(229,242,255,.16)');
+        light.addColorStop(.47, 'rgba(255,255,255,.055)');
+        light.addColorStop(1, 'rgba(198,224,247,.17)');
+        x.save();
+        x.globalCompositeOperation = 'screen';
+        x.fillStyle = light; x.fillRect(0, 0, W, H);
+        x.restore();
+      }
       x.fillStyle = 'rgba(8,8,8,.89)';
       x.fillRect(0, 590, W, 130);
       x.textAlign = 'left';
