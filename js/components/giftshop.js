@@ -42,11 +42,10 @@
           art.src = `assets/gift-${card.key}-majobella.svg`;
         }
       };
-      art.src = card.key === 'personalizada' ? 'assets/gift-personalizada-rosegold.png' : `assets/gift-${card.key}-original.png`;
+      art.src = `assets/gift-${card.key}-original.png`;
     }
     art.alt = `Tarjeta de regalo ${card.name}`;
     $('gc-preview').dataset.variant = card.key;
-    $('gc-variant-label').textContent = card.name;
     $('gc-amt').textContent = M.fmtPrice(v.montoRD || 0);
     $('gc-who').textContent = [v.para ? `Para ${v.para}` : '', v.de ? `de ${v.de}` : ''].filter(Boolean).join(' · ');
     $('gc-msg').textContent = v.mensaje ? `“${v.mensaje}”` : '';
