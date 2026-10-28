@@ -3603,3 +3603,16 @@ html.ga-lock, html.ga-lock body { overflow: hidden; }
   .regalos-page .gc-card-image{transition:none;}
   .regalos-page .gc-preview:hover .gc-card-image{transform:none;}
 }
+
+/* Original gift artwork: responsive viewport, preserving every card detail. */
+.regalos-page .gc-art-frame{position:relative;width:100%;aspect-ratio:1252/718;overflow:hidden;border-radius:clamp(16px,2vw,25px);box-shadow:0 18px 38px #0002}
+.regalos-page .gc-art-frame .gc-card-image{position:absolute;max-width:none;height:auto;aspect-ratio:auto;object-fit:initial;border-radius:0;box-shadow:none;transform:none!important;width:115.655%;left:-7.907%;top:-26.323%}
+.regalos-page [data-variant="gold"] .gc-art-frame{aspect-ratio:1153/688}
+.regalos-page [data-variant="gold"] .gc-card-image{width:125.585%;left:-12.923%;top:-33.576%}
+.regalos-page [data-variant="black"] .gc-art-frame{aspect-ratio:1182/700}
+.regalos-page [data-variant="black"] .gc-card-image{width:122.504%;left:-11.421%;top:-29.571%}
+.regalos-page [data-variant="personalizada"] .gc-art-frame{aspect-ratio:1177/703}
+.regalos-page [data-variant="personalizada"] .gc-card-image{width:123.025%;left:-11.64%;top:-28.876%}
+.regalos-page .gf-chip span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-transform:none}
+.regalos-page .gf-chip small{font-size:.8em;font-weight:400;white-space:nowrap}
+.main-nav a,.main-nav .nav-club-submenu a,.mobile-menu a,.mobile-club-submenu a,.services-section .svc-name,.services-section .menu-group-name,.services-section .menu-category-tile strong,.services-section .menu-tab{text-transform:none!important;letter-spacing:normal}

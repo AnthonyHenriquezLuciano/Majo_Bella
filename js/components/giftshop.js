@@ -15,7 +15,7 @@
     if (custom) return {key: 'personalizada', name: 'Majobella Personalizada'};
     const cards = {
       1500: {key: 'gold', name: 'Majobella Gold'},
-      2000: {key: 'platinum', name: 'Majobella Platinum'},
+      2000: {key: 'platinum', name: 'Majobella Platinium'},
       5000: {key: 'black', name: 'Majobella Black'},
     };
     return cards[Number(value)] || {key: 'personalizada', name: 'Majobella Personalizada'};
@@ -42,7 +42,7 @@
           art.src = `assets/gift-${card.key}-majobella.svg`;
         }
       };
-      art.src = `assets/gift-${card.key}-photo.webp`;
+      art.src = `assets/gift-${card.key}-original.png`;
     }
     art.alt = `Tarjeta de regalo ${card.name}`;
     $('gc-preview').dataset.variant = card.key;

@@ -42,13 +42,13 @@
       return `
         <article class="svc-card${on ? ' is-selected' : ''}" data-id="${s.id}">
           <div class="svc-info">
-            <h3 class="svc-name">${M.escapeHtml(s.name)}</h3>
+            <h3 class="svc-name">${M.escapeHtml(M.Validate.properName(s.name))}</h3>
             <p class="svc-dur">${M.fmtDurationShort(s.durationMinutes)}</p>
             <p class="svc-desc">${M.escapeHtml(s.description)}</p>
             ${priceHtml(s)}
             <button type="button" class="svc-more" aria-expanded="false" aria-controls="det-${s.id}">Ver detalle</button>
           </div>
-          <button type="button" class="svc-add" data-add="${s.id}" aria-label="${on ? 'Quitar' : 'Añadir'} ${M.escapeHtml(s.name)}" aria-pressed="${on}">
+          <button type="button" class="svc-add" data-add="${s.id}" aria-label="${on ? 'Quitar' : 'Añadir'} ${M.escapeHtml(M.Validate.properName(s.name))}" aria-pressed="${on}">
             <span class="svc-add-label" aria-hidden="true">${on ? '✓' : '+'}</span>
           </button>
           <dl class="svc-details" id="det-${s.id}" hidden>
@@ -65,11 +65,11 @@
       // Filtros originales siempre visibles: "Todos" muestra la lista de categorías.
       tabs.innerHTML = ['Todos', ...cats.map((c) => c.name)].map((name) => `
         <button type="button" class="menu-tab${name === active ? ' is-active' : ''}"
-          role="tab" aria-selected="${name === active}" data-cat="${M.escapeHtml(name)}">${M.escapeHtml(name)}</button>`).join('');
+          role="tab" aria-selected="${name === active}" data-cat="${M.escapeHtml(name)}">${M.escapeHtml(M.Validate.properName(name))}</button>`).join('');
       if (!cat) {
         list.innerHTML = `<div class="menu-category-grid">${cats.map((c) => {
           return `<button type="button" class="menu-category-tile" data-open-category="${M.escapeHtml(c.name)}">
-            <strong>${M.escapeHtml(c.name)}</strong>
+            <strong>${M.escapeHtml(M.Validate.properName(c.name))}</strong>
             <span class="menu-category-cta">Explorar →</span>
           </button>`;
         }).join('')}</div>`;
@@ -78,14 +78,14 @@
       const items = M.services.filter((s) => s.categoryId === cat.id || (!s.categoryId && s.category === cat.name));
       const parents = (M.serviceGroups || []).filter((g) => g.categoryId === cat.id);
       const direct = items.filter((s) => !s.parentId || !parents.some((g) => g.id === s.parentId));
-      list.innerHTML = `<div class="menu-category-heading"><h3>${M.escapeHtml(cat.name)}</h3></div>
+      list.innerHTML = `<div class="menu-category-heading"><h3>${M.escapeHtml(M.Validate.properName(cat.name))}</h3></div>
         ${parents.map((g) => {
           const children = items.filter((s) => s.parentId === g.id);
           if (!children.length) return '';
           return `<details class="menu-service-group">
-            <summary aria-label="Ver opciones de ${M.escapeHtml(g.name)}">
+            <summary aria-label="Ver opciones de ${M.escapeHtml(M.Validate.properName(g.name))}">
               <span class="menu-group-copy">
-                <span class="menu-group-name">${M.escapeHtml(g.name)}</span>
+                <span class="menu-group-name">${M.escapeHtml(M.Validate.properName(g.name))}</span>
                 <span class="menu-group-hint">Ver opciones</span>
               </span>
               <span class="menu-group-expand" aria-hidden="true"></span>
