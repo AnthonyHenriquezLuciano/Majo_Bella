@@ -33,9 +33,17 @@
     const v = values();
     const card = selectedVariant();
     const art = $('gc-card-image');
-    // La fotografía exacta tiene prioridad; SVG seguro mientras la foto se publica.
-    art.onerror = () => { art.onerror = null; art.src = `assets/gift-${card.key}-majobella.svg`; };
-    art.src = `assets/gift-${card.key}-photo.webp`;
+    // Usamos las cuatro fotografías originales. Evitamos recargarlas al escribir una dedicatoria.
+    if (art.dataset.variant !== card.key) {
+      art.dataset.variant = card.key;
+      art.onerror = () => {
+        if (art.dataset.variant === card.key) {
+          art.onerror = null;
+          art.src = `assets/gift-${card.key}-majobella.svg`;
+        }
+      };
+      art.src = `assets/gift-${card.key}-photo.webp`;
+    }
     art.alt = `Tarjeta de regalo ${card.name}`;
     $('gc-preview').dataset.variant = card.key;
     $('gc-variant-label').textContent = card.name;
